@@ -24,6 +24,19 @@ class AbstractPS:
     def is_subpattern(self, a: PatternType, b: PatternType) -> bool:
         return self.intersect_patterns(a, b) == a
 
+    def extent(self, pattern: PatternType, data: list[PatternType]) -> Iterator[int]:
+        return (i for i, obj_description in enumerate(data) if self.is_subpattern(pattern, obj_description))
+
+    def intent(self, data: list[PatternType]) -> PatternType:
+        intent = None
+        for obj_description in data:
+            if intent is None:
+                intent = obj_description
+                continue
+
+            intent = self.intersect_patterns(intent, obj_description)
+        return intent
+
     def n_bin_attributes(self, data: list[PatternType]) -> int:
         return sum(1 for _ in self.bin_attributes(data))
 

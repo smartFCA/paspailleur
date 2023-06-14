@@ -41,3 +41,15 @@ def test_n_bin_attributes():
     assert ips.n_bin_attributes(data) == 6
 
 
+def test_intent():
+    data = [(0, 1), (2, 3), (1.5, 2)]
+
+    ips = IntervalPS()
+    assert ips.intent(data) == (0, 3)
+
+
+def test_extent():
+    data = [(0, 1), (2, 3), (1.5, 2)]
+
+    ips = IntervalPS()
+    assert list(ips.extent((1.5, 3), data)) == [1, 2]

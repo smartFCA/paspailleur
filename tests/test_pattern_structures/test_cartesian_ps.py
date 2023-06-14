@@ -68,3 +68,23 @@ def test_binarize():
     patterns, itemsets = cps.binarize(data)
     assert patterns == patterns_true
     assert itemsets == itemsets_true
+
+
+def test_intent():
+    data = [
+        [(0, 1), (10, 20)],
+        [(1, 2), (10, 20)]
+    ]
+
+    cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
+    assert cps.intent(data) == [(0, 2), (10, 20)]
+
+
+def test_extent():
+    data = [
+        [(0, 1), (10, 20)],
+        [(1, 2), (10, 20)]
+    ]
+
+    cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
+    assert list(cps.extent([(1, 2), (10, 20)], data)) == [1]

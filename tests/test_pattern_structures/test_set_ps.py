@@ -41,3 +41,17 @@ def test_n_bin_attributes():
 
     sps = SetPS()
     assert sps.n_bin_attributes(data) == 8
+
+
+def test_intent():
+    data = [{'a'}, {'b'}, {'a', 'c'}]
+
+    sps = SetPS()
+    assert sps.intent(data) == {'a', 'b', 'c'}
+
+
+def test_extent():
+    data = [{'a'}, {'b'}, {'a', 'c'}]
+
+    sps = SetPS()
+    assert list(sps.extent({'a', 'c'}, data)) == [0, 2]
