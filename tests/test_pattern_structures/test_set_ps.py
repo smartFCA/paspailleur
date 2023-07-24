@@ -4,8 +4,8 @@ from bitarray import frozenbitarray as fbarray
 
 def test_intersect_patterns():
     sps = SetPS()
-    assert sps.intersect_patterns({'a', 'b'}, {'c', 'b'}) == {'a', 'b', 'c'}
-    assert sps.intersect_patterns(set(), {'a'}) == {'a'}
+    assert sps.join_patterns({'a', 'b'}, {'c', 'b'}) == {'a', 'b', 'c'}
+    assert sps.join_patterns(set(), {'a'}) == {'a'}
 
 
 def test_bin_attributes():
@@ -24,7 +24,7 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     sps = SetPS()
-    patterns, flags = list(zip(*list(sps.bin_attributes(data))))
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
@@ -32,8 +32,8 @@ def test_bin_attributes():
 def test_is_subpattern():
     sps = SetPS()
 
-    assert sps.is_subpattern({'a', 'b', 'c'}, {'a'})
-    assert not sps.is_subpattern({'a'}, {'c'})
+    assert sps.is_less_precise({'a', 'b', 'c'}, {'a'})
+    assert not sps.is_less_precise({'a'}, {'c'})
 
 
 def test_n_bin_attributes():

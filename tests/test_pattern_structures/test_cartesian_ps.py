@@ -4,7 +4,7 @@ from bitarray import frozenbitarray as fbarray
 
 def test_intersect_patterns():
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.intersect_patterns([(1, 2), (3, 5)], [(0, 2), (3, 5)]) == [(0, 2), (3, 5)]
+    assert cps.join_patterns([(1, 2), (3, 5)], [(0, 2), (3, 5)]) == [(0, 2), (3, 5)]
 
 
 def test_bin_attributes():
@@ -27,7 +27,7 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    patterns, flags = list(zip(*list(cps.bin_attributes(data))))
+    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
@@ -35,8 +35,8 @@ def test_bin_attributes():
 def test_is_subpattern():
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
 
-    assert cps.is_subpattern([(0, 1), (3, 5)], [(1, 1), (3, 4)])
-    assert not cps.is_subpattern([(0, 1), (3, 5)], [(1, 1), (2, 4)])
+    assert cps.is_less_precise([(0, 1), (3, 5)], [(1, 1), (3, 4)])
+    assert not cps.is_less_precise([(0, 1), (3, 5)], [(1, 1), (2, 4)])
 
 
 def test_n_bin_attributes():
