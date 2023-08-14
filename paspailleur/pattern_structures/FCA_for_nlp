@@ -121,15 +121,6 @@ class SynonymsPS(NgramsPS(1)):
 
 
 
-from typing import Iterator, Optional
-from bitarray import frozenbitarray as fbarray
-from paspailleur.pattern_structures import AbstractPS
-import nltk
-from nltk.corpus import wordnet
-from nltk.util import ngrams
-nltk.download('wordnet')
-
-
 class AntonymsPS(NgramsPS(1)):
     PatternType = Set[Tuple[str]]
 
