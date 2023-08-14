@@ -171,7 +171,6 @@ class AntonymsPS(NgramsPS(1)):
 
     def n_bin_attributes(self, data: list[PatternType]) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-
         raise NotImplementedError
 
 
