@@ -15,8 +15,9 @@ NodeType = TypeVar('NodeType')
 class GraphPS(AbstractPS):
     """A pattern structure to work with graphs
 
-    Common description for a set of graphs is a set of maximal common subgraphs
-    (represented by their adjacency matrices)
+    Common description for a set of graphs is the their maximal common subgraph
+    (i.e. maximal common subset of edges).
+    The graphs are intrincically represented by their adcanecy matrices stored as a list of bitarrays.
     """
     PatternType = tuple[fbarray, ...]
     bottom: PatternType  # Graph, containing all possible edges
@@ -48,6 +49,7 @@ class GraphPS(AbstractPS):
             yield tuple([fbarray(row) for row in mtrx])
 
     def postprocess_data(self, data: Iterable[PatternType]) -> Iterator[nx.Graph]:
+        """Convert graph from GraphPS PatternType to a networkx graph"""
         for matrix in data:
             edges = [(i, i+j) for i, row in enumerate(matrix) for j in row[i:].itersearch(True)]
             edges_verb = [(self.nodes[i], self.nodes[j]) for i, j in edges]
