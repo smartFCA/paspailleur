@@ -8,9 +8,9 @@ nltk.download('wordnet')
 class NgramsPS(AbstractPS):
     PatternType =  Set[Tuple[str]]
     bottom = None
-
-    def __init__(self, min_n: int):
-        self.min_n = 2
+    
+    def __init__(self, min_n = 2: int):
+        self.min_n = min_n
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the common ngrams between both patterns `a` and `b`"""
