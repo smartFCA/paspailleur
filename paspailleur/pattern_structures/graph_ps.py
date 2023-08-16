@@ -7,7 +7,8 @@ from bitarray.util import zeros as bazeros
 from typing import TypeVar
 from itertools import combinations
 
-from .abstract_ps import AbstractPS
+#from .abstract_ps import AbstractPS
+from paspailleur.pattern_structures.abstract_ps import AbstractPS
 
 NodeType = TypeVar('NodeType')
 
@@ -15,9 +16,9 @@ NodeType = TypeVar('NodeType')
 class GraphPS(AbstractPS):
     """A pattern structure to work with graphs
 
-    Common description for a set of graphs is the their maximal common subgraph
+    Common description for a set of graphs is their maximal common subgraph
     (i.e. maximal common subset of edges).
-    The graphs are intrincically represented by their adcanecy matrices stored as a list of bitarrays.
+    The graphs are intrinsically represented by their adjacency matrices stored as a list of bitarrays.
     """
     PatternType = tuple[fbarray, ...]
     bottom: PatternType  # Graph, containing all possible edges
@@ -78,9 +79,8 @@ class GraphPS(AbstractPS):
                     if (i, j) not in edges_extents:
                         edges_extents[(i, j)] = bazeros(n_objects)
                     edges_extents[(i, j)][matrix_i] = True
-        edges_extents = {edge: extent for edge, extent in edges_extents.items()}
-        full_extent = ~bazeros(n_objects)
 
+        full_extent = ~bazeros(n_objects)
         n_nodes = len(self.nodes)
         for graph_size in range(0, len(edges_extents)+1):
             for edges_comb in combinations(edges_extents.keys(), graph_size):
@@ -91,6 +91,10 @@ class GraphPS(AbstractPS):
                 extent = reduce(lambda a, b: a & b, (edges_extents[edge] for edge in edges_comb), full_extent)
                 yield matrix, extent
 
+        if len(edges_extents) < n_nodes * (n_nodes-1)/2:
+            yield self.bottom, ~full_extent
+
+
     @staticmethod
     def _intersect_graphs(graph_a: PatternType, graph_b: PatternType) -> PatternType:
         return tuple(row_a & row_b for row_a, row_b in zip(graph_a, graph_b))
@@ -98,3 +102,16 @@ class GraphPS(AbstractPS):
     @staticmethod
     def _is_subgraph(graph_a: PatternType, graph_b: PatternType) -> bool:
         return all(row_a & row_b == row_a for row_a, row_b in zip(graph_a, graph_b))
+
+
+if __name__ == '__main__':
+    ps = GraphPS('abcdefg')
+    g1 = nx.Graph([('a', 'b'), ('b', 'c'), ('c', 'd')])
+    g2 = nx.Graph([('a', 'b'), ('b', 'c')])
+    g3 = nx.Graph([('a', 'b'), ('c', 'd')])
+
+    data = list(ps.preprocess_data([g1, g2, g3]))
+
+    for pattern, extent in ps.iter_bin_attributes(data):
+        edges = next(ps.postprocess_data([pattern])).edges
+        print(edges, extent)
