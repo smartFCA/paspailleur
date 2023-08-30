@@ -1,15 +1,17 @@
 from typing import Iterator, Optional
 from bitarray import frozenbitarray as fbarray
+from bitarray import bitarray
 from paspailleur.pattern_structures import AbstractPS
 from nltk.util import ngrams
 from nltk.corpus import wordnet
 nltk.download('wordnet')
 
 class NgramsPS(AbstractPS):
-    PatternType =  Set[Tuple[str]]
+    PatternType =  set[tuple[str]]
     bottom = None
+    min_n : int
     
-    def __init__(self, min_n = 2: int):
+    def __init__(self, min_n = 1):
         self.min_n = min_n
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -47,7 +49,25 @@ class NgramsPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
-        raise NotImplementedError
+        List_ngrams = []
+        for i in range(len(data)):
+            for ngram in data[i]:
+                List_ngrams.append(ngram)
+        List_ngrams = list(set(List_ngrams))
+        List_ngrams = sorted(List_ngrams)
+        L_extent = []
+        for i in range(len(data)):
+            ngram_i = [data[i]]
+            bit_i = bazeros(len(List_ngrams))
+            for j in range(len(List_ngrams)):
+                if List_ngrams[j] in data[i]:
+                    bit_i[j] = 1
+            ngram_i.append(bit_i)
+            L_extent.append(tuple(ngram_i))
+        L_extent = sorted(L_extent, key=lambda x: (x[1].count(1), x[1]), reverse=True)
+        yield List_ngrams, bitarray([1]*len(List_ngrams))
+        for n_gram, extent in L_extent:
+            yield n_gram, extent
 
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
@@ -64,14 +84,22 @@ class NgramsPS(AbstractPS):
 
     def n_bin_attributes(self, data: list[PatternType]) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        raise NotImplementedError
+        count = 0
+        nbr_of_words = 0
+        for i in range(len(data)):
+            nbr_of_words += len(list(list(data[i])[0]))
+        for i in range(nbr_of_words):
+            for j in range(i + self.min_n, nbr_of_words + 1):
+                count += 1
+        return(count)
 
 
 
-class SynonymsPS(NgramsPS(1)):
-    PatternType = Set[Tuple[str]]
-
-    def __init__(self, num_synonyms: int):
+class SynonymsPS(NgramsPS):
+    PatternType = set[tuple[str]]
+    num_synonyms : int
+    
+    def __init__(self, num_synonyms = 1):
         self.num_synonyms = num_synonyms # number of synonyms for a word
 
     def get_synonyms(self, word):
@@ -84,12 +112,12 @@ class SynonymsPS(NgramsPS(1)):
       return synonyms
 
     def get_synonyms_set_for_text(self, a: PatternType) -> PatternType:
-      synonym_liste = []
-      words_liste = list(a)[0]
-      for i in range(len(words_liste)):
-          for synonym in list(self.get_synonyms(words_liste[i], self.num_synonyms)):
-            synonym_liste.append(synonym)
-      synonym_tuple = tuple(synonym_liste)
+      synonym_list = []
+      words_list = list(a)[0]
+      for i in range(len(words_list)):
+          for synonym in list(self.get_synonyms(words_list[i], self.num_synonyms)):
+            synonym_list.append(synonym)
+      synonym_tuple = [tuple(synonym_list)]
       return(set(synonym_tuple))
 
 
@@ -99,52 +127,42 @@ class SynonymsPS(NgramsPS(1)):
         synonyms_text2 = self.get_synonyms_set_for_text(b, self.num_synonyms)
         return(self.join_patterns(synonyms_text1, synonyms_text2))
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        return(self.is_less_precise)
-
-
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
-        """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
-
-        :parameter
-            data: list[PatternType]
-             list of object descriptions
-        :return
-            iterator of (description: PatternType, extent of the description: frozenbitarray)
-        """
-        raise NotImplementedError
 
     def n_bin_attributes(self, data: list[PatternType]) -> int:
         """Count the number of attributes in the binary representation of `data`"""
+        n = 0
+        for i in range(len(data)):
+            n += len(list(list(data[i])[0]))
+        return (n * (n + 1)) // 2
 
-        raise NotImplementedError
 
 
 
-class AntonymsPS(NgramsPS(1)):
-    PatternType = Set[Tuple[str]]
-
-    def __init__(self, num_antonyms: int):
+class AntonymsPS(NgramsPS):
+    PatternType = set[tuple[str]]
+    num_antonyms : int
+    
+    def __init__(self, num_antonyms = 1):
         self.num_antonyms = num_antonyms
 
-    def get_antonyms(word, num_antonyms=4):
+    def get_antonyms(self, word):
         antonyms = set()
         for synset in wordnet.synsets(word):
             for lemma in synset.lemmas():
                 if lemma.antonyms():
                     antonyms.add(lemma.antonyms()[0].name())
-                    if num_antonyms is not None and len(antonyms) >= num_antonyms:
+                    if self.num_antonyms is not None and len(antonyms) >= self.num_antonyms:
                         return antonyms
         return antonyms
 
 
     def get_antonyms_set_for_text(self, a: PatternType) -> PatternType:
-      antonyms_liste = []
-      words_liste = list(a)[0]
-      for i in range(len(words_liste)):
-          for antonym in list(self.get_antonyms(words_liste[i], self.num_antonyms)):
-            antonyms_liste.append(antonym)
-      antonyms_tuple = tuple(antonyms_liste)
+      antonyms_list = []
+      words_list = list(a)[0]
+      for i in range(len(words_list)):
+          for antonym in list(self.get_antonyms(words_list[i], self.num_antonyms)):
+            antonyms_list.append(antonym)
+      antonyms_tuple = [tuple(antonyms_list)]
       return(set(antonyms_tuple))
 
 
@@ -154,24 +172,13 @@ class AntonymsPS(NgramsPS(1)):
         antonyms_text2 = self.get_antonyms_set_for_text(b, self.num_antonyms)
         return(self.join_patterns(antonyms_text1, antonyms_text2))
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        return(self.is_less_precise)
-
-
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
-        """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
-
-        :parameter
-            data: list[PatternType]
-             list of object descriptions
-        :return
-            iterator of (description: PatternType, extent of the description: frozenbitarray)
-        """
-        raise NotImplementedError
 
     def n_bin_attributes(self, data: list[PatternType]) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        raise NotImplementedError
+        n = 0
+        for i in range(len(data)):
+            n += len(list(list(data[i])[0]))
+        return (n * (n + 1)) // 2
 
 
 
