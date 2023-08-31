@@ -1,8 +1,8 @@
 import difflib
 from typing import Iterator
 
-from bitarray import frozenbitarray as fbarray
-from bitarray import bitarray
+from bitarray import frozenbitarray as fbarray, bitarray
+from bitarray.util import zeros as bazeros
 from paspailleur.pattern_structures import AbstractPS
 
 import nltk
@@ -18,6 +18,11 @@ class NgramsPS(AbstractPS):
     
     def __init__(self, min_n: int = 1):
         self.min_n = min_n
+
+    def preprocess_data(self, data: Iterator[str], separator=' ') -> list[PatternType]:
+        ngrams = (tuple(text.split(separator)) for text in data)
+        patterns = [{ngram} if len(ngram) >= self.min_n else set() for ngram in ngrams]
+        return patterns
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the maximal sub-ngrams contained both in `a` and in `b`
@@ -36,7 +41,7 @@ class NgramsPS(AbstractPS):
             for ngram_b in b:
                 seq_matcher.set_seq2(ngram_b)
 
-                blocks = seq_matcher.get_matching_blocks()[:-1]  # the last block is always empty
+                blocks = seq_matcher.get_matching_blocks()[:-1]  # the last block is always empty, so skip it
                 common_ngrams.extend((ngram_a[block.a: block.a+block.size] for block in blocks))
 
         # Delete common n-grams contained in other common n-grams
@@ -62,25 +67,15 @@ class NgramsPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
-        List_ngrams = []
-        for i in range(len(data)):
-            for ngram in data[i]:
-                List_ngrams.append(ngram)
-        List_ngrams = list(set(List_ngrams))
-        List_ngrams = sorted(List_ngrams)
-        L_extent = []
-        for i in range(len(data)):
-            ngram_i = [data[i]]
-            bit_i = bazeros(len(List_ngrams))
-            for j in range(len(List_ngrams)):
-                if List_ngrams[j] in data[i]:
-                    bit_i[j] = 1
-            ngram_i.append(bit_i)
-            L_extent.append(tuple(ngram_i))
-        L_extent = sorted(L_extent, key=lambda x: (x[1].count(1), x[1]), reverse=True)
-        yield List_ngrams, bitarray([1]*len(List_ngrams))
-        for n_gram, extent in L_extent:
-            yield n_gram, extent
+        ngrams_list = sorted({ngram for pattern in data for ngram in pattern}, key=lambda ngram: len(ngram))
+
+        yield set(), fbarray(~bazeros(len(data)))
+
+        for ngram in ngrams_list:
+            extent = fbarray([self.is_less_precise({ngram}, pattern) for pattern in data])
+            yield ngram, extent
+
+        yield None, fbarray(bazeros(len(data)))
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
