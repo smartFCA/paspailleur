@@ -1,7 +1,9 @@
 import difflib
-from typing import Iterator
+from functools import reduce
+from itertools import chain
+from typing import Iterator, Iterable
 
-from bitarray import frozenbitarray as fbarray, bitarray
+from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 from paspailleur.pattern_structures import AbstractPS
 
@@ -11,7 +13,7 @@ from nltk.corpus import wordnet
 nltk.download('wordnet')
 
 
-class NgramsPS(AbstractPS):
+class NgramPS(AbstractPS):
     PatternType = set[tuple[str]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
     bottom: PatternType = None  # the most specific ngram for the data. Equals to None for simplicity
     min_n: int = 1  # Minimal size of an ngram to consider
@@ -19,8 +21,8 @@ class NgramsPS(AbstractPS):
     def __init__(self, min_n: int = 1):
         self.min_n = min_n
 
-    def preprocess_data(self, data: Iterator[str], separator=' ') -> list[PatternType]:
-        ngrams = (tuple(text.split(separator)) for text in data)
+    def preprocess_data(self, data: Iterable[str], separator=' ') -> list[PatternType]:
+        ngrams = (tuple(text.split(separator)) if text != '' else tuple() for text in data)
         patterns = [{ngram} if len(ngram) >= self.min_n else set() for ngram in ngrams]
         return patterns
 
@@ -42,7 +44,8 @@ class NgramsPS(AbstractPS):
                 seq_matcher.set_seq2(ngram_b)
 
                 blocks = seq_matcher.get_matching_blocks()[:-1]  # the last block is always empty, so skip it
-                common_ngrams.extend((ngram_a[block.a: block.a+block.size] for block in blocks))
+                common_ngrams.extend((ngram_a[block.a: block.a+block.size] for block in blocks
+                                      if block.size >= self.min_n))
 
         # Delete common n-grams contained in other common n-grams
         common_ngrams = sorted(common_ngrams, key=lambda ngram: len(ngram), reverse=True)
@@ -67,10 +70,10 @@ class NgramsPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        total_pattern = reduce(self.join_patterns, data[1:], data[0])
+        yield total_pattern, fbarray(~bazeros(len(data)))
+
         ngrams_list = sorted({ngram for pattern in data for ngram in pattern}, key=lambda ngram: len(ngram))
-
-        yield set(), fbarray(~bazeros(len(data)))
-
         for ngram in ngrams_list:
             extent = fbarray([self.is_less_precise({ngram}, pattern) for pattern in data])
             yield ngram, extent
@@ -111,7 +114,7 @@ class NgramsPS(AbstractPS):
         return count
 
 
-class SynonymsPS(NgramsPS):
+class SynonymsPS(NgramPS):
     PatternType = set[tuple[str]]
     num_synonyms : int
     
@@ -152,9 +155,7 @@ class SynonymsPS(NgramsPS):
         return (n * (n + 1)) // 2
 
 
-
-
-class AntonymsPS(NgramsPS):
+class AntonymsPS(NgramPS):
     PatternType = set[tuple[str]]
     num_antonyms : int
     
