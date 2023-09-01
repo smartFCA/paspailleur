@@ -1,9 +1,10 @@
 import difflib
+from collections import deque
 from functools import reduce
 from itertools import chain
 from typing import Iterator, Iterable
 
-from bitarray import frozenbitarray as fbarray
+from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from paspailleur.pattern_structures import AbstractPS
 
@@ -14,7 +15,7 @@ nltk.download('wordnet')
 
 
 class NgramPS(AbstractPS):
-    PatternType = set[tuple[str]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
+    PatternType = set[tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
     bottom: PatternType = None  # the most specific ngram for the data. Equals to None for simplicity
     min_n: int = 1  # Minimal size of an ngram to consider
     
@@ -61,7 +62,7 @@ class NgramPS(AbstractPS):
 
         return set(common_ngrams)
 
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -70,15 +71,52 @@ class NgramPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
-        total_pattern = reduce(self.join_patterns, data[1:], data[0])
-        yield total_pattern, fbarray(~bazeros(len(data)))
+        empty_extent = bazeros(len(data))
 
-        ngrams_list = sorted({ngram for pattern in data for ngram in pattern}, key=lambda ngram: len(ngram))
-        for ngram in ngrams_list:
-            extent = fbarray([self.is_less_precise({ngram}, pattern) for pattern in data])
-            yield ngram, extent
+        words_extents: dict[str, bitarray] = {}
+        for i, pattern in enumerate(data):
+            for ngram in pattern:
+                for word in ngram:
+                    if word not in words_extents:
+                        words_extents[word] = empty_extent.copy()
+                    words_extents[word][i] = True
 
-        yield None, fbarray(bazeros(len(data)))
+        total_pattern = set()
+        if any(extent.all() for extent in words_extents.values()):
+            total_pattern = reduce(self.join_patterns, data[1:], data[0])
+
+        yield total_pattern, fbarray(~empty_extent)
+
+        words_to_pop = [word for word, extent in words_extents.items() if extent.count() < min_support]
+        for word in words_to_pop:
+            del words_extents[word]
+
+        queue = deque([((word,), extent) for word, extent in words_extents.items() if not extent.all()])
+        while queue:
+            ngram, extent = queue.popleft()
+            yield ngram, fbarray(extent)
+
+            for word, word_extent in words_extents.items():
+                next_extent = word_extent & extent
+                if not next_extent.any() or next_extent.count() < min_support:
+                    continue
+
+                support_delta = next_extent.count() - max(min_support, 1)
+
+                next_ngram = ngram + (word, )
+                for i in next_extent.itersearch(True):
+                    if self.is_less_precise({next_ngram}, data[i]):
+                        continue
+
+                    next_extent[i] = False
+                    support_delta -= 1
+                    if support_delta < 0:
+                        break
+                else:  # no break, i.e. enough support
+                    queue.append((next_ngram, next_extent))
+
+        if min_support == 0:
+            yield None, fbarray(empty_extent)
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
@@ -102,16 +140,10 @@ class NgramPS(AbstractPS):
 
         return True
 
-    def n_bin_attributes(self, data: list[PatternType]) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        count = 0
-        nbr_of_words = len({word for pattern in data for word in pattern})
+        return sum(1 for _ in self.iter_bin_attributes(data, min_support))
 
-        # TODO: Check if this is valid formula
-        for i in range(nbr_of_words):
-            for j in range(i + self.min_n, nbr_of_words + 1):
-                count += 1
-        return count
 
 
 class SynonymsPS(NgramPS):
