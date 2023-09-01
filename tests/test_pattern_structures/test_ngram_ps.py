@@ -21,10 +21,10 @@ def test_ngram_preprocess():
     ps = NgramPS()
     texts = ['hello world', 'hello there', 'hi', '']
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
-    assert ps.preprocess_data(texts) == patterns
+    assert list(ps.preprocess_data(texts)) == patterns
 
     ps.min_n = 10
-    assert ps.preprocess_data(texts) == [set(), set(), set(), set()]
+    assert list(ps.preprocess_data(texts)) == [set(), set(), set(), set()]
 
 
 def test_ngram_join_patterns():
