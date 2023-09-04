@@ -1,5 +1,4 @@
 import difflib
-from collections import deque
 from functools import reduce
 from itertools import product
 from typing import Iterator, Iterable
@@ -7,8 +6,7 @@ from typing import Iterator, Iterable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 
-#from .abstract_ps import AbstractPS
-from paspailleur.pattern_structures.abstract_ps import AbstractPS
+from .abstract_ps import AbstractPS
 
 
 class NgramPS(AbstractPS):
@@ -66,12 +64,37 @@ class NgramPS(AbstractPS):
 
         return set(common_ngrams)
 
+    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
+        """Return True if pattern `a` is less precise than pattern `b`"""
+        b_texts_sizes = [(len(ngram), ' '.join(ngram)) for ngram in
+                         sorted(b, key=lambda ngram: len(ngram), reverse=True)]
+
+        for smaller_tuple in a:
+            smaller_text = ' '.join(smaller_tuple)
+            smaller_size = len(smaller_tuple)
+
+            inclusion_found = False
+            for larger_size, larger_text in b_texts_sizes:
+                if smaller_size > larger_size:
+                    break
+
+                if smaller_text in larger_text:
+                    inclusion_found = True
+                    break
+
+            if not inclusion_found:
+                return False
+
+        return True
+
     def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
+            min_support: int
+                Minimal amount of objects a binary attribute should cover
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
@@ -140,25 +163,31 @@ class NgramPS(AbstractPS):
         words, extents = zip(*words_extents.items())
         n_words = len(words)
 
+        # Yield 1grams
         ngrams = {(word_i,): ext for word_i, ext in enumerate(extents)}
         for (word_i,), ext in ngrams.items():
             yield (words[word_i],), fbarray(ext)
 
+        # Iterate 2_and_more-grams
         while ngrams:
             prev_ngrams, ngrams = ngrams, {}
 
             search_space = setup_search_space(prev_ngrams, n_words)
             for prev_ngram, word_i in search_space:
+                # Get the approximate extent of the new ngram (which is a superset of the exact extent)
                 new_ngram: tuple[int, ...] = prev_ngram + (word_i,)
                 proto_extent = prev_ngrams[prev_ngram] & prev_ngrams[new_ngram[1:]]
                 if not proto_extent.any() or proto_extent.count() < min_support:
                     continue
 
+                # Get the exact extent of the new ngram
                 new_ngram_verb = tuple([words[word_j] for word_j in new_ngram])
                 new_extent = refine_extent(proto_extent, new_ngram_verb, min_support, data)
                 if new_extent is None:
                     continue
 
+                # Yield the new ngram if its extent is new.
+                # If not, the extended version of the new ngram can still output some new extent
                 ngrams[new_ngram] = new_extent
                 if new_extent != extents[word_i] and new_extent != prev_ngrams[prev_ngram]\
                         and len(new_ngram) >= self.min_n:
@@ -167,37 +196,6 @@ class NgramPS(AbstractPS):
         if min_support == 0:
             yield None, fbarray(bazeros(len(data)))
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        """Return True if pattern `a` is less precise than pattern `b`"""
-        b_texts_sizes = [(len(ngram), ' '.join(ngram)) for ngram in
-                         sorted(b, key=lambda ngram: len(ngram), reverse=True)]
-
-        for smaller_tuple in a:
-            smaller_text = ' '.join(smaller_tuple)
-            smaller_size = len(smaller_tuple)
-
-            inclusion_found = False
-            for larger_size, larger_text in b_texts_sizes:
-                if smaller_size > larger_size:
-                    break
-
-                if smaller_text in larger_text:
-                    inclusion_found = True
-                    break
-
-            if not inclusion_found:
-                return False
-
-        return True
-
     def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""
         return sum(1 for _ in self.iter_bin_attributes(data, min_support))
-
-
-if __name__ == '__main__':
-    patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
-
-    ps = NgramPS()
-    for subpattern, extent in ps.iter_bin_attributes(patterns):
-        print(subpattern, extent)
