@@ -8,8 +8,17 @@ from itertools import combinations
 
 T = TypeVar('T')
 
-class SetPS(AbstractPS):
-    PatternType = frozenset
+
+class SuperSetPS(AbstractPS):
+    """A PS where every description is a set of values. And the bigger is the set, the less precise is the description
+
+    E.g. description {'green', 'yellow', 'red'} is less precise than {'green', 'yellow'}
+    as the former describes all the objects that are 'green' OR 'yellow' OR 'red'
+    and the latter only describes the objects that are 'green' OR 'yellow'.
+
+    Such Pattern Structure can be applied for categorical values in tabular data.
+    """
+    PatternType = frozenset[T]
     bottom = frozenset()  # Bottom pattern, more specific than any other one
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -48,10 +57,14 @@ class SetPS(AbstractPS):
         return 2**len(unique_values)
 
 
-DsjSetPS = SetPS
+class SubSetPS(AbstractPS):
+    """A PS where every description is a set of values. And the smaller is the set, the less precise is the description
 
+    E.g. description {'green', 'cubic'} is less precise than {'green', 'cubic', 'heavy'}
+    as the former describes all the objects that are 'green' AND 'cubic'
+    and the latter describes the objects that are 'green' AND 'cubic' AND 'heavy'.
 
-class CnjSetPS(AbstractPS):
+    """
     PatternType = frozenset[T]
     bottom = None
 

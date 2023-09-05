@@ -1,14 +1,7 @@
-from collections import deque
 from functools import reduce
-from itertools import combinations
 from typing import Iterator, Iterable
 
-from bitarray import frozenbitarray as fbarray, bitarray
-from bitarray.util import zeros as bazeros
-
-#from .abstract_ps import AbstractPS
-from paspailleur.pattern_structures import AbstractPS
-from paspailleur.pattern_structures.set_ps import CnjSetPS
+from .set_ps import SubSetPS
 
 
 import nltk
@@ -16,7 +9,7 @@ from nltk.corpus import wordnet
 nltk.download('wordnet')
 
 
-class SynonymsPS(CnjSetPS):
+class SynonymsPS(SubSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of synonyms to words in the text
     n_synonyms: int | None = 1  # number of synonyms for a word
 
@@ -39,7 +32,7 @@ class SynonymsPS(CnjSetPS):
             yield synonyms
 
 
-class AntonymsPS(CnjSetPS):
+class AntonymsPS(SubSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of antonyms to words in the text
     num_antonyms : int | None = 1  # number of antonyms for a word
     

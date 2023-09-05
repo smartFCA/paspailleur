@@ -1,9 +1,9 @@
-from paspailleur.pattern_structures.set_ps import SetPS
+from paspailleur.pattern_structures.set_ps import SuperSetPS
 from bitarray import frozenbitarray as fbarray
 
 
 def test_intersect_patterns():
-    sps = SetPS()
+    sps = SuperSetPS()
     assert sps.join_patterns({'a', 'b'}, {'c', 'b'}) == {'a', 'b', 'c'}
     assert sps.join_patterns(set(), {'a'}) == {'a'}
 
@@ -23,14 +23,14 @@ def test_bin_attributes():
     )
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
-    sps = SetPS()
+    sps = SuperSetPS()
     patterns, flags = list(zip(*list(sps.iter_bin_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
 
 def test_is_subpattern():
-    sps = SetPS()
+    sps = SuperSetPS()
 
     assert sps.is_less_precise({'a', 'b', 'c'}, {'a'})
     assert not sps.is_less_precise({'a'}, {'c'})
@@ -39,19 +39,19 @@ def test_is_subpattern():
 def test_n_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
-    sps = SetPS()
+    sps = SuperSetPS()
     assert sps.n_bin_attributes(data) == 8
 
 
 def test_intent():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
-    sps = SetPS()
+    sps = SuperSetPS()
     assert sps.intent(data) == {'a', 'b', 'c'}
 
 
 def test_extent():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
-    sps = SetPS()
+    sps = SuperSetPS()
     assert list(sps.extent({'a', 'c'}, data)) == [0, 2]
