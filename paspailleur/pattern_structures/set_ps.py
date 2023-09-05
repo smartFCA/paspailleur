@@ -1,4 +1,5 @@
 from collections import deque
+from functools import reduce
 from typing import Iterator, Optional, TypeVar
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
@@ -76,7 +77,7 @@ class SubSetPS(AbstractPS):
         """Return True if pattern `a` is less precise than pattern `b`"""
         return a.issubset(b)
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 1)\
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -121,11 +122,6 @@ class SubSetPS(AbstractPS):
                 queue.append((next_words, next_extent, i))
 
         if min_support == 0:
-            yield None, fbarray(empty_extent)
-
-    def n_bin_attributes(self, data: list[PatternType]) -> int:
-        """Count the number of attributes in the binary representation of `data`"""
-        unique_values = set()
-        for data_row in data:
-            unique_values |= data_row
-        return 2**len(unique_values)
+            bottom_extent = reduce(lambda a, b: a & b, vals_extents.values(), ~empty_extent)
+            if not bottom_extent.any():
+                yield frozenset(vals_extents), fbarray(bottom_extent)
