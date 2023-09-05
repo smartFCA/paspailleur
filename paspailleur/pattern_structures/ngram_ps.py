@@ -195,7 +195,3 @@ class NgramPS(AbstractPS):
 
         if min_support == 0:
             yield None, fbarray(bazeros(len(data)))
-
-    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
-        """Count the number of attributes in the binary representation of `data`"""
-        return sum(1 for _ in self.iter_bin_attributes(data, min_support))

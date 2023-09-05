@@ -16,12 +16,24 @@ class IntervalPS(AbstractPS):
 
         return min(a[0], b[0]), max(a[1], b[1])
 
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
+    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
+        """Return True if pattern `a` is less precise than pattern `b`"""
+        if b is self.bottom:
+            return True
+
+        if a is self.bottom:
+            return False
+
+        return a[0] <= b[0] <= b[1] <= a[1]
+
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
+            min_support: int
+             minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
@@ -33,23 +45,22 @@ class IntervalPS(AbstractPS):
         yield (min_, max_), fbarray([True]*len(data))
 
         for lb in lower_bounds:
-            yield (lb, max_), fbarray((lb <= x for x, _ in data))
+            extent = fbarray((lb <= x for x, _ in data))
+            if extent.count() < min_support:
+                break
+            yield (lb, max_), extent
 
         for ub in upper_bounds[::-1]:
-            yield (min_, ub), fbarray((x <= ub for _, x in data))
+            extent = fbarray((x <= ub for _, x in data))
+            if extent.count() < min_support:
+                break
+            yield (min_, ub), extent
 
-        yield None, fbarray([False]*len(data))
+        if min_support == 0:
+            yield None, fbarray([False]*len(data))
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        """Return True if pattern `a` is less precise than pattern `b`"""
-        if b is self.bottom:
-            return True
-
-        if a is self.bottom:
-            return False
-
-        return a[0] <= b[0] <= b[1] <= a[1]
-
-    def n_bin_attributes(self, data: list[PatternType]) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        return len({lb for lb, ub in data}) + len({ub for ub in data})
+        if min_support == 0:
+            return len({lb for lb, ub in data}) + len({ub for ub in data})
+        return super().n_bin_attributes(data, min_support)

@@ -26,12 +26,18 @@ class SuperSetPS(AbstractPS):
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
         return a | b
 
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
+    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
+        """Return True if pattern `a` is less precise than pattern `b`"""
+        return a & b == b
+
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
+            min_support: int
+             minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
@@ -44,18 +50,19 @@ class SuperSetPS(AbstractPS):
             combs = combinations(unique_values, comb_size)
             for combination in combs:
                 pattern = frozenset(combination)
-                yield pattern, fbarray((data_row & pattern == data_row for data_row in data))
+                extent = fbarray((data_row & pattern == data_row for data_row in data))
+                if extent.count() < min_support:  # TODO: Optimize min_support check
+                    continue
+                yield pattern, extent
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        """Return True if pattern `a` is less precise than pattern `b`"""
-        return a & b == b
-
-    def n_bin_attributes(self, data: list[PatternType]) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        unique_values = set()
-        for data_row in data:
-            unique_values |= data_row
-        return 2**len(unique_values)
+        if min_support == 0:
+            unique_values = set()
+            for data_row in data:
+                unique_values |= data_row
+            return 2**len(unique_values)
+        return super().n_bin_attributes(data, min_support)
 
 
 class SubSetPS(AbstractPS):
@@ -84,6 +91,8 @@ class SubSetPS(AbstractPS):
         :parameter
             data: list[PatternType]
              list of object descriptions
+            min_support: int
+             minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
