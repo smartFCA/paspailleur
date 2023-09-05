@@ -16,28 +16,30 @@ class CartesianPS(AbstractPS):
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
         return [ps.join_patterns(a_, b_) for (ps, a_, b_) in zip(self.basic_structures, a, b)]
 
-    def iter_bin_attributes(self, data: list[PatternType]) -> Iterator[tuple[PatternType, fbarray]]:
+    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
+        """Return True if pattern `a` is less precise than pattern `b`"""
+        return all(ps.is_less_precise(a_, b_) for ps, a_, b_ in zip(self.basic_structures, a, b))
+
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
+            min_support: int
+             minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
         for i, ps in enumerate(self.basic_structures):
             ps_data = [data_row[i] for data_row in data]
-            for pattern, flag in ps.iter_bin_attributes(ps_data):
+            for pattern, flag in ps.iter_bin_attributes(ps_data, min_support):
                 yield (i, pattern), flag
 
-    def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
-        """Return True if pattern `a` is less precise than pattern `b`"""
-        return all(ps.is_less_precise(a_, b_) for ps, a_, b_ in zip(self.basic_structures, a, b))
-
-    def n_bin_attributes(self, data: list[PatternType]) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""
         n_bin_attrs = 0
         for i, ps in enumerate(self.basic_structures):
             ps_data = [data_row[i] for data_row in data]
-            n_bin_attrs += ps.n_bin_attributes(ps_data)
+            n_bin_attrs += ps.n_bin_attributes(ps_data, min_support=min_support)
         return n_bin_attrs
