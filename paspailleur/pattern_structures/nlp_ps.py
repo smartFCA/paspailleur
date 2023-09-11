@@ -6,7 +6,6 @@ from .set_ps import SubSetPS
 
 import nltk
 from nltk.corpus import wordnet
-nltk.download('wordnet')
 
 
 class SynonymPS(SubSetPS):
@@ -14,6 +13,7 @@ class SynonymPS(SubSetPS):
     n_synonyms: int | None = 1  # number of synonyms for a word
 
     def __init__(self, n_synonyms: int | None = 1):
+        nltk.download('wordnet')
         self.n_synonyms = n_synonyms
 
     def get_synonyms(self, word: str) -> set[str]:
@@ -37,6 +37,7 @@ class AntonymPS(SubSetPS):
     n_antonyms: int | None = 1  # number of antonyms for a word
     
     def __init__(self, n_antonyms: int = 1):
+        nltk.download('wordnet')
         self.n_antonyms = n_antonyms
 
     def get_antonyms(self, word: str) -> PatternType:
