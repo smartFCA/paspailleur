@@ -38,6 +38,13 @@ def test_ngram_join_patterns():
     ps = NgramPS(min_n=2)
     assert ps.join_patterns(a, b) == set()
 
+    ps = NgramPS()
+    join = ps.join_patterns({tuple('abcd')}, {tuple('cxaz')})
+    assert join == {tuple('a'), tuple('c')}
+
+    join = ps.join_patterns({tuple('ab'), tuple('bc')}, {tuple('abc')})
+    assert join == {tuple('ab'), tuple('bc')}
+
 
 def test_ngram_is_less_precise():
     a = {('hello', 'world'), ('who', 'is', 'there')}

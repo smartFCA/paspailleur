@@ -6,7 +6,8 @@ from typing import Iterator, Iterable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 
-from .abstract_ps import AbstractPS
+#from .abstract_ps import AbstractPS
+from paspailleur.pattern_structures import AbstractPS
 
 
 class NgramPS(AbstractPS):
@@ -37,17 +38,25 @@ class NgramPS(AbstractPS):
         and 'there' is contained both in 'who is there' and 'hello there'
         """
         # Transform the set of words into text
-        seq_matcher = difflib.SequenceMatcher(isjunk=lambda ngram: len(ngram) < self.min_n)
 
         common_ngrams = []
         for ngram_a in a:
-            seq_matcher.set_seq1(ngram_a)
-            for ngram_b in b:
-                seq_matcher.set_seq2(ngram_b)
+            words_pos_a = dict()
+            for i, word in enumerate(ngram_a):
+                words_pos_a[word] = words_pos_a.get(word, []) + [i]
 
-                blocks = seq_matcher.get_matching_blocks()[:-1]  # the last block is always empty, so skip it
-                common_ngrams.extend((ngram_a[block.a: block.a + block.size] for block in blocks
-                                      if block.size >= self.min_n))
+            for ngram_b in b:
+                for j, word in enumerate(ngram_b):
+                    if word not in words_pos_a:
+                        continue
+                    # word in words_a
+                    for i in words_pos_a[word]:
+                        ngram_size = next(
+                            s for s in range(len(ngram_b))
+                            if i+s >= len(ngram_a) or j+s >= len(ngram_b) or ngram_a[i+s] != ngram_b[j+s]
+                        )
+                        if ngram_size >= self.min_n:
+                            common_ngrams.append(ngram_a[i:i+ngram_size])
 
         # Delete common n-grams contained in other common n-grams
         common_ngrams = sorted(common_ngrams, key=lambda ngram: len(ngram), reverse=True)
