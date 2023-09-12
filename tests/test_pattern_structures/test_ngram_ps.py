@@ -1,3 +1,5 @@
+import pytest
+
 from paspailleur.pattern_structures.ngram_ps import NgramPS
 
 from bitarray import frozenbitarray as fbarray
@@ -27,6 +29,23 @@ def test_ngram_preprocess():
     assert list(ps.preprocess_data(texts)) == [set(), set(), set(), set()]
 
 
+def test_ngram_is_less_precise():
+    a = {('hello', 'world'), ('who', 'is', 'there')}
+    b = {('hello', 'there')}
+    join = {('hello',), ('there',)}
+
+    ps = NgramPS()
+    assert ps.is_less_precise(set(), a) is True
+    assert ps.is_less_precise(join, a) is True
+    assert ps.is_less_precise(join, b) is True
+    assert ps.is_less_precise(a, b) is False
+    assert ps.is_less_precise(b, a) is False
+
+    assert ps.is_less_precise({('word',)}, {('word_suffix',)}) is False
+
+    assert ps.is_less_precise({('hello', 'world'), ('who', 'is', 'there')}, {('hello', 'world', 'who', 'is', 'there')})
+
+
 def test_ngram_join_patterns():
     a = {('hello', 'world'), ('who', 'is', 'there')}
     b = {('hello', 'there')}
@@ -44,19 +63,6 @@ def test_ngram_join_patterns():
 
     join = ps.join_patterns({tuple('ab'), tuple('bc')}, {tuple('abc')})
     assert join == {tuple('ab'), tuple('bc')}
-
-
-def test_ngram_is_less_precise():
-    a = {('hello', 'world'), ('who', 'is', 'there')}
-    b = {('hello', 'there')}
-    join = {('hello',), ('there',)}
-
-    ps = NgramPS()
-    assert ps.is_less_precise(set(), a)
-    assert ps.is_less_precise(join, a)
-    assert ps.is_less_precise(join, b)
-    assert not ps.is_less_precise(a, b)
-    assert not ps.is_less_precise(b, a)
 
 
 def test_ngram_iter_bin_attributes():

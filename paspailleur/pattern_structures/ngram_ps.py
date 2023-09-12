@@ -6,8 +6,7 @@ from typing import Iterator, Iterable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 
-#from .abstract_ps import AbstractPS
-from paspailleur.pattern_structures import AbstractPS
+from .abstract_ps import AbstractPS
 
 
 class NgramPS(AbstractPS):
@@ -75,25 +74,34 @@ class NgramPS(AbstractPS):
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
-        b_texts_sizes = [(len(ngram), ' '.join(ngram)) for ngram in
-                         sorted(b, key=lambda ngram: len(ngram), reverse=True)]
+        if a is None:
+            return b is None
+        if (not a) or (b is None):
+            return True
 
         for smaller_tuple in a:
-            smaller_text = ' '.join(smaller_tuple)
-            smaller_size = len(smaller_tuple)
+            small_size = len(smaller_tuple)
+            small_words = set(smaller_tuple)
+            for larger_tuple in b:
+                if not (small_words <= set(larger_tuple)):
+                    continue
 
-            inclusion_found = False
-            for larger_size, larger_text in b_texts_sizes:
-                if smaller_size > larger_size:
+                if small_size == 1:
+                    break  # inclusion found
+
+                inclusion_found = False
+                for i, word_start in enumerate(larger_tuple[:-small_size+1]):
+                    if word_start != smaller_tuple[0]:
+                        continue
+
+                    inclusion_found = all(word_a == word_b for word_a, word_b in zip(smaller_tuple, larger_tuple[i:]))
+                    if inclusion_found:
+                        break
+
+                if inclusion_found:
                     break
-
-                if smaller_text in larger_text:
-                    inclusion_found = True
-                    break
-
-            if not inclusion_found:
+            else:  # no break, i.e. no inclusion found
                 return False
-
         return True
 
     def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
