@@ -78,6 +78,10 @@ def test_ngram_iter_bin_attributes():
                     fbarray('1000'), fbarray('0100'), fbarray('0010'), fbarray('0000')}
     assert set(extents) == extents_true
 
+    subpatterns, extents = zip(*ps.iter_bin_attributes(patterns, min_support=2))
+    assert subpatterns == (set(), ('hello',))
+    assert extents == (fbarray('1111'), fbarray('1100'))
+
 
 def test_ngram_n_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]

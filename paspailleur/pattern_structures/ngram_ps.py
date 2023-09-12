@@ -133,7 +133,7 @@ class NgramPS(AbstractPS):
             return total_pattern
 
         def drop_rare_words(words_exts, min_supp):
-            rare_words = (w for w, ext in words_exts.items() if ext.count() < min_supp)
+            rare_words = [w for w, ext in words_exts.items() if ext.count() < min_supp]
             for rare_word in rare_words:
                 del words_exts[rare_word]
 
