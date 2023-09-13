@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeVar, Iterator
+from typing import TypeVar, Iterator, Iterable
 from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 
@@ -28,10 +28,12 @@ class AbstractPS:
         """Return indices of rows in `data` whose description contains `pattern`"""
         return (i for i, obj_description in enumerate(data) if self.is_less_precise(pattern, obj_description))
 
-    def intent(self, data: list[PatternType]) -> PatternType:
+    def intent(self, data: list[PatternType], indices: Iterable[int] = None) -> PatternType:
         """Return common pattern of all rows in `data`"""
+        iterator = (data[i] for i in indices) if indices is not None else data
+
         intent = None
-        for obj_description in data:
+        for obj_description in iterator:
             if intent is None:
                 intent = obj_description
                 continue
