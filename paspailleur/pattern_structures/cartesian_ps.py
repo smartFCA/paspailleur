@@ -10,7 +10,7 @@ class CartesianPS(AbstractPS):
 
     def __init__(self, basic_structures: list[AbstractPS]):
         self.basic_structures = basic_structures
-        self.bottom = [ps.max_pattern for ps in basic_structures]
+        self.max_pattern = [ps.max_pattern for ps in basic_structures]
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""

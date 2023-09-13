@@ -34,12 +34,8 @@ class AbstractPS:
         """Return common pattern of all rows in `data`"""
         iterator = (data[i] for i in indices) if indices is not None else data
 
-        intent = None
+        intent = self.max_pattern
         for obj_description in iterator:
-            if intent is None:
-                intent = obj_description
-                continue
-
             intent = self.join_patterns(intent, obj_description)
         return intent
 
