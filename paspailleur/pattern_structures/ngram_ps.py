@@ -36,8 +36,12 @@ class NgramPS(AbstractPS):
         as 'hello' is contained both in 'hello world' and 'hello there'
         and 'there' is contained both in 'who is there' and 'hello there'
         """
-        # Transform the set of words into text
+        if a == self.max_pattern:
+            return b
+        if b == self.max_pattern:
+            return a
 
+        # Transform the set of words into text
         common_ngrams = []
         for ngram_a in a:
             words_pos_a = dict()

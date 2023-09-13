@@ -4,8 +4,14 @@ import math
 
 
 def test_intersect_patterns():
+    a = [(1, 2), (3, 5)]
+    b = [(0, 2), (3, 5)]
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.join_patterns([(1, 2), (3, 5)], [(0, 2), (3, 5)]) == [(0, 2), (3, 5)]
+    assert cps.join_patterns(a, b) == b
+    assert cps.join_patterns(b, a) == b
+
+    assert cps.join_patterns(cps.max_pattern, a) == a
+    assert cps.join_patterns(a, cps.max_pattern) == a
 
 
 def test_bin_attributes():

@@ -64,6 +64,9 @@ def test_ngram_join_patterns():
     join = ps.join_patterns({tuple('ab'), tuple('bc')}, {tuple('abc')})
     assert join == {tuple('ab'), tuple('bc')}
 
+    assert ps.join_patterns(ps.max_pattern, a) == a
+    assert ps.join_patterns(a, ps.max_pattern) == a
+
 
 def test_ngram_iter_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]

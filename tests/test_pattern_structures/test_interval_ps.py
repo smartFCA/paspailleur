@@ -2,6 +2,7 @@ from paspailleur.pattern_structures.interval_ps import IntervalPS
 from bitarray import frozenbitarray as fbarray
 import math
 
+
 def test_intersect_patterns():
     ips = IntervalPS()
     assert ips.join_patterns((0, 1), (2, 3)) == (0, 3)
@@ -49,6 +50,9 @@ def test_intent():
 
     ips = IntervalPS()
     assert ips.intent(data) == (0, 3)
+
+    for i, x in enumerate(data):
+        assert ips.intent(data, [i]) == x
 
 
 def test_extent():

@@ -12,6 +12,9 @@ def test_intersect_patterns():
     assert sps.join_patterns({'a', 'b'}, {'a', 'd'}) == {'a'}
     assert sps.join_patterns(set(), {'a'}) == set()
 
+    assert sps.join_patterns(sps.max_pattern, {'a'}) == {'a'}
+    assert sps.join_patterns({'a'}, sps.max_pattern) == {'a'}
+
 
 def test_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
