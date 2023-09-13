@@ -4,8 +4,8 @@ import math
 
 
 def test_intersect_patterns():
-    a = [(1, 2), (3, 5)]
-    b = [(0, 2), (3, 5)]
+    a = ((1, 2), (3, 5))
+    b = ((0, 2), (3, 5))
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
     assert cps.join_patterns(a, b) == b
     assert cps.join_patterns(b, a) == b
@@ -16,8 +16,8 @@ def test_intersect_patterns():
 
 def test_bin_attributes():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
     patterns_true = (
         (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
@@ -48,8 +48,8 @@ def test_is_subpattern():
 
 def test_n_bin_attributes():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
@@ -58,8 +58,8 @@ def test_n_bin_attributes():
 
 def test_binarize():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
     patterns_true = [
         (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
@@ -79,12 +79,12 @@ def test_binarize():
 
 def test_intent():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.intent(data) == [(0, 2), (10, 20)]
+    assert cps.intent(data) == ((0, 2), (10, 20))
 
 
 def test_extent():

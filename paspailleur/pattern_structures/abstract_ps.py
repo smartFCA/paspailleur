@@ -13,7 +13,7 @@ class ProjectionNotFoundError(ValueError):
 
 
 class AbstractPS:
-    PatternType = TypeVar('PatternType')
+    PatternType = TypeVar('PatternType')  # A type that should be hashable and support __eq__ comparison
     max_pattern: PatternType  # Pattern more specific than any other one. Should be of PatternType type, i.e. NOT None
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:

@@ -67,6 +67,8 @@ def test_ngram_join_patterns():
     assert ps.join_patterns(ps.max_pattern, a) == a
     assert ps.join_patterns(a, ps.max_pattern) == a
 
+    assert ps.join_patterns({('a', '_', 'ab', 'c')}, {('a', '__', 'ab', 'c')}) == frozenset({('a',), ('ab', 'c')})
+
 
 def test_ngram_iter_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]

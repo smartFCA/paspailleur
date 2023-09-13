@@ -10,9 +10,8 @@ from .abstract_ps import AbstractPS
 
 
 class NgramPS(AbstractPS):
-    PatternType = set[
-        tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
-    max_pattern: PatternType = {('<MAX_NGRAM>',)}  # the set of the most specific ngrams for the data. Might be huge
+    PatternType = frozenset[tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
+    max_pattern: PatternType = frozenset({('<MAX_NGRAM>',)})  # the set of the most specific ngrams for the data. Might be huge
     min_n: int = 1  # Minimal size of an ngram to consider
 
     def __init__(self, min_n: int = 1):
@@ -26,7 +25,7 @@ class NgramPS(AbstractPS):
 
             ngram = tuple(text.split(separator))
             pattern = {ngram} if len(ngram) >= self.min_n else set()
-            yield pattern
+            yield frozenset(pattern)
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the maximal sub-ngrams contained both in `a` and in `b`
@@ -41,7 +40,7 @@ class NgramPS(AbstractPS):
         if b == self.max_pattern:
             return a
 
-        # Transform the set of words into text
+        # Find common ngrams (not necessarily maximal)
         common_ngrams = []
         for ngram_a in a:
             words_pos_a = dict()
@@ -49,6 +48,10 @@ class NgramPS(AbstractPS):
                 words_pos_a[word] = words_pos_a.get(word, []) + [i]
 
             for ngram_b in b:
+                if ngram_a == ngram_b:
+                    common_ngrams.append(ngram_a)
+                    continue
+
                 for j, word in enumerate(ngram_b):
                     if word not in words_pos_a:
                         continue
@@ -69,12 +72,12 @@ class NgramPS(AbstractPS):
                 break
 
             ngram = common_ngrams[i]
-            ngrams_to_pop = (j for j in reversed(range(i + 1, n_ngrams)) if
-                             self.is_less_precise(common_ngrams[j], ngram))
+            ngrams_to_pop = (j for j in reversed(range(i + 1, n_ngrams))
+                             if self.is_less_precise({common_ngrams[j]}, {ngram}))
             for j in ngrams_to_pop:
                 common_ngrams.pop(j)
 
-        return set(common_ngrams)
+        return frozenset(common_ngrams)
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
