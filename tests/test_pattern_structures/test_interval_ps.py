@@ -1,18 +1,19 @@
 from paspailleur.pattern_structures.interval_ps import IntervalPS
 from bitarray import frozenbitarray as fbarray
-
+import math
 
 def test_intersect_patterns():
     ips = IntervalPS()
     assert ips.join_patterns((0, 1), (2, 3)) == (0, 3)
     assert ips.join_patterns((1.5, 2), (1.1, 1.9)) == (1.1, 2)
 
-    assert ips.join_patterns(None, (2, 3)) == (2, 3)
+    assert ips.join_patterns(ips.max_pattern, (2, 3)) == (2, 3)
+    assert ips.join_patterns((2, 3), ips.max_pattern) == (2, 3)
 
 
 def test_bin_attributes():
     data = [(0, 1), (2, 3), (1.5, 2)]
-    patterns_true = ((0, 3), (1.5, 3), (2, 3), (0, 2), (0, 1), None)
+    patterns_true = ((0, 3), (1.5, 3), (2, 3), (0, 2), (0, 1), (math.inf, -math.inf))
     flags_true = (
         '111',  # (0, 3)
         '011',  # (1.5, 3)
@@ -54,4 +55,4 @@ def test_extent():
     data = [(0, 1), (2, 3), (1.5, 2)]
 
     ips = IntervalPS()
-    assert list(ips.extent((1.5, 3), data)) == [1, 2]
+    assert list(ips.extent(data, (1.5, 3))) == [1, 2]

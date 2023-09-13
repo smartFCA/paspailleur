@@ -12,7 +12,7 @@ from .abstract_ps import AbstractPS
 class NgramPS(AbstractPS):
     PatternType = set[
         tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
-    bottom: PatternType = None  # the most specific ngram for the data. Equals to None for simplicity
+    max_pattern: PatternType = {('<MAX_NGRAM>',)}  # the set of the most specific ngrams for the data. Might be huge
     min_n: int = 1  # Minimal size of an ngram to consider
 
     def __init__(self, min_n: int = 1):
@@ -74,10 +74,10 @@ class NgramPS(AbstractPS):
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
-        if a is None:
-            return b is None
-        if (not a) or (b is None):
+        if b == self.max_pattern:
             return True
+        if a == self.max_pattern:  # and b != max_pattern
+            return False
 
         for smaller_tuple in a:
             small_size = len(smaller_tuple)

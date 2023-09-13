@@ -1,5 +1,6 @@
 from paspailleur.pattern_structures import CartesianPS, IntervalPS
 from bitarray import frozenbitarray as fbarray
+import math
 
 
 def test_intersect_patterns():
@@ -13,8 +14,8 @@ def test_bin_attributes():
         [(1, 2), (10, 20)]
     ]
     patterns_true = (
-        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, None),
-        (1, (10, 20)), (1, None),
+        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
+        (1, (10, 20)), (1, (math.inf, -math.inf)),
     )
     flags_true = (
         '11',  # (0, (0, 2))
@@ -55,8 +56,8 @@ def test_binarize():
         [(1, 2), (10, 20)]
     ]
     patterns_true = [
-        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, None),
-        (1, (10, 20)), (1, None),
+        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
+        (1, (10, 20)), (1, (math.inf, -math.inf)),
     ]
     itemsets_true = [
         '101010',
@@ -87,4 +88,4 @@ def test_extent():
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert list(cps.extent([(1, 2), (10, 20)], data)) == [1]
+    assert list(cps.extent(data, [(1, 2), (10, 20)])) == [1]

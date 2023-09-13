@@ -14,7 +14,7 @@ class ProjectionNotFoundError(ValueError):
 
 class AbstractPS:
     PatternType = TypeVar('PatternType')
-    bottom: PatternType  # Bottom pattern, more specific than any other one
+    max_pattern: PatternType  # Pattern more specific than any other one. Should be of PatternType type, i.e. NOT None
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -24,8 +24,10 @@ class AbstractPS:
         """Return True if pattern `a` is less precise than pattern `b`"""
         return self.join_patterns(a, b) == a
 
-    def extent(self, pattern: PatternType, data: list[PatternType]) -> Iterator[int]:
+    def extent(self, data: list[PatternType], pattern: PatternType = None) -> Iterator[int]:
         """Return indices of rows in `data` whose description contains `pattern`"""
+        if pattern is None:
+            return (i for i in range(len(data)))
         return (i for i, obj_description in enumerate(data) if self.is_less_precise(pattern, obj_description))
 
     def intent(self, data: list[PatternType], indices: Iterable[int] = None) -> PatternType:

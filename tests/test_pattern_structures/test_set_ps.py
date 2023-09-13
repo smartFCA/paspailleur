@@ -85,7 +85,7 @@ def test_extent():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
     sps = SuperSetPS()
-    assert list(sps.extent({'a', 'c'}, data)) == [0, 2]
+    assert list(sps.extent(data, {'a', 'c'})) == [0, 2]
 
     sps = SubSetPS()
-    assert list(sps.extent({'a'}, data)) == [0, 2]
+    assert list(sps.extent(data, {'a'})) == [0, 2]

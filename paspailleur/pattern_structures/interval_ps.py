@@ -1,27 +1,22 @@
 from typing import Iterator, Optional
 from bitarray import frozenbitarray as fbarray
 from .abstract_ps import AbstractPS
+from math import inf
 
 
 class IntervalPS(AbstractPS):
     PatternType = Optional[tuple[float, float]]
-    bottom = None  # Bottom pattern, more specific than any other one
+    max_pattern = (inf, -inf)  # The pattern that always describes no objects
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
-        if a is self.bottom:
-            return b
-        if b is self.bottom:
-            return a
-
         return min(a[0], b[0]), max(a[1], b[1])
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
-        if b is self.bottom:
+        if b == self.max_pattern:
             return True
-
-        if a is self.bottom:
+        if a == self.max_pattern:  # and b != max_pattern
             return False
 
         return a[0] <= b[0] <= b[1] <= a[1]
@@ -57,7 +52,7 @@ class IntervalPS(AbstractPS):
             yield (min_, ub), extent
 
         if min_support == 0:
-            yield None, fbarray([False]*len(data))
+            yield self.max_pattern, fbarray([False]*len(data))
 
     def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
         """Count the number of attributes in the binary representation of `data`"""

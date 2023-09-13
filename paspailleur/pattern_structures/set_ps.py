@@ -20,14 +20,22 @@ class SuperSetPS(AbstractPS):
     Such Pattern Structure can be applied for categorical values in tabular data.
     """
     PatternType = frozenset[T]
-    bottom = frozenset()  # Bottom pattern, more specific than any other one
+    max_pattern = frozenset()  # Bottom pattern, more specific than any other one
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
+        if a == self.max_pattern:
+            return b
+        if b == self.max_pattern:
+            return a
         return a | b
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
+        if b == self.max_pattern:
+            return True
+        if a == self.max_pattern:  # and b != max_pattern
+            return False
         return a & b == b
 
     def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
@@ -74,14 +82,22 @@ class SubSetPS(AbstractPS):
 
     """
     PatternType = frozenset[T]
-    bottom = None
+    max_pattern = frozenset({'<ALL_VALUES>'})  # Maximal pattern that should be more precise than any other pattern
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
+        if b == self.max_pattern:
+            return a
+        if a == self.max_pattern:
+            return b
         return a.intersection(b)
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
+        if b == self.max_pattern:
+            return True
+        if a == self.max_pattern:  # and b != max_pattern
+            return False
         return a.issubset(b)
 
     def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0)\

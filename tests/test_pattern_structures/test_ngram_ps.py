@@ -13,7 +13,7 @@ def test_ngram_init():
     ps = NgramPS()
     assert ps.min_n == 1
 
-    assert ps.bottom is None
+    assert ps.max_pattern == {('<MAX_NGRAM>',)}
 
     ps = NgramPS(10)
     assert ps.min_n == 10
