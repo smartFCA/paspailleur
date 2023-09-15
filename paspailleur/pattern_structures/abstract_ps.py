@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import TypeVar, Iterator
+from typing import TypeVar, Iterator, Iterable
 from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
+from tqdm.autonotebook import tqdm
 
 
 @dataclass
@@ -13,8 +14,8 @@ class ProjectionNotFoundError(ValueError):
 
 
 class AbstractPS:
-    PatternType = TypeVar('PatternType')
-    bottom: PatternType  # Bottom pattern, more specific than any other one
+    PatternType = TypeVar('PatternType')  # A type that should be hashable and support __eq__ comparison
+    max_pattern: PatternType  # Pattern more specific than any other one. Should be of PatternType type, i.e. NOT None
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -24,22 +25,22 @@ class AbstractPS:
         """Return True if pattern `a` is less precise than pattern `b`"""
         return self.join_patterns(a, b) == a
 
-    def extent(self, pattern: PatternType, data: list[PatternType]) -> Iterator[int]:
+    def extent(self, data: list[PatternType], pattern: PatternType = None) -> Iterator[int]:
         """Return indices of rows in `data` whose description contains `pattern`"""
+        if pattern is None:
+            return (i for i in range(len(data)))
         return (i for i, obj_description in enumerate(data) if self.is_less_precise(pattern, obj_description))
 
-    def intent(self, data: list[PatternType]) -> PatternType:
+    def intent(self, data: list[PatternType], indices: Iterable[int] = None) -> PatternType:
         """Return common pattern of all rows in `data`"""
-        intent = None
-        for obj_description in data:
-            if intent is None:
-                intent = obj_description
-                continue
+        iterator = (data[i] for i in indices) if indices is not None else data
 
+        intent = self.max_pattern
+        for obj_description in iterator:
             intent = self.join_patterns(intent, obj_description)
         return intent
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -52,11 +53,14 @@ class AbstractPS:
         """
         raise NotImplementedError
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        return sum(1 for _ in self.iter_bin_attributes(data, min_support))
+        iterator = self.iter_bin_attributes(data, min_support)
+        if use_tqdm:
+            iterator = tqdm(iterator, desc='Counting patterns')
+        return sum(1 for _ in iterator)
 
-    def binarize(self, data: list[PatternType], min_support: int = 0) -> tuple[list[PatternType], list[fbarray]]:
+    def binarize(self, data: list[PatternType], min_support: int | float = 0) -> tuple[list[PatternType], list[fbarray]]:
         """Binarize the data into Formal Context
 
         :parameter

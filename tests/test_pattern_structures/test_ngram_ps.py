@@ -13,7 +13,7 @@ def test_ngram_init():
     ps = NgramPS()
     assert ps.min_n == 1
 
-    assert ps.bottom is None
+    assert ps.max_pattern == {('<MAX_NGRAM>',)}
 
     ps = NgramPS(10)
     assert ps.min_n == 10
@@ -63,6 +63,11 @@ def test_ngram_join_patterns():
 
     join = ps.join_patterns({tuple('ab'), tuple('bc')}, {tuple('abc')})
     assert join == {tuple('ab'), tuple('bc')}
+
+    assert ps.join_patterns(ps.max_pattern, a) == a
+    assert ps.join_patterns(a, ps.max_pattern) == a
+
+    assert ps.join_patterns({('a', '_', 'ab', 'c')}, {('a', '__', 'ab', 'c')}) == frozenset({('a',), ('ab', 'c')})
 
 
 def test_ngram_iter_bin_attributes():

@@ -1,6 +1,7 @@
 from collections import deque
 from functools import reduce
-from typing import Iterator, Optional, TypeVar
+from math import ceil
+from typing import Iterator, TypeVar
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from .abstract_ps import AbstractPS
@@ -20,17 +21,25 @@ class SuperSetPS(AbstractPS):
     Such Pattern Structure can be applied for categorical values in tabular data.
     """
     PatternType = frozenset[T]
-    bottom = frozenset()  # Bottom pattern, more specific than any other one
+    max_pattern = frozenset()  # Bottom pattern, more specific than any other one
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
+        if a == self.max_pattern:
+            return b
+        if b == self.max_pattern:
+            return a
         return a | b
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
+        if b == self.max_pattern:
+            return True
+        if a == self.max_pattern:  # and b != max_pattern
+            return False
         return a & b == b
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float= 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -41,6 +50,8 @@ class SuperSetPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+
         unique_values = set()
         for data_row in data:
             unique_values |= data_row
@@ -55,7 +66,7 @@ class SuperSetPS(AbstractPS):
                     continue
                 yield pattern, extent
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
             unique_values = set()
@@ -74,17 +85,25 @@ class SubSetPS(AbstractPS):
 
     """
     PatternType = frozenset[T]
-    bottom = None
+    max_pattern = frozenset({'<ALL_VALUES>'})  # Maximal pattern that should be more precise than any other pattern
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
+        if b == self.max_pattern:
+            return a
+        if a == self.max_pattern:
+            return b
         return a.intersection(b)
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
+        if b == self.max_pattern:
+            return True
+        if a == self.max_pattern:  # and b != max_pattern
+            return False
         return a.issubset(b)
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0)\
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -96,6 +115,8 @@ class SubSetPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+
         empty_extent = bazeros(len(data))
         vals_extents: dict[T, bitarray] = {}
         for i, pattern in enumerate(data):
@@ -107,7 +128,7 @@ class SubSetPS(AbstractPS):
         total_pattern = {v for v, extent in vals_extents.items() if extent.all()}
         yield frozenset(total_pattern), fbarray(~empty_extent)
 
-        vals_to_pop = (v for v, extent in vals_extents.items() if extent.count() < min_support or extent.all())
+        vals_to_pop = [v for v, extent in vals_extents.items() if extent.count() < min_support or extent.all()]
         for v in vals_to_pop:
             del vals_extents[v]
 

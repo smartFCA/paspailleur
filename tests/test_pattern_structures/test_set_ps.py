@@ -12,6 +12,9 @@ def test_intersect_patterns():
     assert sps.join_patterns({'a', 'b'}, {'a', 'd'}) == {'a'}
     assert sps.join_patterns(set(), {'a'}) == set()
 
+    assert sps.join_patterns(sps.max_pattern, {'a'}) == {'a'}
+    assert sps.join_patterns({'a'}, sps.max_pattern) == {'a'}
+
 
 def test_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
@@ -33,6 +36,12 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
     # SubsetPS
     patterns_true = (set(), {'a'}, {'b'}, {'c'}, {'a', 'b', 'c'})
     flags_true = (
@@ -49,6 +58,11 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
 def test_is_subpattern():
     sps = SuperSetPS()
@@ -85,7 +99,7 @@ def test_extent():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
     sps = SuperSetPS()
-    assert list(sps.extent({'a', 'c'}, data)) == [0, 2]
+    assert list(sps.extent(data, {'a', 'c'})) == [0, 2]
 
     sps = SubSetPS()
-    assert list(sps.extent({'a'}, data)) == [0, 2]
+    assert list(sps.extent(data, {'a'})) == [0, 2]

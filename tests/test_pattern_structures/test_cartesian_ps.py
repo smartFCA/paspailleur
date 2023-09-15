@@ -1,20 +1,27 @@
 from paspailleur.pattern_structures import CartesianPS, IntervalPS
 from bitarray import frozenbitarray as fbarray
+import math
 
 
 def test_intersect_patterns():
+    a = ((1, 2), (3, 5))
+    b = ((0, 2), (3, 5))
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.join_patterns([(1, 2), (3, 5)], [(0, 2), (3, 5)]) == [(0, 2), (3, 5)]
+    assert cps.join_patterns(a, b) == b
+    assert cps.join_patterns(b, a) == b
+
+    assert cps.join_patterns(cps.max_pattern, a) == a
+    assert cps.join_patterns(a, cps.max_pattern) == a
 
 
 def test_bin_attributes():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
     patterns_true = (
-        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, None),
-        (1, (10, 20)), (1, None),
+        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
+        (1, (10, 20)), (1, (math.inf, -math.inf)),
     )
     flags_true = (
         '11',  # (0, (0, 2))
@@ -31,6 +38,12 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
+
+    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=1))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
+
 
 def test_is_subpattern():
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
@@ -41,8 +54,8 @@ def test_is_subpattern():
 
 def test_n_bin_attributes():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
@@ -51,12 +64,12 @@ def test_n_bin_attributes():
 
 def test_binarize():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
     patterns_true = [
-        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, None),
-        (1, (10, 20)), (1, None),
+        (0, (0, 2)), (0, (1, 2)), (0, (0, 1)), (0, (math.inf, -math.inf)),
+        (1, (10, 20)), (1, (math.inf, -math.inf)),
     ]
     itemsets_true = [
         '101010',
@@ -72,12 +85,12 @@ def test_binarize():
 
 def test_intent():
     data = [
-        [(0, 1), (10, 20)],
-        [(1, 2), (10, 20)]
+        ((0, 1), (10, 20)),
+        ((1, 2), (10, 20))
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.intent(data) == [(0, 2), (10, 20)]
+    assert cps.intent(data) == ((0, 2), (10, 20))
 
 
 def test_extent():
@@ -87,4 +100,4 @@ def test_extent():
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert list(cps.extent([(1, 2), (10, 20)], data)) == [1]
+    assert list(cps.extent(data, [(1, 2), (10, 20)])) == [1]
