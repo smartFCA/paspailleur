@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import TypeVar, Iterator, Iterable
 from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
+from tqdm.autonotebook import tqdm
 
 
 @dataclass
@@ -39,7 +40,7 @@ class AbstractPS:
             intent = self.join_patterns(intent, obj_description)
         return intent
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -52,11 +53,14 @@ class AbstractPS:
         """
         raise NotImplementedError
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
         """Count the number of attributes in the binary representation of `data`"""
-        return sum(1 for _ in self.iter_bin_attributes(data, min_support))
+        iterator = self.iter_bin_attributes(data, min_support)
+        if use_tqdm:
+            iterator = tqdm(iterator, desc='Counting patterns')
+        return sum(1 for _ in iterator)
 
-    def binarize(self, data: list[PatternType], min_support: int = 0) -> tuple[list[PatternType], list[fbarray]]:
+    def binarize(self, data: list[PatternType], min_support: int | float = 0) -> tuple[list[PatternType], list[fbarray]]:
         """Binarize the data into Formal Context
 
         :parameter

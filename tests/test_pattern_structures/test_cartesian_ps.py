@@ -38,6 +38,12 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
+
+    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=1))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
+
 
 def test_is_subpattern():
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])

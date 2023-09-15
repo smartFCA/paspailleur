@@ -36,6 +36,12 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
     # SubsetPS
     patterns_true = (set(), {'a'}, {'b'}, {'c'}, {'a', 'b', 'c'})
     flags_true = (
@@ -52,6 +58,11 @@ def test_bin_attributes():
     assert patterns == patterns_true
     assert flags == flags_true
 
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
+    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
 def test_is_subpattern():
     sps = SuperSetPS()

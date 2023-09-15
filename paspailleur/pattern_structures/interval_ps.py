@@ -1,7 +1,7 @@
 from typing import Iterator, Optional
 from bitarray import frozenbitarray as fbarray
 from .abstract_ps import AbstractPS
-from math import inf
+from math import inf, ceil
 
 
 class IntervalPS(AbstractPS):
@@ -21,7 +21,7 @@ class IntervalPS(AbstractPS):
 
         return a[0] <= b[0] <= b[1] <= a[1]
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -32,6 +32,8 @@ class IntervalPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+
         lower_bounds, upper_bounds = [sorted(set(bounds)) for bounds in zip(*data)]
         min_, max_ = lower_bounds[0], upper_bounds[-1]
         lower_bounds.pop(0)
@@ -54,7 +56,7 @@ class IntervalPS(AbstractPS):
         if min_support == 0:
             yield self.max_pattern, fbarray([False]*len(data))
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
             return len({lb for lb, ub in data}) + len({ub for ub in data})

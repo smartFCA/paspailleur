@@ -1,6 +1,5 @@
-import difflib
-from functools import reduce
 from itertools import product
+from math import ceil
 from typing import Iterator, Iterable
 
 from bitarray import frozenbitarray as fbarray, bitarray
@@ -111,7 +110,7 @@ class NgramPS(AbstractPS):
                 return False
         return True
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -122,6 +121,8 @@ class NgramPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+
         def compute_words_extents(ptrns):
             n_patterns = len(ptrns)
             words_extents: dict[str, bitarray] = {}
@@ -132,12 +133,6 @@ class NgramPS(AbstractPS):
                         words_extents[word] = bazeros(n_patterns)
                     words_extents[word][i] = True
             return words_extents
-
-        def compute_total_pattern(words_exts, ptrns):
-            total_pattern = set()
-            if any(ext.all() for ext in words_exts.values()):
-                total_pattern = reduce(self.join_patterns, ptrns[1:], ptrns[0])
-            return total_pattern
 
         def drop_rare_words(words_exts, min_supp):
             rare_words = [w for w, ext in words_exts.items() if ext.count() < min_supp]
@@ -180,9 +175,9 @@ class NgramPS(AbstractPS):
                 return ext
             return None
 
-        words_extents = compute_words_extents(data)
-        yield compute_total_pattern(words_extents, data), fbarray(~bazeros(len(data)))
+        yield frozenset(), fbarray(~bazeros(len(data)))
 
+        words_extents = compute_words_extents(data)
         drop_rare_words(words_extents, min_support)
         words, extents = zip(*words_extents.items())
         n_words = len(words)
