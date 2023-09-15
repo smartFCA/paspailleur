@@ -57,7 +57,7 @@ class NgramPS(AbstractPS):
                     # word in words_a
                     for i in words_pos_a[word]:
                         ngram_size = next(
-                            s for s in range(len(ngram_b))
+                            s for s in range(len(ngram_b)+1)
                             if i+s >= len(ngram_a) or j+s >= len(ngram_b) or ngram_a[i+s] != ngram_b[j+s]
                         )
                         if ngram_size >= self.min_n:
