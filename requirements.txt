@@ -4,7 +4,7 @@
 #
 #    pip-compile pyproject.toml
 #
-bitarray>=2.7.5
+bitarray==2.8.2
     # via
     #   caspailleur
     #   paspailleur (pyproject.toml)
@@ -14,7 +14,7 @@ contourpy==1.1.0
     # via matplotlib
 cycler==0.11.0
     # via matplotlib
-dataclasses>=0.6
+dataclasses==0.6
     # via scikit-mine
 fonttools==4.40.0
     # via matplotlib
@@ -42,7 +42,7 @@ packaging==23.1
     # via matplotlib
 pandas==2.0.2
     # via scikit-mine
-pillow==9.5.0
+pillow==10.0.1
     # via matplotlib
 pydot==1.4.2
     # via scikit-mine
@@ -80,6 +80,3 @@ tzdata==2023.3
     # via pandas
 wget==3.2
     # via scikit-mine
-
-paspailleur>=0.0.1
-nltk>=3.8.1
