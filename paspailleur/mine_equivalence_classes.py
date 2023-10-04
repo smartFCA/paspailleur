@@ -1,9 +1,8 @@
 from .pattern_structures import AbstractPS
-from bitarray import frozenbitarray as fbarray
 from bitarray import bitarray
 
 
-def list_intents_via_Lindig_complex(data: List, pattern_structure: AbstractPS) -> list['PatternDescription']:
+def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -> list['PatternDescription']:
     """Get the list of intents of pattern concepts from `data` described by `pattern_structure` running Lindig algorithm
     from "Fast Concept Analysis" by Christian Lindig, Harvard University, Division of Engineering and Applied Sciences
 
@@ -23,7 +22,7 @@ def list_intents_via_Lindig_complex(data: List, pattern_structure: AbstractPS) -
     class NotFound(Exception):
         pass
 
-    def compute_bits_intersection(bits: List[bitarray], len_bitarray):
+    def compute_bits_intersection(bits: list[bitarray], len_bitarray):
         if bits == []:
             return(bitarray([1 for _ in range(len_bitarray)]))
         bit = bits[0]
@@ -31,7 +30,7 @@ def list_intents_via_Lindig_complex(data: List, pattern_structure: AbstractPS) -
             bit = bit & obj
         return(bit)
 
-    def find_upper_neighbors(data: List, concept_extent: List, objects_indices: List):
+    def find_upper_neighbors(data: list, concept_extent: list, objects_indices: list):
         min_set = [obj for obj in objects_indices if obj not in concept_extent]
         concept_extent_values = [data[i] for i in concept_extent]
         neighbors = []
@@ -45,7 +44,7 @@ def list_intents_via_Lindig_complex(data: List, pattern_structure: AbstractPS) -
                 min_set.remove(g)
         return neighbors
 
-    def find_next_concept_extent(data: List, concept_extent: List, List_extents: List):
+    def find_next_concept_extent(data: list, concept_extent: list, List_extents: list):
         bin_col_names, rows = ps.binarize(data)
         next_concept_extent = None
         concept_extent_bit = compute_bits_intersection([rows[i] for i in concept_extent], len(rows[0]))
