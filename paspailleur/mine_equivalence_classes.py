@@ -18,7 +18,6 @@ def list_intents_via_Lindig_complex(data: List, pattern_structure: AbstractPS) -
     -------
     Lattice_data_intents:
         list of intents of pattern concepts
-
     """
 
     class NotFound(Exception):
