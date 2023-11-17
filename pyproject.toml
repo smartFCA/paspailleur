@@ -6,8 +6,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paspailleur"
-version = "0.0.2"
-description = "Minimalistic python package for concise representations of complex data. Part of SmartFCA project"
+version = "0.0.3"
+description = "Pattern Structures miner in Python. An add-on for Caspailleur package. Part of SmartFCA project"
 readme = "README.md"
 authors = [{ name = "Egor Dudyrev" }]
 license = { file = "LICENSE" }

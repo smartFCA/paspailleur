@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import Iterator, Union, Iterable, Any, Sequence
 from bitarray import frozenbitarray as fbarray
 from .abstract_ps import AbstractPS
 
@@ -22,7 +22,8 @@ class CartesianPS(AbstractPS):
         """Return True if pattern `a` is less precise than pattern `b`"""
         return all(ps.is_less_precise(a_, b_) for ps, a_, b_ in zip(self.basic_structures, a, b))
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
@@ -38,7 +39,8 @@ class CartesianPS(AbstractPS):
             for pattern, flag in ps.iter_bin_attributes(ps_data, min_support):
                 yield (i, pattern), flag
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+            -> int:
         """Count the number of attributes in the binary representation of `data`"""
         n_bin_attrs = 0
         iterator = enumerate(self.basic_structures)
@@ -48,3 +50,8 @@ class CartesianPS(AbstractPS):
             ps_data = [data_row[i] for data_row in data]
             n_bin_attrs += ps.n_bin_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
         return n_bin_attrs
+
+    def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])

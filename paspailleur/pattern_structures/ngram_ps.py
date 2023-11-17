@@ -1,6 +1,6 @@
 from itertools import product
 from math import ceil
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Union
 
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
@@ -22,8 +22,11 @@ class NgramPS(AbstractPS):
                 yield set()
                 continue
 
-            ngram = tuple(text.split(separator))
-            pattern = {ngram} if len(ngram) >= self.min_n else set()
+            if isinstance(text, str):
+                pattern = {tuple(text.split(separator))}
+            else:
+                pattern = text
+            pattern = {tuple(ngram) for ngram in pattern if len(ngram) >= self.min_n}
             yield frozenset(pattern)
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -110,7 +113,8 @@ class NgramPS(AbstractPS):
                 return False
         return True
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter

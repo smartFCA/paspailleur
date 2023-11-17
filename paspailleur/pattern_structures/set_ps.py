@@ -1,7 +1,8 @@
 from collections import deque
 from functools import reduce
 from math import ceil
-from typing import Iterator, TypeVar
+from numbers import Number
+from typing import Iterator, TypeVar, Union, Iterable, Container, Any, Hashable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from .abstract_ps import AbstractPS
@@ -39,13 +40,14 @@ class SuperSetPS(AbstractPS):
             return False
         return a & b == b
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float= 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float]= 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
-            min_support: int
+            min_support: int or float
              minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
@@ -66,7 +68,8 @@ class SuperSetPS(AbstractPS):
                     continue
                 yield pattern, extent
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+            -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
             unique_values = set()
@@ -74,6 +77,19 @@ class SuperSetPS(AbstractPS):
                 unique_values |= data_row
             return 2**len(unique_values)
         return super().n_bin_attributes(data, min_support)
+
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            if isinstance(description, (Number, str)):
+                description = {description}
+            if isinstance(description, Container):
+                description = frozenset(description)
+            else:
+                raise ValueError(f'Cannot preprocess this description: {description}. '
+                                 f'Provide either a number or a string or a container of hashable values.')
+
+            yield description
 
 
 class SubSetPS(AbstractPS):
@@ -103,7 +119,7 @@ class SubSetPS(AbstractPS):
             return False
         return a.issubset(b)
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0)\
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -155,3 +171,16 @@ class SubSetPS(AbstractPS):
             bottom_extent = reduce(lambda a, b: a & b, vals_extents.values(), ~empty_extent)
             if not bottom_extent.any():
                 yield frozenset(vals_extents), fbarray(bottom_extent)
+
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            if isinstance(description, (Number, str)):
+                description = {description}
+            if isinstance(description, Container):
+                description = frozenset(description)
+            else:
+                raise ValueError(f'Cannot preprocess this description: {description}. '
+                                 f'Provide either a number or a string or a container of hashable values.')
+
+            yield description

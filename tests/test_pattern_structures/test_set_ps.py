@@ -103,3 +103,13 @@ def test_extent():
 
     sps = SubSetPS()
     assert list(sps.extent(data, {'a'})) == [0, 2]
+
+
+def test_preprocess_data():
+    data = [{'a'},  1, [3, 'x']]
+
+    sps = SuperSetPS()
+    assert list(sps.preprocess_data(data)) == [frozenset({'a'}), frozenset({1}), frozenset({3, 'x'})]
+
+    sps = SubSetPS()
+    assert list(sps.preprocess_data(data)) == [frozenset({'a'}), frozenset({1}), frozenset({3, 'x'})]

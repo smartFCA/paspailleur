@@ -1,4 +1,4 @@
-from paspailleur.pattern_structures import CartesianPS, IntervalPS
+from paspailleur.pattern_structures import CartesianPS, IntervalPS, SuperSetPS, NgramPS
 from bitarray import frozenbitarray as fbarray
 import math
 
@@ -101,3 +101,16 @@ def test_extent():
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
     assert list(cps.extent(data, [(1, 2), (10, 20)])) == [1]
+
+
+def test_preprocess_data():
+    data = [
+        [(0, 1), 'x', 'hello world'],
+        [(0, 3), 'y', 'hello']
+    ]
+
+    cps = CartesianPS(basic_structures=[IntervalPS(), SuperSetPS(), NgramPS()])
+    assert list(cps.preprocess_data(data)) == [
+        ((0., 1.), frozenset({'x'}), frozenset({('hello', 'world')})),
+        ((0., 3.), frozenset({'y'}), frozenset({('hello',)}))
+    ]
