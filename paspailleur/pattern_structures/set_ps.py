@@ -1,7 +1,7 @@
 from collections import deque
 from functools import reduce
 from math import ceil
-from typing import Iterator, TypeVar
+from typing import Iterator, TypeVar, Union
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from .abstract_ps import AbstractPS
@@ -39,13 +39,14 @@ class SuperSetPS(AbstractPS):
             return False
         return a & b == b
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float= 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float]= 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
-            min_support: int
+            min_support: int or float
              minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
@@ -66,7 +67,8 @@ class SuperSetPS(AbstractPS):
                     continue
                 yield pattern, extent
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+            -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
             unique_values = set()
@@ -103,7 +105,7 @@ class SubSetPS(AbstractPS):
             return False
         return a.issubset(b)
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0)\
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 

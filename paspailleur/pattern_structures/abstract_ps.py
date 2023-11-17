@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypeVar, Iterator, Iterable
+from typing import TypeVar, Iterator, Iterable, Union
 from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 from tqdm.autonotebook import tqdm
@@ -40,33 +40,36 @@ class AbstractPS:
             intent = self.join_patterns(intent, obj_description)
         return intent
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
             data: list[PatternType]
              list of object descriptions
-            min_support: int
+            min_support: int or float
              minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
         raise NotImplementedError
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: int | float = 0, use_tqdm: bool = False) -> int:
+    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+            -> int:
         """Count the number of attributes in the binary representation of `data`"""
         iterator = self.iter_bin_attributes(data, min_support)
         if use_tqdm:
             iterator = tqdm(iterator, desc='Counting patterns')
         return sum(1 for _ in iterator)
 
-    def binarize(self, data: list[PatternType], min_support: int | float = 0) -> tuple[list[PatternType], list[fbarray]]:
+    def binarize(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+            -> tuple[list[PatternType], list[fbarray]]:
         """Binarize the data into Formal Context
 
         :parameter
             data: list[PatternType]
                 List of row descriptions
-            min_support: int
+            min_support: int or float
                 minimal amount of objects an attribute should describe (in natural numbers, not per cents)
         :return
             patterns: list[PatternType]

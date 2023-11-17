@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Optional
 
 from .set_ps import SubSetPS
 
@@ -35,7 +35,7 @@ class SynonymPS(SubSetPS):
 
 class AntonymPS(SubSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of antonyms to words in the text
-    n_antonyms: int | None = 1  # number of antonyms for a word
+    n_antonyms: Optional[int] = 1  # number of antonyms for a word
     max_pattern = frozenset({'<MAX_ANTONYM'})  # Maximal pattern that should be more precise than any other pattern
     
     def __init__(self, n_antonyms: int = 1):

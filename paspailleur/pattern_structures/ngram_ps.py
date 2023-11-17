@@ -1,6 +1,6 @@
 from itertools import product
 from math import ceil
-from typing import Iterator, Iterable
+from typing import Iterator, Iterable, Union
 
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
@@ -110,7 +110,8 @@ class NgramPS(AbstractPS):
                 return False
         return True
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: int | float = 0) -> Iterator[tuple[PatternType, fbarray]]:
+    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+            -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
         :parameter
