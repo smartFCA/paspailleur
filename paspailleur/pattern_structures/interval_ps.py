@@ -1,4 +1,5 @@
-from typing import Iterator, Optional, Union
+from numbers import Number
+from typing import Iterator, Optional, Union, Iterable, Sequence
 from bitarray import frozenbitarray as fbarray
 from .abstract_ps import AbstractPS
 from math import inf, ceil
@@ -63,3 +64,26 @@ class IntervalPS(AbstractPS):
         if min_support == 0:
             return len({lb for lb, ub in data}) + len({ub for ub in data})
         return super().n_bin_attributes(data, min_support)
+
+    def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            if isinstance(description, Number):
+                description = (description, description)
+            if isinstance(description, range):
+                start, stop = description.start, description.stop
+                if start < stop:
+                    description = (start, stop-1)
+                elif stop < start:
+                    description = (stop+1, start)
+                else:  # if start == stop, then there is not closed interval inside [start, stop) == [start, start)
+                    description = (inf, -inf)
+
+            if isinstance(description, Sequence)\
+                    and len(description) == 2 and all(isinstance(x, Number) for x in description):
+                description = (float(description[0]), float(description[1]))
+            else:
+                raise ValueError(f'Cannot preprocess this description: {description}. '
+                                 f'Provide either a number or a sequence of two numbers.')
+
+            yield description

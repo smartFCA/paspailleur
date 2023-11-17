@@ -1,4 +1,4 @@
-from typing import Iterator, Union
+from typing import Iterator, Union, Iterable, Any, Sequence
 from bitarray import frozenbitarray as fbarray
 from .abstract_ps import AbstractPS
 
@@ -50,3 +50,8 @@ class CartesianPS(AbstractPS):
             ps_data = [data_row[i] for data_row in data]
             n_bin_attrs += ps.n_bin_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
         return n_bin_attrs
+
+    def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])

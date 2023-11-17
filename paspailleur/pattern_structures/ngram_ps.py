@@ -22,8 +22,11 @@ class NgramPS(AbstractPS):
                 yield set()
                 continue
 
-            ngram = tuple(text.split(separator))
-            pattern = {ngram} if len(ngram) >= self.min_n else set()
+            if isinstance(text, str):
+                pattern = {tuple(text.split(separator))}
+            else:
+                pattern = text
+            pattern = {tuple(ngram) for ngram in pattern if len(ngram) >= self.min_n}
             yield frozenset(pattern)
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:

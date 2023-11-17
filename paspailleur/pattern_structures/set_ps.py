@@ -1,7 +1,8 @@
 from collections import deque
 from functools import reduce
 from math import ceil
-from typing import Iterator, TypeVar, Union
+from numbers import Number
+from typing import Iterator, TypeVar, Union, Iterable, Container, Any, Hashable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from .abstract_ps import AbstractPS
@@ -76,6 +77,19 @@ class SuperSetPS(AbstractPS):
                 unique_values |= data_row
             return 2**len(unique_values)
         return super().n_bin_attributes(data, min_support)
+
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            if isinstance(description, (Number, str)):
+                description = {description}
+            if isinstance(description, Container):
+                description = frozenset(description)
+            else:
+                raise ValueError(f'Cannot preprocess this description: {description}. '
+                                 f'Provide either a number or a string or a container of hashable values.')
+
+            yield description
 
 
 class SubSetPS(AbstractPS):
@@ -157,3 +171,16 @@ class SubSetPS(AbstractPS):
             bottom_extent = reduce(lambda a, b: a & b, vals_extents.values(), ~empty_extent)
             if not bottom_extent.any():
                 yield frozenset(vals_extents), fbarray(bottom_extent)
+
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            if isinstance(description, (Number, str)):
+                description = {description}
+            if isinstance(description, Container):
+                description = frozenset(description)
+            else:
+                raise ValueError(f'Cannot preprocess this description: {description}. '
+                                 f'Provide either a number or a string or a container of hashable values.')
+
+            yield description

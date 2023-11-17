@@ -87,3 +87,8 @@ class AbstractPS:
                 itemsets_ba[i][j] = True
         itemsets_ba = [fbarray(ba) for ba in itemsets_ba]
         return list(patterns), itemsets_ba
+
+    def preprocess_data(self, data: Iterable) -> Iterator[PatternType]:
+        """Preprocess the data into to the format, supported by intent/extent functions"""
+        for description in data:
+            yield description

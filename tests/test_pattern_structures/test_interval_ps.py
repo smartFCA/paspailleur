@@ -1,3 +1,5 @@
+import pytest
+
 from paspailleur.pattern_structures.interval_ps import IntervalPS
 from bitarray import frozenbitarray as fbarray
 import math
@@ -60,3 +62,13 @@ def test_extent():
 
     ips = IntervalPS()
     assert list(ips.extent(data, (1.5, 3))) == [1, 2]
+
+
+def test_preprocess_data():
+    data = [(0, 1), [1, 2], range(5), 10.2, 1]
+
+    ips = IntervalPS()
+    assert list(ips.preprocess_data(data)) == [(0., 1.), (1., 2.), (0., 4.), (10.2, 10.2), (1., 1.)]
+
+    with pytest.raises(ValueError):
+        next(ips.preprocess_data(['x']))
