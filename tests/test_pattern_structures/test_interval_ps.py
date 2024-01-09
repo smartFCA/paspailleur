@@ -72,3 +72,12 @@ def test_preprocess_data():
 
     with pytest.raises(ValueError):
         next(ips.preprocess_data(['x']))
+
+
+def test_verbalize():
+    ips = IntervalPS()
+    assert ips.verbalize([1, 2]) == "[1.00, 2.00]"
+    assert ips.verbalize([0.2, 0.7], number_format='.0%') == '[20%, 70%]'
+    assert ips.verbalize([0.1, math.inf]) == '>= 0.10'
+    assert ips.verbalize([-math.inf, 0.265]) == '<= 0.27'
+    assert ips.verbalize([math.inf, -math.inf]) == '∅'

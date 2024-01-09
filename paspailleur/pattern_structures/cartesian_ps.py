@@ -56,11 +56,18 @@ class CartesianPS(AbstractPS):
         for description in data:
             yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])
 
-    def verbalize(self, description: PatternType, separator=', ', pattern_names: list[str] = None) -> str:
+    def verbalize(
+        self, description: PatternType,
+        separator=', ', pattern_names: list[str] = None,
+        basic_structures_params: dict[int, dict[str, Any]] = None
+    ) -> str:
         """Convert `description` into human-readable string"""
         if pattern_names is None:
             pattern_names = [f"{i}" for i in range(len(self.basic_structures))]
 
-        basic_strs = [f"{pattern_names[i]}: {bps.vervalize(v)}"
+        if basic_structures_params is None:
+            basic_structures_params = dict()
+
+        basic_strs = [f"{pattern_names[i]}: {bps.verbalize(v, **basic_structures_params.get(i, {}))}"
                       for i, (v, bps) in enumerate(zip(description, self.basic_structures))]
         return separator.join(basic_strs)

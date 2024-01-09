@@ -91,9 +91,15 @@ class SuperSetPS(AbstractPS):
 
             yield description
 
-    def verbalize(self, description: PatternType, separator: str = ', ') -> str:
+    def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:
         """Convert `description` into human-readable string"""
-        return separator.join([f"{v}" for v in description])
+        if not description and not add_curly_braces:
+            return '∅'
+
+        description_verb = separator.join([f"{v}" for v in sorted(description)])
+        if add_curly_braces:
+            description_verb = '{' + description_verb + '}'
+        return description_verb
 
 
 class SubSetPS(AbstractPS):
@@ -189,6 +195,12 @@ class SubSetPS(AbstractPS):
 
             yield description
 
-    def verbalize(self, description: PatternType, separator: str = ', ') -> str:
+    def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:
         """Convert `description` into human-readable string"""
-        return separator.join([f"{v}" for v in description])
+        if not description and not add_curly_braces:
+            return '∅'
+
+        description_verb = separator.join([f"{v}" for v in sorted(description)])
+        if add_curly_braces:
+            description_verb = '{' + description_verb + '}'
+        return description_verb

@@ -113,3 +113,17 @@ def test_preprocess_data():
 
     sps = SubSetPS()
     assert list(sps.preprocess_data(data)) == [frozenset({'a'}), frozenset({1}), frozenset({3, 'x'})]
+
+
+def test_verbalize():
+    sps = SubSetPS()
+    assert sps.verbalize({'a', 'b', 'c'}) == 'a, b, c'
+    assert sps.verbalize({'a', 'bcde', 'f'}, add_curly_braces=True) == '{a, bcde, f}'
+    assert sps.verbalize(set()) == '∅'
+    assert sps.verbalize(set(), add_curly_braces=True) == '{}'
+
+    sps = SuperSetPS()
+    assert sps.verbalize({'a', 'b', 'c'}) == 'a, b, c'
+    assert sps.verbalize({'a', 'bcde', 'f'}, add_curly_braces=True) == '{a, bcde, f}'
+    assert sps.verbalize(set()) == '∅'
+    assert sps.verbalize(set(), add_curly_braces=True) == '{}'

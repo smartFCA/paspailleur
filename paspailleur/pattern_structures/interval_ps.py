@@ -90,6 +90,8 @@ class IntervalPS(AbstractPS):
 
     def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
         """Convert `description` into human-readable string"""
+        if tuple(description) == self.max_pattern:
+            return '∅'
         if description == (-inf, inf):
             return '[-∞, ∞]'
         if description[0] == -inf:

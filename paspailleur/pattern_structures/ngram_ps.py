@@ -221,4 +221,6 @@ class NgramPS(AbstractPS):
 
     def verbalize(self, description: PatternType, ngram_separator: str = '; ') -> str:
         """Convert `description` into human-readable string"""
-        return ngram_separator.join([' '.join(ngram) for ngram in description])
+        if not description:
+            return '∅'
+        return ngram_separator.join([' '.join(ngram) for ngram in sorted(description, key=lambda ngram: -len(ngram))])

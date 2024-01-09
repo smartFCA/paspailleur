@@ -95,3 +95,10 @@ def test_ngram_n_bin_attributes():
     ps = NgramPS()
     bin_attrs = list(ps.iter_bin_attributes(patterns))
     assert ps.n_bin_attributes(patterns) == len(bin_attrs)
+
+
+def test_verbalize():
+    ps = NgramPS()
+    assert ps.verbalize({('hello', 'world'), ('hi',)}) == 'hello world; hi'
+    assert ps.verbalize({('hello', 'world'), ('hi',)}, ngram_separator='\n') == 'hello world\nhi'
+    assert ps.verbalize(set()) == '∅'
