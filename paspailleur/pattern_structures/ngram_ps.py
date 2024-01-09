@@ -218,3 +218,9 @@ class NgramPS(AbstractPS):
 
         if min_support == 0:
             yield None, fbarray(bazeros(len(data)))
+
+    def verbalize(self, description: PatternType, ngram_separator: str = '; ') -> str:
+        """Convert `description` into human-readable string"""
+        if not description:
+            return '∅'
+        return ngram_separator.join([' '.join(ngram) for ngram in sorted(description, key=lambda ngram: -len(ngram))])

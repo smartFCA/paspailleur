@@ -87,3 +87,17 @@ class IntervalPS(AbstractPS):
                                  f'Provide either a number or a sequence of two numbers.')
 
             yield description
+
+    def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
+        """Convert `description` into human-readable string"""
+        if tuple(description) == self.max_pattern:
+            return '∅'
+        if description == (-inf, inf):
+            return '[-∞, ∞]'
+        if description[0] == -inf:
+            return f'<= {description[1]:{number_format}}'
+        if description[1] == inf:
+            return f'>= {description[0]:{number_format}}'
+        return f'[{description[0]:{number_format}}, {description[1]:{number_format}}]'
+
+

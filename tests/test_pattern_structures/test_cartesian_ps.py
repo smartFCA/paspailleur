@@ -1,4 +1,4 @@
-from paspailleur.pattern_structures import CartesianPS, IntervalPS, SuperSetPS, NgramPS
+from paspailleur.pattern_structures import CartesianPS, IntervalPS, SuperSetPS, SubSetPS, NgramPS
 from bitarray import frozenbitarray as fbarray
 import math
 
@@ -114,3 +114,14 @@ def test_preprocess_data():
         ((0., 1.), frozenset({'x'}), frozenset({('hello', 'world')})),
         ((0., 3.), frozenset({'y'}), frozenset({('hello',)}))
     ]
+
+
+def test_verbalize():
+    ps = CartesianPS(basic_structures=[IntervalPS(), NgramPS(), SuperSetPS(), SubSetPS()])
+    description = [(1, 2.43), {('hello', 'world'), ('hello',)}, {'a', 'b'}, set()]
+    verbose = "0: [1.00, 2.43], 1: hello world; hello, 2: a, b, 3: ∅"
+    assert ps.verbalize(description) == verbose
+
+    params = {0: {'number_format': '.0f'}, 1: {'ngram_separator': ', '}}
+    verbose = "0: [1, 2]\n1: hello world, hello\n2: a, b\n3: ∅"
+    assert ps.verbalize(description, basic_structures_params=params, separator='\n') == verbose
