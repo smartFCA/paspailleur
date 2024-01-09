@@ -55,3 +55,12 @@ class CartesianPS(AbstractPS):
         """Preprocess the data into to the format, supported by intent/extent functions"""
         for description in data:
             yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])
+
+    def verbalize(self, description: PatternType, separator=', ', pattern_names: list[str] = None) -> str:
+        """Convert `description` into human-readable string"""
+        if pattern_names is None:
+            pattern_names = [f"{i}" for i in range(len(self.basic_structures))]
+
+        basic_strs = [f"{pattern_names[i]}: {bps.vervalize(v)}"
+                      for i, (v, bps) in enumerate(zip(description, self.basic_structures))]
+        return separator.join(basic_strs)

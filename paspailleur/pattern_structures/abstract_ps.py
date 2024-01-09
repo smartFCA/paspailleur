@@ -92,3 +92,7 @@ class AbstractPS:
         """Preprocess the data into to the format, supported by intent/extent functions"""
         for description in data:
             yield description
+
+    def verbalize(self, description: PatternType) -> str:
+        """Convert `description` into human-readable string"""
+        return f"{description}"

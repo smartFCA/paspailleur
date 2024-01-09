@@ -91,6 +91,10 @@ class SuperSetPS(AbstractPS):
 
             yield description
 
+    def verbalize(self, description: PatternType, separator: str = ', ') -> str:
+        """Convert `description` into human-readable string"""
+        return separator.join([f"{v}" for v in description])
+
 
 class SubSetPS(AbstractPS):
     """A PS where every description is a set of values. And the smaller is the set, the less precise is the description
@@ -184,3 +188,7 @@ class SubSetPS(AbstractPS):
                                  f'Provide either a number or a string or a container of hashable values.')
 
             yield description
+
+    def verbalize(self, description: PatternType, separator: str = ', ') -> str:
+        """Convert `description` into human-readable string"""
+        return separator.join([f"{v}" for v in description])
