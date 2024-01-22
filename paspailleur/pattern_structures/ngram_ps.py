@@ -5,7 +5,8 @@ from typing import Iterator, Iterable, Union
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 
-from .abstract_ps import AbstractPS
+#from .abstract_ps import AbstractPS
+from abstract_ps import AbstractPS
 
 
 class NgramPS(AbstractPS):
@@ -148,6 +149,7 @@ class NgramPS(AbstractPS):
                 for prev_ngrm, word_i in product(prev_lvl_ngrams, range(n_words_)):
                     if prev_ngrm[1:] + (word_i,) in prev_lvl_ngrams:
                         yield prev_ngrm, word_i
+                return
 
             # len(prev_level_ngrams) < n_words:
             prefixes_dict: dict[tuple[int, ...], list[int]] = {}
@@ -195,7 +197,8 @@ class NgramPS(AbstractPS):
         while ngrams:
             prev_ngrams, ngrams = ngrams, {}
 
-            search_space = setup_search_space(prev_ngrams, n_words)
+            #search_space = setup_search_space(prev_ngrams, n_words)
+            search_space = list(setup_search_space(prev_ngrams, n_words))
             for prev_ngram, word_i in search_space:
                 # Get the approximate extent of the new ngram (which is a superset of the exact extent)
                 new_ngram: tuple[int, ...] = prev_ngram + (word_i,)
@@ -224,3 +227,11 @@ class NgramPS(AbstractPS):
         if not description:
             return '∅'
         return ngram_separator.join([' '.join(ngram) for ngram in sorted(description, key=lambda ngram: -len(ngram))])
+
+
+if __name__ == '__main__':
+    texts = ['a b', 'a', 'b']
+    ps = NgramPS()
+    data = list(ps.preprocess_data(texts))
+    colnames, itsets = ps.binarize(data)
+    print(colnames)
