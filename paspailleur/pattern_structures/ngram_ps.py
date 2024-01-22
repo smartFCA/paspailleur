@@ -5,8 +5,7 @@ from typing import Iterator, Iterable, Union
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 
-#from .abstract_ps import AbstractPS
-from abstract_ps import AbstractPS
+from .abstract_ps import AbstractPS
 
 
 class NgramPS(AbstractPS):
