@@ -1,3 +1,4 @@
+import math
 from numbers import Number
 from typing import Iterator, Optional, Union, Iterable, Sequence
 from bitarray import frozenbitarray as fbarray
@@ -6,9 +7,15 @@ from math import inf, ceil
 
 
 class IntervalPS(AbstractPS):
+    ndigits: int  # Number of digits after the comma
+    precision: float  # Precision of the number in pattern
     PatternType = Optional[tuple[float, float]]
     min_pattern = (-inf, inf)  # The pattern that always describes all objects
     max_pattern = (inf, -inf)  # The pattern that always describes no objects
+
+    def __init__(self, ndigits: int = 6):
+        self.ndigits = ndigits
+        self.precision = 10**(-ndigits)
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -87,6 +94,7 @@ class IntervalPS(AbstractPS):
                 raise ValueError(f'Cannot preprocess this description: {description}. '
                                  f'Provide either a number or a sequence of two numbers.')
 
+            description = tuple([round(x, self.ndigits) if x != inf and x != -inf else x for x in description])
             yield description
 
     def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
@@ -101,6 +109,39 @@ class IntervalPS(AbstractPS):
             return f'>= {description[0]:{number_format}}'
         return f'[{description[0]:{number_format}}, {description[1]:{number_format}}]'
 
+    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
 
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.min_pattern:
+            return
 
+        l, r = description
 
+        yield l, r+self.precision
+        if not use_lectic_order:
+            yield l-self.precision, r
+
+    def closest_more_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.max_pattern:
+            return
+
+        l, r = description
+        if r - l <= self.precision:
+            yield self.max_pattern
+            return
+
+        yield l, r-self.precision
+        if not use_lectic_order:
+            yield l+self.precision, r
+
+    def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
+        """Return the least precise descriptions equivalent to the given intent"""
+        out_l = max((l + self.precision for l, _ in data if l < intent[0]), default=self.min_pattern[0])
+        out_r = min((r - self.precision for _, r in data if r > intent[1]), default=self.min_pattern[1])
+        return [(out_l, out_r)]

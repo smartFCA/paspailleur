@@ -81,3 +81,25 @@ def test_verbalize():
     assert ips.verbalize([0.1, math.inf]) == '>= 0.10'
     assert ips.verbalize([-math.inf, 0.265]) == '<= 0.27'
     assert ips.verbalize([math.inf, -math.inf]) == '∅'
+
+
+def test_closest_less_precise():
+    ips = IntervalPS(ndigits=2)
+    assert list(ips.closest_less_precise((1, 2))) == [(1, 2.01), (0.99, 2)]
+    assert list(ips.closest_less_precise((1, 2), use_lectic_order=True)) == [(1, 2.01)]
+    assert list(ips.closest_less_precise((-math.inf, math.inf))) == []
+
+
+def test_closest_more_precise():
+    ips = IntervalPS(ndigits=2)
+    assert list(ips.closest_more_precise((1, 2))) == [(1, 1.99), (1.01, 2)]
+    assert list(ips.closest_more_precise((1, 2), use_lectic_order=True)) == [(1, 1.99)]
+    assert list(ips.closest_more_precise((1, 1))) == [ips.max_pattern]
+    assert list(ips.closest_more_precise(ips.max_pattern)) == []
+
+
+def test_keys():
+    ips = IntervalPS(ndigits=2)
+    data = [(1, 3), (1, 2)]
+    assert ips.keys((1, 3), data) == [(-math.inf, math.inf)]
+    assert ips.keys((1, 2), data) == [(-math.inf, 2.99)]
