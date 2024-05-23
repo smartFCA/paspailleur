@@ -74,7 +74,7 @@ class IntervalPS(AbstractPS):
         return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
-        """Preprocess the data into to the format, supported by intent/extent functions"""
+        """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         for description in data:
             if isinstance(description, Number):
                 description = (description, description)
@@ -141,7 +141,7 @@ class IntervalPS(AbstractPS):
             yield l+self.precision, r
 
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
-        """Return the least precise descriptions equivalent to the given intent"""
+        """Return the least precise descriptions equivalent to the given attrs_order"""
         out_l = max((l + self.precision for l, _ in data if l < intent[0]), default=self.min_pattern[0])
         out_r = min((r - self.precision for _, r in data if r > intent[1]), default=self.min_pattern[1])
         return [(out_l, out_r)]

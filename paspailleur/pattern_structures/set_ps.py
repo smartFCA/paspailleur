@@ -1,10 +1,13 @@
 from collections import deque
+from dataclasses import dataclass
 from functools import reduce
 from math import ceil
 from numbers import Number
 from typing import Iterator, TypeVar, Union, Iterable, Container, Any, Hashable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
+from deprecation import deprecated
+
 from .abstract_ps import AbstractPS
 
 from itertools import combinations
@@ -12,7 +15,17 @@ from itertools import combinations
 T = TypeVar('T')
 
 
-class SuperSetPS(AbstractPS):
+@dataclass
+class ValuesUniverseUndefined(ValueError):
+    parameter_name: str
+
+    def __str__(self):
+        return f'`{self.parameter_name}` variable should be properly defined. ' \
+            'You can use self.__init__ method to pass `all_values` parameter ' \
+            'or pass your data through `self.preprocess_data` function'
+
+
+class DisjunctiveSetPS(AbstractPS):
     """A PS where every description is a set of values. And the bigger is the set, the less precise is the description
 
     E.g. description {'green', 'yellow', 'red'} is less precise than {'green', 'yellow'}
@@ -22,8 +35,12 @@ class SuperSetPS(AbstractPS):
     Such Pattern Structure can be applied for categorical values in tabular data.
     """
     PatternType = frozenset[T]
-    min_pattern = frozenset({'<ALL_VALUES'})  # Top pattern, less specific than any other one
+    MIN_PATTERN_PLACEHOLDER = frozenset({'<ALL_VALUES>'})
+    min_pattern = MIN_PATTERN_PLACEHOLDER  # Top pattern, less specific than any other one
     max_pattern = frozenset()  # Bottom pattern, more specific than any other one
+
+    def __init__(self, all_values: set = None):
+        self.min_pattern = frozenset(all_values) if all_values else self.MIN_PATTERN_PLACEHOLDER
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -80,7 +97,8 @@ class SuperSetPS(AbstractPS):
         return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
-        """Preprocess the data into to the format, supported by intent/extent functions"""
+        """Preprocess the data into to the format, supported by attrs_order/extent functions"""
+        all_values = set()
         for description in data:
             if isinstance(description, (Number, str)):
                 description = {description}
@@ -91,6 +109,10 @@ class SuperSetPS(AbstractPS):
                                  f'Provide either a number or a string or a container of hashable values.')
 
             yield description
+            all_values |= description
+
+        if self.min_pattern == self.MIN_PATTERN_PLACEHOLDER:
+            self.min_pattern = frozenset(all_values)
 
     def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:
         """Convert `description` into human-readable string"""
@@ -102,8 +124,46 @@ class SuperSetPS(AbstractPS):
             description_verb = '{' + description_verb + '}'
         return description_verb
 
+    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
 
-class SubSetPS(AbstractPS):
+        Use lectic order for optimisation of description traversal
+        """
+        if self.min_pattern == self.MIN_PATTERN_PLACEHOLDER:
+            raise ValuesUniverseUndefined('self.min_pattern')
+
+        if description == self.min_pattern:
+            return iter([])
+
+        if not use_lectic_order:
+            return (description | {attr} for attr in self.min_pattern - description)
+
+        all_values = sorted(self.min_pattern)
+        max_attr = next(attr_i for attr_i in reversed(range(len(all_values))) if all_values[attr_i] in description)
+        return (description | {attr} for attr in all_values[max_attr+1:])
+
+    def closest_more_precise(
+            self, description: PatternType, use_lectic_order: bool = False, intent: PatternType = None
+    ) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.max_pattern:
+            return iter([])
+
+        if not use_lectic_order:
+            return (description - {attr} for attr in description)
+
+        if intent is None and self.min_pattern == self.MIN_PATTERN_PLACEHOLDER:
+            raise ValuesUniverseUndefined('self.min_pattern')
+        all_values = sorted(self.min_pattern if intent is None else intent)
+        missing_attrs = (attr_i for attr_i in reversed(range(len(all_values))) if all_values[attr_i] not in description)
+        max_missing_attr = next(missing_attrs) if len(all_values) != len(description) else -1
+        return (description - {attr} for attr in all_values[max_missing_attr+1:] if attr in description)
+
+
+class ConjunctiveSetPS(AbstractPS):
     """A PS where every description is a set of values. And the smaller is the set, the less precise is the description
 
     E.g. description {'green', 'cubic'} is less precise than {'green', 'cubic', 'heavy'}
@@ -112,8 +172,12 @@ class SubSetPS(AbstractPS):
 
     """
     PatternType = frozenset[T]
+    MAX_PATTERN_PLACEHOLDER = frozenset({'<ALL_VALUES>'})
     min_pattern = frozenset()  # Empty set that is always contained in any other set of values
-    max_pattern = frozenset({'<ALL_VALUES>'})  # Maximal pattern that should be more precise than any other pattern
+    max_pattern = MAX_PATTERN_PLACEHOLDER  # Maximal pattern that should be more precise than any other pattern
+
+    def __init__(self, all_values: set[T] = None):
+        self.max_pattern = frozenset(all_values) if all_values else self.MAX_PATTERN_PLACEHOLDER
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -185,7 +249,8 @@ class SubSetPS(AbstractPS):
                 yield frozenset(vals_extents), fbarray(bottom_extent)
 
     def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
-        """Preprocess the data into to the format, supported by intent/extent functions"""
+        """Preprocess the data into to the format, supported by attrs_order/extent functions"""
+        all_values = set()
         for description in data:
             if isinstance(description, (Number, str)):
                 description = {description}
@@ -196,6 +261,10 @@ class SubSetPS(AbstractPS):
                                  f'Provide either a number or a string or a container of hashable values.')
 
             yield description
+            all_values |= description
+
+        if self.max_pattern == self.MAX_PATTERN_PLACEHOLDER:
+            self.max_pattern = frozenset(all_values)
 
     def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:
         """Convert `description` into human-readable string"""
@@ -206,3 +275,79 @@ class SubSetPS(AbstractPS):
         if add_curly_braces:
             description_verb = '{' + description_verb + '}'
         return description_verb
+
+    def closest_less_precise(
+            self, description: PatternType, use_lectic_order: bool = False, intent: PatternType = None
+    ) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.min_pattern:
+            return iter([])
+
+        if not use_lectic_order:
+            return (description - {attr} for attr in description)
+
+        if intent is None and self.max_pattern == self.MAX_PATTERN_PLACEHOLDER:
+            raise ValuesUniverseUndefined('self.max_pattern')
+        all_values = sorted(self.max_pattern if intent is None else intent)
+        missing_attrs = (attr_i for attr_i in reversed(range(len(all_values))) if all_values[attr_i] not in description)
+        max_missing_attr = next(missing_attrs) if len(description) != len(all_values) else -1
+        return (description - {attr} for attr in all_values[max_missing_attr+1:] if attr in description)
+
+    def closest_more_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if self.max_pattern == self.MAX_PATTERN_PLACEHOLDER:
+            raise ValuesUniverseUndefined('self.max_pattern')
+
+        if description == self.max_pattern:
+            return iter([])
+
+        if not use_lectic_order:
+            return (description | {attr} for attr in self.max_pattern - description)
+
+        all_values = sorted(self.max_pattern)
+        attr_indices = (attr_i for attr_i in reversed(range(len(all_values))) if all_values[attr_i] in description)
+        max_attr = next(attr_indices) if description else -1
+        return (description | {attr} for attr in all_values[max_attr+1:])
+
+    def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
+        """Return the least precise descriptions equivalent to the given attrs_order"""
+        extent = set(self.extent(data, intent))
+        outer_data = [data[i] for i in range(len(data)) if i not in extent]
+
+        keys_candidates, keys = deque([intent]), []
+        while keys_candidates:
+            key_candidate = keys_candidates.popleft()
+            subdescriptions = self.closest_less_precise(key_candidate, use_lectic_order=True, intent=intent)
+
+            has_next_descriptions = False
+            for next_descr in subdescriptions:
+                no_outer_extent = all(0 for _ in self.extent(outer_data, next_descr))
+                if no_outer_extent:
+                    keys_candidates.append(next_descr)
+                    has_next_descriptions = True
+            if not has_next_descriptions:
+                keys.append(key_candidate)
+
+        keys_candidates, keys = keys, []
+        for key_candidate in keys_candidates:
+            if not any(self.is_less_precise(key, key_candidate) for key in keys):
+                keys = [key for key in keys if not self.is_less_precise(key_candidate, key)]
+                keys.append(key_candidate)
+
+        return keys
+
+
+@deprecated(deprecated_in='0.1.0', removed_in='0.1.1')
+class SuperSetPS(DisjunctiveSetPS):
+    pass
+
+
+@deprecated(deprecated_in='0.1.0', removed_in='0.1.1')
+class SubSetPS(ConjunctiveSetPS):
+    pass

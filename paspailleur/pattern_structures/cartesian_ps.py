@@ -54,7 +54,7 @@ class CartesianPS(AbstractPS):
         return n_bin_attrs
 
     def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:
-        """Preprocess the data into to the format, supported by intent/extent functions"""
+        """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         for description in data:
             yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])
 

@@ -132,7 +132,7 @@ class AbstractPS:
         return list(patterns), itemsets_ba
 
     def preprocess_data(self, data: Iterable) -> Iterator[PatternType]:
-        """Preprocess the data into to the format, supported by intent/extent functions"""
+        """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         for description in data:
             yield description
 
@@ -155,7 +155,7 @@ class AbstractPS:
         raise NotImplementedError
 
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
-        """Return the least precise descriptions equivalent to the given intent"""
+        """Return the least precise descriptions equivalent to the given attrs_order"""
         extent = set(self.extent(data, intent))
         outer_data = [data[i] for i in range(len(data)) if i not in extent]
 
@@ -163,9 +163,19 @@ class AbstractPS:
         while keys_candidates:
             key_candidate = keys_candidates.popleft()
             subdescriptions = self.closest_less_precise(key_candidate, use_lectic_order=True)
-            equiv_subdescriptions = [descr for descr in subdescriptions if not any(self.extent(outer_data, descr))]
-            if not equiv_subdescriptions:
+            has_next_descriptions = False
+            for next_descr in subdescriptions:
+                no_outer_extent = all(0 for _ in self.extent(outer_data, next_descr))
+                if no_outer_extent:
+                    keys_candidates.append(next_descr)
+                    has_next_descriptions = True
+            if not has_next_descriptions:
                 keys.append(key_candidate)
-                continue
-            keys_candidates.extend(equiv_subdescriptions)
+
+        keys_candidates, keys = keys, []
+        for key_candidate in keys_candidates:
+            if not any(self.is_less_precise(key, key_candidate) for key in keys):
+                keys = [key for key in keys if not self.is_less_precise(key_candidate, key)]
+                keys.append(key_candidate)
+
         return keys

@@ -1,14 +1,14 @@
 from functools import reduce
 from typing import Iterator, Iterable, Optional
 
-from .set_ps import SubSetPS
+from .set_ps import ConjunctiveSetPS
 
 
 import nltk
 from nltk.corpus import wordnet
 
 
-class SynonymPS(SubSetPS):
+class SynonymPS(ConjunctiveSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of synonyms to words in the text
     n_synonyms: int | None = 1  # number of synonyms for a word
     min_pattern = frozenset()  # Empty set of synonyms, contained in any other set of synonyms
@@ -34,7 +34,7 @@ class SynonymPS(SubSetPS):
             yield synonyms
 
 
-class AntonymPS(SubSetPS):
+class AntonymPS(ConjunctiveSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of antonyms to words in the text
     n_antonyms: Optional[int] = 1  # number of antonyms for a word
     min_pattern = frozenset()  # Empty set of antonyms contained in any other set of antonyms
