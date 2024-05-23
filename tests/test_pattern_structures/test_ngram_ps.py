@@ -76,7 +76,7 @@ def test_ngram_iter_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
 
     ps = NgramPS()
-    subpatterns, extents = zip(*ps.iter_bin_attributes(patterns))
+    subpatterns, extents = zip(*ps.iter_attributes(patterns))
     assert subpatterns[0] == set()
     assert extents[0].all()
     assert not extents[-1].any()
@@ -85,7 +85,7 @@ def test_ngram_iter_bin_attributes():
                     fbarray('1000'), fbarray('0100'), fbarray('0010'), fbarray('0000')}
     assert set(extents) == extents_true
 
-    subpatterns, extents = zip(*ps.iter_bin_attributes(patterns, min_support=2))
+    subpatterns, extents = zip(*ps.iter_attributes(patterns, min_support=2))
     assert subpatterns == (set(), ('hello',))
     assert extents == (fbarray('1111'), fbarray('1100'))
 
@@ -93,8 +93,8 @@ def test_ngram_iter_bin_attributes():
 def test_ngram_n_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
     ps = NgramPS()
-    bin_attrs = list(ps.iter_bin_attributes(patterns))
-    assert ps.n_bin_attributes(patterns) == len(bin_attrs)
+    bin_attrs = list(ps.iter_attributes(patterns))
+    assert ps.n_attributes(patterns) == len(bin_attrs)
 
 
 def test_verbalize():

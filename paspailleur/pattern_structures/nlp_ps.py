@@ -11,6 +11,7 @@ from nltk.corpus import wordnet
 class SynonymPS(SubSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of synonyms to words in the text
     n_synonyms: int | None = 1  # number of synonyms for a word
+    min_pattern = frozenset()  # Empty set of synonyms, contained in any other set of synonyms
     max_pattern = frozenset({'<MAX_SYNONYM'})  # Maximal pattern that should be more precise than any other pattern
 
     def __init__(self, n_synonyms: int | None = 1):
@@ -36,6 +37,7 @@ class SynonymPS(SubSetPS):
 class AntonymPS(SubSetPS):
     PatternType = frozenset[str]  # Every text is described by a set of antonyms to words in the text
     n_antonyms: Optional[int] = 1  # number of antonyms for a word
+    min_pattern = frozenset()  # Empty set of antonyms contained in any other set of antonyms
     max_pattern = frozenset({'<MAX_ANTONYM'})  # Maximal pattern that should be more precise than any other pattern
     
     def __init__(self, n_antonyms: int = 1):

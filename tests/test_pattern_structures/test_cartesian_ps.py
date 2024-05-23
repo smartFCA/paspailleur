@@ -34,14 +34,14 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data))))
+    patterns, flags = list(zip(*list(cps.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
-    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=0.5))))
+    patterns, flags = list(zip(*list(cps.iter_attributes(data, min_support=0.5))))
     assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
 
-    patterns, flags = list(zip(*list(cps.iter_bin_attributes(data, min_support=1))))
+    patterns, flags = list(zip(*list(cps.iter_attributes(data, min_support=1))))
     assert set(flags) == {flg for flg in flags_true if flg.count() > 0}
 
 
@@ -59,7 +59,7 @@ def test_n_bin_attributes():
     ]
 
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
-    assert cps.n_bin_attributes(data) == 6
+    assert cps.n_attributes(data) == 6
 
 
 def test_binarize():

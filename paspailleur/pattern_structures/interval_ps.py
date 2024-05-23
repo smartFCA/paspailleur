@@ -7,6 +7,7 @@ from math import inf, ceil
 
 class IntervalPS(AbstractPS):
     PatternType = Optional[tuple[float, float]]
+    min_pattern = (-inf, inf)  # The pattern that always describes all objects
     max_pattern = (inf, -inf)  # The pattern that always describes no objects
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -22,7 +23,7 @@ class IntervalPS(AbstractPS):
 
         return a[0] <= b[0] <= b[1] <= a[1]
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -58,12 +59,12 @@ class IntervalPS(AbstractPS):
         if min_support == 0:
             yield self.max_pattern, fbarray([False]*len(data))
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+    def n_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
             -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
             return len({lb for lb, ub in data}) + len({ub for ub in data})
-        return super().n_bin_attributes(data, min_support)
+        return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by intent/extent functions"""
@@ -99,5 +100,7 @@ class IntervalPS(AbstractPS):
         if description[1] == inf:
             return f'>= {description[0]:{number_format}}'
         return f'[{description[0]:{number_format}}, {description[1]:{number_format}}]'
+
+
 
 

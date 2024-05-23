@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paspailleur"
-version = "0.0.3"
+version = "0.1.0"
 description = "Pattern Structures miner in Python. An add-on for Caspailleur package. Part of SmartFCA project"
 readme = "README.md"
 authors = [{ name = "Egor Dudyrev" }]
@@ -19,10 +19,17 @@ classifiers = [
 ]
 keywords = ["python", "fca", "itemset-mining"]
 dependencies = [
-    'caspailleur', 'bitarray>=2.5.1', 'tqdm',
+    'caspailleur', 'bitarray>=2.5.1', 'tqdm', 'deprecation'
 ]
 requires-python = ">=3.8"
 
 
 [project.urls]
 Homepage = "https://github.com/EgorDudyrev/paspailleur"
+
+
+[tool.setuptools]
+py-modules = ["paspailleur"]
+
+[tool.setuptools.packages]
+find = {}  # Scanning implicit namespaces is active by default

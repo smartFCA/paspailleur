@@ -7,11 +7,13 @@ from tqdm.autonotebook import tqdm
 
 class CartesianPS(AbstractPS):
     PatternType = tuple[tuple, ...]
+    min_pattern: tuple  # Top pattern, less specific than any other one
     max_pattern: tuple  # Bottom pattern, more specific than any other one
     basic_structures: tuple[AbstractPS, ...]
 
     def __init__(self, basic_structures: list[AbstractPS]):
         self.basic_structures = tuple(basic_structures)
+        self.min_pattern = tuple([ps.min_pattern for ps in basic_structures])
         self.max_pattern = tuple([ps.max_pattern for ps in basic_structures])
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -22,7 +24,7 @@ class CartesianPS(AbstractPS):
         """Return True if pattern `a` is less precise than pattern `b`"""
         return all(ps.is_less_precise(a_, b_) for ps, a_, b_ in zip(self.basic_structures, a, b))
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -36,10 +38,10 @@ class CartesianPS(AbstractPS):
         """
         for i, ps in enumerate(self.basic_structures):
             ps_data = [data_row[i] for data_row in data]
-            for pattern, flag in ps.iter_bin_attributes(ps_data, min_support):
+            for pattern, flag in ps.iter_attributes(ps_data, min_support):
                 yield (i, pattern), flag
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+    def n_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
             -> int:
         """Count the number of attributes in the binary representation of `data`"""
         n_bin_attrs = 0
@@ -48,7 +50,7 @@ class CartesianPS(AbstractPS):
             iterator = tqdm(iterator, desc='Iterating basic structures', total=len(self.basic_structures))
         for i, ps in iterator:
             ps_data = [data_row[i] for data_row in data]
-            n_bin_attrs += ps.n_bin_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
+            n_bin_attrs += ps.n_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
         return n_bin_attrs
 
     def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:

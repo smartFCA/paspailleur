@@ -32,14 +32,14 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     sps = SuperSetPS()
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data, min_support=0.5))))
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data, min_support=2))))
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
     # SubsetPS
@@ -54,14 +54,14 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     sps = SubSetPS()
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=0.5))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data, min_support=0.5))))
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
-    patterns, flags = list(zip(*list(sps.iter_bin_attributes(data, min_support=2))))
+    patterns, flags = list(zip(*list(sps.iter_attributes(data, min_support=2))))
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
 def test_is_subpattern():
@@ -79,10 +79,10 @@ def test_n_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
     sps = SuperSetPS()
-    assert sps.n_bin_attributes(data) == 8
+    assert sps.n_attributes(data) == 8
 
     sps = SubSetPS()
-    assert sps.n_bin_attributes(data) == 5
+    assert sps.n_attributes(data) == 5
 
 
 def test_intent():

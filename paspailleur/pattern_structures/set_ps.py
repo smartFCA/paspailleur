@@ -22,6 +22,7 @@ class SuperSetPS(AbstractPS):
     Such Pattern Structure can be applied for categorical values in tabular data.
     """
     PatternType = frozenset[T]
+    min_pattern = frozenset({'<ALL_VALUES'})  # Top pattern, less specific than any other one
     max_pattern = frozenset()  # Bottom pattern, more specific than any other one
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -40,7 +41,7 @@ class SuperSetPS(AbstractPS):
             return False
         return a & b == b
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float]= 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float]= 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -68,7 +69,7 @@ class SuperSetPS(AbstractPS):
                     continue
                 yield pattern, extent
 
-    def n_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+    def n_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
             -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
@@ -76,7 +77,7 @@ class SuperSetPS(AbstractPS):
             for data_row in data:
                 unique_values |= data_row
             return 2**len(unique_values)
-        return super().n_bin_attributes(data, min_support)
+        return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by intent/extent functions"""
@@ -111,6 +112,7 @@ class SubSetPS(AbstractPS):
 
     """
     PatternType = frozenset[T]
+    min_pattern = frozenset()  # Empty set that is always contained in any other set of values
     max_pattern = frozenset({'<ALL_VALUES>'})  # Maximal pattern that should be more precise than any other pattern
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
@@ -129,7 +131,7 @@ class SubSetPS(AbstractPS):
             return False
         return a.issubset(b)
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 

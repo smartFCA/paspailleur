@@ -10,6 +10,7 @@ from .abstract_ps import AbstractPS
 
 class NgramPS(AbstractPS):
     PatternType = frozenset[tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
+    min_pattern: PatternType = frozenset()  # Empty set of ngrams contained in any other set of ngrams
     max_pattern: PatternType = frozenset({('<MAX_NGRAM>',)})  # the set of the most specific ngrams for the data. Might be huge
     min_n: int = 1  # Minimal size of an ngram to consider
 
@@ -113,7 +114,7 @@ class NgramPS(AbstractPS):
                 return False
         return True
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 

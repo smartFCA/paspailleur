@@ -28,7 +28,7 @@ def test_bin_attributes():
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
     ips = IntervalPS()
-    patterns, flags = list(zip(*list(ips.iter_bin_attributes(data))))
+    patterns, flags = list(zip(*list(ips.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
 
@@ -44,7 +44,7 @@ def test_n_bin_attributes():
     data = [(0, 1), (2, 3), (1.5, 2)]
 
     ips = IntervalPS()
-    assert ips.n_bin_attributes(data) == 6
+    assert ips.n_attributes(data) == 6
 
 
 def test_intent():
