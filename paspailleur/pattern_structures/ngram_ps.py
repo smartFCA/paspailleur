@@ -1,4 +1,5 @@
-from itertools import product
+from functools import reduce
+from itertools import product, chain
 from math import ceil
 from typing import Iterator, Iterable, Union
 
@@ -10,8 +11,9 @@ from .abstract_ps import AbstractPS
 
 class NgramPS(AbstractPS):
     PatternType = frozenset[tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
+    MAX_PATTERN_PLACEHOLDER = frozenset({('<MAX_NGRAM>',)})
     min_pattern: PatternType = frozenset()  # Empty set of ngrams contained in any other set of ngrams
-    max_pattern: PatternType = frozenset({('<MAX_NGRAM>',)})  # the set of the most specific ngrams for the data. Might be huge
+    max_pattern: PatternType = MAX_PATTERN_PLACEHOLDER  # the set of the most specific ngrams for the data. Might be huge
     min_n: int = 1  # Minimal size of an ngram to consider
 
     def __init__(self, min_n: int = 1):
@@ -227,6 +229,62 @@ class NgramPS(AbstractPS):
         if not description:
             return '∅'
         return ngram_separator.join([' '.join(ngram) for ngram in sorted(description, key=lambda ngram: -len(ngram))])
+
+    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.min_pattern:
+            return iter([])
+
+        if not use_lectic_order:
+            result = []
+            for ngram in description:
+                subdescr = description - {ngram}
+                next_descrs = [subdescr | {ngram[:-1]}, subdescr | {ngram[1:]}] if len(ngram) > 1 else [subdescr]
+                result.extend(next_descrs)
+            return iter(result)
+
+        return (description - {ngram} | ({ngram[:-1]} if len(ngram) > 1 else set()) for ngram in description)
+
+    def closest_more_precise(
+            self, description: PatternType, use_lectic_order: bool = False, vocabulary: set[str] = None
+    ) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal.
+        Note that the resulting descriptions may repeat in case `use_lectic_order` is set to False
+        """
+        if vocabulary is None:
+            vocabulary = reduce(set.__or__, map(set, description), set())
+
+        def enrich_description(descr: frozenset, new_ngram: tuple[str, ...]):
+            if new_ngram in descr:
+                return descr
+
+            descr = sorted(descr | {new_ngram}, key=lambda ngram: len(ngram), reverse=True)
+            i = 0
+            while i < len(descr):
+                cur_ngram = ' '.join(descr[i])
+                if any(cur_ngram in ' '.join(ngram) for ngram in descr[:i]):
+                    descr.pop(i)
+                    continue
+                i += 1
+            return frozenset(descr)
+
+        for word in vocabulary:
+            wordgram = word,
+            new_ngrams = chain(
+                [wordgram],
+                (ngram + wordgram for ngram in description),
+                (wordgram + ngram for ngram in description) if not use_lectic_order else []
+            )
+            next_descriptions = (enrich_description(description, new_ngram) for new_ngram in new_ngrams)
+
+            for next_descr in next_descriptions:
+                if next_descr != description:
+                    yield next_descr
 
 
 if __name__ == '__main__':
