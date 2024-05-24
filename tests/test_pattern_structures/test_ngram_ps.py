@@ -107,12 +107,12 @@ def test_verbalize():
 def test_closest_less_precise():
     ps = NgramPS()
     assert set(ps.closest_less_precise(frozenset())) == set()
-    assert set(ps.closest_less_precise(frozenset({('a',)}))) == {frozenset()}
-    assert set(ps.closest_less_precise(frozenset({('a', 'b'), ('x',)}))) == {
-        frozenset({('a', 'b')}), frozenset({('a',), ('x',)}), frozenset({('b',), ('x',)})
+    assert set(ps.closest_less_precise(frozenset({tuple('a')}))) == {frozenset()}
+    assert set(ps.closest_less_precise(frozenset({tuple('ab'), tuple('x')}))) == {
+        frozenset({tuple('ab')}), frozenset({tuple('a'), tuple('b'), tuple('x')}),
     }
-    assert set(ps.closest_less_precise(frozenset({('a', 'b'), ('x',)}), use_lectic_order=True)) == {
-        frozenset({('a', 'b')}), frozenset({('a',), ('x',)}),  # frozenset({('b',), ('x',)}) ???
+    assert set(ps.closest_less_precise(frozenset({tuple('ab'), tuple('ac')}), use_lectic_order=True)) == {
+        frozenset({tuple('ab'), tuple('c')}), frozenset({tuple('ac'), tuple('b')})
     }
 
 
@@ -160,6 +160,6 @@ def test_keys():
         frozenset({('a',)})
     ]
     assert ps.keys(frozenset({('a',)}), data) == [frozenset()]
-    assert set(ps.keys(frozenset({('a', 'b'), ('c',)}), data)) == {frozenset({('c',)}), frozenset({('b',)})}
+    assert set(ps.keys(frozenset({('a', 'b'), ('c',)}), data)) == {frozenset({('b',)})}
     assert ps.keys(frozenset({('c', 'a')}), data) == [frozenset({('c', 'a')})]
     assert ps.keys(frozenset({('a',), ('c',)}), data) == [frozenset({('c',)})]

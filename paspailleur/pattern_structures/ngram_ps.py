@@ -233,20 +233,24 @@ class NgramPS(AbstractPS):
     def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
         """Return closest descriptions that are less precise than `description`
 
-        Use lectic order for optimisation of description traversal
+        Use lectic order for optimisation of description traversal.
+
+        IMPORTANT: Lectic order is not yet implemented
         """
         if description == self.min_pattern:
             return iter([])
 
-        if not use_lectic_order:
-            result = []
-            for ngram in description:
-                subdescr = description - {ngram}
-                next_descrs = [subdescr | {ngram[:-1]}, subdescr | {ngram[1:]}] if len(ngram) > 1 else [subdescr]
-                result.extend(next_descrs)
-            return iter(result)
+        for ngram in description:
+            if len(ngram) == 1:
+                yield description - {ngram}
+            else:
+                shortened_right = self.filter_max_ngrams(description - {ngram} | {ngram[:-1], ngram[-1:]})
+                shortened_left = self.filter_max_ngrams(description - {ngram} | {ngram[1:], ngram[:1]})
 
-        return (description - {ngram} | ({ngram[:-1]} if len(ngram) > 1 else set()) for ngram in description)
+                if shortened_left != description:
+                    yield shortened_left
+                if shortened_right != shortened_left and shortened_right != description:
+                    yield shortened_right
 
     def closest_more_precise(
             self, description: PatternType, use_lectic_order: bool = False, vocabulary: set[str] = None
@@ -259,20 +263,6 @@ class NgramPS(AbstractPS):
         if vocabulary is None:
             vocabulary = reduce(set.__or__, map(set, description), set())
 
-        def enrich_description(descr: frozenset, new_ngram: tuple[str, ...]):
-            if new_ngram in descr:
-                return descr
-
-            descr = sorted(descr | {new_ngram}, key=lambda ngram: len(ngram), reverse=True)
-            i = 0
-            while i < len(descr):
-                cur_ngram = ' '.join(descr[i])
-                if any(cur_ngram in ' '.join(ngram) for ngram in descr[:i]):
-                    descr.pop(i)
-                    continue
-                i += 1
-            return frozenset(descr)
-
         for word in vocabulary:
             wordgram = word,
             new_ngrams = chain(
@@ -280,11 +270,23 @@ class NgramPS(AbstractPS):
                 (ngram + wordgram for ngram in description),
                 (wordgram + ngram for ngram in description) if not use_lectic_order else []
             )
-            next_descriptions = (enrich_description(description, new_ngram) for new_ngram in new_ngrams)
+            next_descriptions = (self.filter_max_ngrams(description | {new_ngram}) for new_ngram in new_ngrams
+                                 if new_ngram not in description)
 
             for next_descr in next_descriptions:
                 if next_descr != description:
                     yield next_descr
+
+    def filter_max_ngrams(self, description: PatternType) -> PatternType:
+        description = sorted(description, key=lambda ngram: len(ngram), reverse=True)
+        i = 0
+        while i < len(description):
+            cur_ngram = ' '.join(description[i])
+            if any(cur_ngram in ' '.join(ngram) for ngram in description[:i]):
+                description.pop(i)
+                continue
+            i += 1
+        return frozenset(description)
 
 
 if __name__ == '__main__':
