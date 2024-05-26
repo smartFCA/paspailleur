@@ -115,6 +115,16 @@ def test_preprocess_data():
         ((0., 3.), frozenset({'y'}), frozenset({('hello',)}))
     ]
 
+    data = [(1, (3, 4)),
+            (2, (2, 5))]
+    cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
+    dp = list(cps.preprocess_data(data))
+    assert dp == [((1., 1.), (3., 4.)), ((2., 2.), (2., 5.))]
+    assert cps.basic_structures[0].min_bounds == (1., 2.)
+    assert cps.basic_structures[0].max_bounds == (1., 2.)
+    assert cps.basic_structures[1].min_bounds == (2., 3.)
+    assert cps.basic_structures[1].max_bounds == (4., 5.)
+
 
 def test_verbalize():
     ps = CartesianPS(basic_structures=[IntervalPS(), NgramPS(), DisjunctiveSetPS(), ConjunctiveSetPS()])
@@ -201,3 +211,22 @@ def test_closest_more_precise():
         tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset({'x'})]),
     }
     assert next_descrs == next_descrs_true
+
+
+def test_keys():
+    ps = CartesianPS(basic_structures=[
+        IntervalPS(ndigits=2), IntervalPS(ndigits=2),
+    ])
+    data = [
+        (3, 3), (6, 3), (3, 5), (6, 5),
+        (0.5, 5), (1, 4), (2, 1), (2, 7), (7, 7)
+    ]
+    data = list(ps.preprocess_data(data))
+
+    keys = ps.keys(((3, 6), (3, 5)), data)
+    keys_true = [
+        ((2.01, 6.99), (-math.inf, math.inf)),
+        ((2.01, math.inf), (-math.inf, 6.99)),
+        ((1.01, math.inf), (1.01, 6.99))
+    ]
+    assert keys == keys_true

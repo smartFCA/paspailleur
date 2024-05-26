@@ -55,8 +55,14 @@ class CartesianPS(AbstractPS):
 
     def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
+        vals_per_structures = [[] for _ in self.basic_structures]
         for description in data:
-            yield tuple([next(bps.preprocess_data([v])) for v, bps in zip(description, self.basic_structures)])
+            for column, value in enumerate(description):
+                vals_per_structures[column].append(value)
+
+        processed_per_structures = [list(bs.preprocess_data(vals))
+                                    for bs, vals in zip(self.basic_structures, vals_per_structures)]
+        return zip(*processed_per_structures)
 
     def verbalize(
         self, description: PatternType,
