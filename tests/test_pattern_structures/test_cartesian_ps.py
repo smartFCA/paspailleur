@@ -115,15 +115,17 @@ def test_preprocess_data():
         ((0., 3., BS.CLOSED), frozenset({'y'}), frozenset({('hello',)}))
     ]
 
-    data = [(1, (3, 4)),
-            (2, (2, 5))]
-    cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS()])
+    data = [(1, (3, 4), 'ClassA'),
+            (2, (2, 5), 'ClassB')]
+    cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS(), DisjunctiveSetPS()])
     dp = list(cps.preprocess_data(data))
-    assert dp == [((1., 1., BS.CLOSED), (3., 4., BS.CLOSED)), ((2., 2., BS.CLOSED), (2., 5., BS.CLOSED))]
+    assert dp == [((1., 1., BS.CLOSED), (3., 4., BS.CLOSED), frozenset({'ClassA'})),
+                  ((2., 2., BS.CLOSED), (2., 5., BS.CLOSED), frozenset({'ClassB'}))]
     assert cps.basic_structures[0].min_bounds == (1., 2.)
     assert cps.basic_structures[0].max_bounds == (1., 2.)
     assert cps.basic_structures[1].min_bounds == (2., 3.)
     assert cps.basic_structures[1].max_bounds == (4., 5.)
+    assert cps.basic_structures[2].min_pattern == frozenset({'ClassA', 'ClassB'})
 
 
 def test_verbalize():
@@ -245,7 +247,46 @@ def test_passkeys():
     data = list(ps.preprocess_data(data))
 
     pkeys = ps.passkeys(((3, 6, BS.CLOSED), (3, 5, BS.CLOSED)), data)
-    pkeys_true = [
-        ((2, 7, BS.OPEN), (-math.inf, math.inf, BS.OPEN))
-    ]
+    pkeys_true = [((2, 7, BS.OPEN), (-math.inf, math.inf, BS.OPEN))]
     assert pkeys == pkeys_true
+
+    pkeys = ps.passkeys(((1, 6, BS.CLOSED), (3, 5, BS.CLOSED)), data)
+    pkeys_true = [((0.5, math.inf, BS.OPEN), (1, 7, BS.OPEN))]
+    assert pkeys == pkeys_true
+
+    # Harry Potter-inspired complex data
+    ps = CartesianPS(basic_structures=[IntervalPS(ndigits=2), DisjunctiveSetPS(), NgramPS()])
+    data = [
+        (11, 'Gryffindor', 'Harry Potter'),
+        (11, 'Gryffindor', 'Ron Weasley'),
+        (13, 'Gryffindor', 'George Weasley'),
+        (13, 'Gryffindor', 'Fred Weasley'),
+        (11, 'Slytherin', 'Draco Malfoy')
+    ]
+    data = list(ps.preprocess_data(data))
+    schools = ps.min_pattern[1]
+
+    intent = ((11, 13, BS.CLOSED), schools, frozenset())
+    pkeys = ps.passkeys(intent, data)
+    pkeys_true = [((-math.inf, math.inf, BS.OPEN), schools, frozenset())]
+    assert set(pkeys) == set(pkeys_true)
+
+    intent = ((11, 11, BS.CLOSED), frozenset({'Gryffindor'}), frozenset({('Harry', 'Potter')}))
+    pkeys = ps.passkeys(intent, data)
+    pkeys_true = [((-math.inf, math.inf, BS.OPEN), schools, frozenset({('Harry',)})),
+                  ((-math.inf, math.inf, BS.OPEN), schools, frozenset({('Potter',)}))]
+    assert set(pkeys) == set(pkeys_true)
+
+    intent = ((11, 13, BS.CLOSED), frozenset({'Gryffindor'}), frozenset({('Weasley',)}))
+    pkeys = ps.passkeys(intent, data)
+    pkeys_true = [
+        ((-math.inf, math.inf, BS.OPEN), schools, frozenset({('Weasley',)})),
+    ]
+    assert set(pkeys) == set(pkeys_true)
+
+    intent = ((11, 11, BS.CLOSED), schools, frozenset())
+    pkeys = ps.passkeys(intent, data)
+    pkeys_true = [
+        ((-math.inf, 13, BS.OPEN), schools, frozenset()),
+    ]
+    assert set(pkeys) == set(pkeys_true)

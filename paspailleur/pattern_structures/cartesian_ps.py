@@ -66,6 +66,8 @@ class CartesianPS(AbstractPS):
 
         processed_per_structures = [list(bs.preprocess_data(vals))
                                     for bs, vals in zip(self.basic_structures, vals_per_structures)]
+        self.min_pattern = tuple([ps.min_pattern for ps in self.basic_structures])
+        self.max_pattern = tuple([ps.max_pattern for ps in self.basic_structures])
         return zip(*processed_per_structures)
 
     def verbalize(
