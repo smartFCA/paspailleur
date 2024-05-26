@@ -8,14 +8,16 @@ from math import inf, ceil
 
 class IntervalPS(AbstractPS):
     ndigits: int  # Number of digits after the comma
-    precision: float  # Precision of the number in pattern
     PatternType = Optional[tuple[float, float]]
     min_pattern = (-inf, inf)  # The pattern that always describes all objects
     max_pattern = (inf, -inf)  # The pattern that always describes no objects
 
     def __init__(self, ndigits: int = 6):
         self.ndigits = ndigits
-        self.precision = 10**(-ndigits)
+
+    @property
+    def precision(self) -> float:
+        return 10**(-self.ndigits)
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
@@ -119,9 +121,9 @@ class IntervalPS(AbstractPS):
 
         l, r = description
 
-        yield l, r+self.precision
+        yield l, round(r+self.precision, self.ndigits)
         if not use_lectic_order:
-            yield l-self.precision, r
+            yield round(l-self.precision, self.ndigits), r
 
     def closest_more_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
         """Return closest descriptions that are more precise than `description`
@@ -136,9 +138,9 @@ class IntervalPS(AbstractPS):
             yield self.max_pattern
             return
 
-        yield l, r-self.precision
+        yield l, round(r-self.precision, self.ndigits)
         if not use_lectic_order:
-            yield l+self.precision, r
+            yield round(l+self.precision, self.ndigits), r
 
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
         """Return the least precise descriptions equivalent to the given attrs_order"""
