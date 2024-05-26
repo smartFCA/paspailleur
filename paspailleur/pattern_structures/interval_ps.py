@@ -11,9 +11,26 @@ class IntervalPS(AbstractPS):
     PatternType = Optional[tuple[float, float]]
     min_pattern = (-inf, inf)  # The pattern that always describes all objects
     max_pattern = (inf, -inf)  # The pattern that always describes no objects
+    min_bounds: Optional[tuple[float]] = None  # Left bounds of intervals in the data. Sorted in ascending order
+    max_bounds: Optional[tuple[float]] = None  # Right bounds of intervals in the data. Sorted in ascending order
 
-    def __init__(self, ndigits: int = 6):
+    def __init__(
+            self, ndigits: int = 6,
+            values: list[float] = None, min_bounds: list[float] = None, max_bounds: list[float] = None
+    ):
         self.ndigits = ndigits
+
+        if values is not None and not (min_bounds is None and max_bounds is None):
+            raise ValueError('Please specify either `values` or the pair `min_bounds`, `max_bounds`,'
+                             ' but not all the parameters at the same time')
+        if (min_bounds is None) != (max_bounds is None):
+            raise ValueError('Please specify both `min_bounds` and `max_bounds` parameters.'
+                             ' If the bounds are the same, you can use `values` parameter of the __init__ function')
+
+        if values is not None:
+            min_bounds = max_bounds = tuple(values)
+        self.min_bounds = tuple(sorted({round(x, ndigits) for x in min_bounds})) if min_bounds else None
+        self.max_bounds = tuple(sorted({round(x, ndigits) for x in max_bounds})) if max_bounds else None
 
     @property
     def precision(self) -> float:
@@ -77,6 +94,7 @@ class IntervalPS(AbstractPS):
 
     def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
+        lbounds, rbounds = [], []
         for description in data:
             if isinstance(description, Number):
                 description = (description, description)
@@ -87,7 +105,7 @@ class IntervalPS(AbstractPS):
                 elif stop < start:
                     description = (stop+1, start)
                 else:  # if start == stop, then there is not closed interval inside [start, stop) == [start, start)
-                    description = (inf, -inf)
+                    description = self.max_pattern
 
             if isinstance(description, Sequence)\
                     and len(description) == 2 and all(isinstance(x, Number) for x in description):
@@ -98,6 +116,11 @@ class IntervalPS(AbstractPS):
 
             description = tuple([round(x, self.ndigits) if x != inf and x != -inf else x for x in description])
             yield description
+            lbounds.append(description[0])
+            rbounds.append(description[1])
+
+        self.min_bounds = tuple(sorted(set(lbounds)))
+        self.max_bounds = tuple(sorted(set(rbounds)))
 
     def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
         """Convert `description` into human-readable string"""
@@ -111,24 +134,44 @@ class IntervalPS(AbstractPS):
             return f'>= {description[0]:{number_format}}'
         return f'[{description[0]:{number_format}}, {description[1]:{number_format}}]'
 
-    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+    def closest_less_precise(
+            self,
+            description: PatternType,
+            use_lectic_order: bool = False, use_data_values: bool = True
+    ) -> Iterator[PatternType]:
         """Return closest descriptions that are less precise than `description`
 
-        Use lectic order for optimisation of description traversal
+        Use lectic order for optimisation of description traversal.
+        If use_data_values=True, then the function only returns the closest descriptions that can be found in the data
+        (in case the values from the data are provided).
         """
         if description == self.min_pattern:
             return
 
         l, r = description
 
-        yield l, round(r+self.precision, self.ndigits)
-        if not use_lectic_order:
-            yield round(l-self.precision, self.ndigits), r
+        next_right = round(r+self.precision, self.ndigits)
+        if use_data_values and self.max_bounds:
+            next_right = next(x for x in self.max_bounds if x > r) if r < self.max_bounds[-1] else self.min_pattern[1]
+        yield l, next_right
 
-    def closest_more_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        if not use_lectic_order:
+            next_left = round(l - self.precision, self.ndigits)
+            if use_data_values and self.min_bounds:
+                next_left = next(x for x in self.min_bounds[::-1] if x < l)\
+                    if self.min_bounds[0] < l else self.min_pattern[0]
+            yield next_left, r
+
+    def closest_more_precise(
+            self,
+            description: PatternType,
+            use_lectic_order: bool = False,use_data_values: bool = True
+    ) -> Iterator[PatternType]:
         """Return closest descriptions that are more precise than `description`
 
         Use lectic order for optimisation of description traversal
+        If use_data_values=True, then the function only returns the closest descriptions that can be found in the data
+        (in case the values from the data are provided).
         """
         if description == self.max_pattern:
             return
@@ -138,9 +181,16 @@ class IntervalPS(AbstractPS):
             yield self.max_pattern
             return
 
-        yield l, round(r-self.precision, self.ndigits)
+        next_right = round(r-self.precision, self.ndigits)
+        if use_data_values and self.max_bounds:
+            next_right = next(x for x in self.max_bounds[::-1] if x < r)
+        yield l, next_right
+
         if not use_lectic_order:
-            yield round(l+self.precision, self.ndigits), r
+            next_left = round(l + self.precision, self.ndigits)
+            if use_data_values and self.min_bounds:
+                next_left = next(x for x in self.min_bounds if x > l)
+            yield next_left, r
 
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
         """Return the least precise descriptions equivalent to the given attrs_order"""

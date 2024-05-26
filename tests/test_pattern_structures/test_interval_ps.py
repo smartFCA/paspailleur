@@ -5,6 +5,20 @@ from bitarray import frozenbitarray as fbarray
 import math
 
 
+def test_init():
+    ips = IntervalPS()
+    assert ips.min_bounds is None
+    assert ips.max_bounds is None
+
+    ips = IntervalPS(values=[3, 1, 2, 0, 10])
+    assert ips.min_bounds == (0, 1, 2, 3, 10)
+    assert ips.max_bounds == (0, 1, 2, 3, 10)
+
+    ips = IntervalPS(min_bounds=[10, 10, 2], max_bounds=[10, 2, 2])
+    assert ips.min_bounds == (2, 10)
+    assert ips.max_bounds == (2, 10)
+
+
 def test_intersect_patterns():
     ips = IntervalPS()
     assert ips.join_patterns((0, 1), (2, 3)) == (0, 3)
@@ -98,6 +112,11 @@ def test_closest_less_precise():
     assert list(ips.closest_less_precise((-math.inf, math.inf))) == []
     assert list(ips.closest_less_precise((0, 0.06))) == [(0, 0.07), (-0.01, 0.06)]
 
+    ips = IntervalPS(ndigits=2, values=[0, 1, 2, 3, 4, 5])
+    assert list(ips.closest_less_precise((1, 2))) == [(1, 3), (0, 2)]
+    assert list(ips.closest_less_precise((1, 2), use_lectic_order=True)) == [(1, 3)]
+    assert list(ips.closest_less_precise((0, 5))) == [(0, math.inf), (-math.inf, 5)]
+
 
 def test_closest_more_precise():
     ips = IntervalPS(ndigits=2)
@@ -106,6 +125,12 @@ def test_closest_more_precise():
     assert list(ips.closest_more_precise((1, 1))) == [ips.max_pattern]
     assert list(ips.closest_more_precise(ips.max_pattern)) == []
     assert list(ips.closest_more_precise((0, 0.03))) == [(0, 0.02), (0.01, 0.03)]
+
+    ips = IntervalPS(ndigits=2, values=[0, 1, 2, 3, 4, 5])
+    assert list(ips.closest_more_precise((1, 2))) == [(1, 1), (2, 2)]
+    assert list(ips.closest_more_precise((1, 2), use_lectic_order=True)) == [(1, 1)]
+    assert list(ips.closest_more_precise((0, 0))) == [ips.max_pattern]
+    assert list(ips.closest_more_precise((-math.inf, math.inf))) == [(-math.inf, 5), (0, math.inf)]
 
 
 def test_keys():
