@@ -1,4 +1,4 @@
-import math
+from enum import Flag
 from numbers import Number
 from typing import Iterator, Optional, Union, Iterable, Sequence
 from bitarray import frozenbitarray as fbarray
@@ -6,16 +6,23 @@ from .abstract_ps import AbstractPS
 from math import inf, ceil
 
 
+class BoundStatus(Flag):
+    OPEN = 0  # binary 00 meaning open-open
+    RCLOSED = 1  # binary 01 meaning open-closed
+    LCLOSED = 2  # binary 10 meaning closed-open
+    CLOSED = 3  # binary 11 meaning closed-closed
+
+
 class IntervalPS(AbstractPS):
     ndigits: int  # Number of digits after the comma
-    PatternType = Optional[tuple[float, float]]
-    min_pattern = (-inf, inf)  # The pattern that always describes all objects
-    max_pattern = (inf, -inf)  # The pattern that always describes no objects
+    PatternType = tuple[float, float, BoundStatus]
+    min_pattern = (-inf, inf, BoundStatus.OPEN)  # The pattern that always describes all objects
+    max_pattern = (None, None, BoundStatus.CLOSED)  # The pattern that always describes no objects
     min_bounds: Optional[tuple[float]] = None  # Left bounds of intervals in the data. Sorted in ascending order
     max_bounds: Optional[tuple[float]] = None  # Right bounds of intervals in the data. Sorted in ascending order
 
     def __init__(
-            self, ndigits: int = 6,
+            self, ndigits: int = 2,
             values: list[float] = None, min_bounds: list[float] = None, max_bounds: list[float] = None
     ):
         self.ndigits = ndigits
@@ -38,7 +45,15 @@ class IntervalPS(AbstractPS):
 
     def join_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
-        return min(a[0], b[0]), max(a[1], b[1])
+        if a == self.max_pattern:
+            return b
+        if b == self.max_pattern:
+            return a
+
+        l, r = min(a[0], b[0]), max(a[1], b[1])
+        lbound = BoundStatus.LCLOSED & (a[2] if a[0] < b[0] else b[2] if b[0] < a[0] else a[2]|b[2])
+        rbound = BoundStatus.RCLOSED & (b[2] if a[1] < b[1] else a[2] if b[1] < a[1] else a[2]|b[2])
+        return l, r, lbound | rbound
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
@@ -47,7 +62,16 @@ class IntervalPS(AbstractPS):
         if a == self.max_pattern:  # and b != max_pattern
             return False
 
-        return a[0] <= b[0] <= b[1] <= a[1]
+        if not (a[0] <= b[0]):
+            return False
+        if not (b[1] <= a[1]):
+            return False
+        if a[0] == b[0] and BoundStatus.LCLOSED not in a[2] and BoundStatus.LCLOSED in b[2]:
+            return False
+        if a[1] == b[1] and BoundStatus.RCLOSED not in a[2] and BoundStatus.RCLOSED in b[2]:
+            return False
+
+        return True
 
     def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
@@ -61,26 +85,26 @@ class IntervalPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
+        # TODO: Add support for open and half-open intervals
         min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
 
-        lower_bounds, upper_bounds = [sorted(set(bounds)) for bounds in zip(*data)]
-        min_, max_ = lower_bounds[0], upper_bounds[-1]
-        lower_bounds.pop(0)
-        upper_bounds.pop(-1)
+        lower_bounds = sorted({lb for lb, _, _ in data})
+        upper_bounds = sorted({ub for _, ub, _ in data})
+        min_, max_ = lower_bounds.pop(0), upper_bounds.pop(-1)
 
-        yield (min_, max_), fbarray([True]*len(data))
+        yield (min_, max_, BoundStatus.CLOSED), fbarray([True]*len(data))
 
         for lb in lower_bounds:
-            extent = fbarray((lb <= x for x, _ in data))
+            extent = fbarray((lb <= x for x, _, _ in data))
             if extent.count() < min_support:
                 break
-            yield (lb, max_), extent
+            yield (lb, max_, BoundStatus.CLOSED), extent
 
         for ub in upper_bounds[::-1]:
-            extent = fbarray((x <= ub for _, x in data))
+            extent = fbarray((x <= ub for _, x, _ in data))
             if extent.count() < min_support:
                 break
-            yield (min_, ub), extent
+            yield (min_, ub, BoundStatus.CLOSED), extent
 
         if min_support == 0:
             yield self.max_pattern, fbarray([False]*len(data))
@@ -89,35 +113,40 @@ class IntervalPS(AbstractPS):
             -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
-            return len({lb for lb, ub in data}) + len({ub for ub in data})
+            return len({lb for lb, _, _ in data}) + len({ub for _, ub, _ in data})
         return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         lbounds, rbounds = [], []
-        for description in data:
-            if isinstance(description, Number):
-                description = (description, description)
-            if isinstance(description, range):
-                start, stop = description.start, description.stop
+        for descr in data:
+            if isinstance(descr, Number):
+                descr = (descr, descr)
+            if isinstance(descr, range):
+                start, stop = descr.start, descr.stop
                 if start < stop:
-                    description = (start, stop-1)
+                    descr = (start, stop-1)
                 elif stop < start:
-                    description = (stop+1, start)
+                    descr = (stop+1, start)
                 else:  # if start == stop, then there is not closed interval inside [start, stop) == [start, start)
-                    description = self.max_pattern
+                    descr = self.max_pattern
 
-            if isinstance(description, Sequence)\
-                    and len(description) == 2 and all(isinstance(x, Number) for x in description):
-                description = (float(description[0]), float(description[1]))
+            if isinstance(descr, Sequence)\
+                    and len(descr) == 2 and all(isinstance(x, Number) for x in descr):
+                descr = (descr[0], descr[1], BoundStatus.CLOSED)
+            if isinstance(descr, Sequence) and len(descr) == 3 \
+                    and all(isinstance(x, Number) for x in descr[:2]) and isinstance(descr[2], BoundStatus):
+                pass
             else:
-                raise ValueError(f'Cannot preprocess this description: {description}. '
-                                 f'Provide either a number or a sequence of two numbers.')
+                raise ValueError(f'Cannot preprocess this description: {descr}. '
+                                 f'Provide either a number, or a sequence of two numbers,'
+                                 f' or a sequence of two numbers + border status'
+                                 f' (0 for open, 1 for right-closed, 2 for left-closed, 3 for closed interval).')
 
-            description = tuple([round(x, self.ndigits) if x != inf and x != -inf else x for x in description])
-            yield description
-            lbounds.append(description[0])
-            rbounds.append(description[1])
+            descr = (float(round(descr[0], self.ndigits)), float(round(descr[1], self.ndigits)), descr[2])
+            yield descr
+            lbounds.append(descr[0])
+            rbounds.append(descr[1])
 
         self.min_bounds = tuple(sorted(set(lbounds)))
         self.max_bounds = tuple(sorted(set(rbounds)))
@@ -126,13 +155,12 @@ class IntervalPS(AbstractPS):
         """Convert `description` into human-readable string"""
         if tuple(description) == self.max_pattern:
             return '∅'
-        if description == (-inf, inf):
-            return '[-∞, ∞]'
-        if description[0] == -inf:
-            return f'<= {description[1]:{number_format}}'
-        if description[1] == inf:
-            return f'>= {description[0]:{number_format}}'
-        return f'[{description[0]:{number_format}}, {description[1]:{number_format}}]'
+        lb = '[' if BoundStatus.LCLOSED in description[2] else '('
+        ub = ']' if BoundStatus.RCLOSED in description[2] else ')'
+
+        l = f"{description[0]:{number_format}}" if description[0] > -inf else '-∞'
+        u = f"{description[1]:{number_format}}" if description[1] < inf else '∞'
+        return f"{lb}{l}, {u}{ub}"
 
     def closest_less_precise(
             self,
@@ -146,26 +174,37 @@ class IntervalPS(AbstractPS):
         (in case the values from the data are provided).
         """
         if description == self.min_pattern:
-            return
+            return iter([])
 
-        l, r = description
+        l, r, bound = description
 
-        next_right = round(r+self.precision, self.ndigits)
-        if use_data_values and self.max_bounds:
-            next_right = next(x for x in self.max_bounds if x > r) if r < self.max_bounds[-1] else self.min_pattern[1]
-        yield l, next_right
+        next_right, next_right_bound = r, (~bound) & BoundStatus.RCLOSED
+        if BoundStatus.RCLOSED in bound:  # find next bigger value and make the bound open
+            if use_data_values and self.max_bounds:
+                next_right = next(x for x in self.max_bounds if x > r) if r < self.max_bounds[-1] else self.min_pattern[1]
+            else:
+                next_right += self.precision
 
-        if not use_lectic_order:
-            next_left = round(l - self.precision, self.ndigits)
+        next_right_descr = l, round(next_right, self.ndigits), (bound & BoundStatus.LCLOSED) | next_right_bound
+        if use_lectic_order:
+            return iter([next_right_descr])
+
+        next_left, next_left_bound = l, (~bound) & BoundStatus.LCLOSED
+        if BoundStatus.LCLOSED in bound:  # find next smaller value and make the bound open
             if use_data_values and self.min_bounds:
                 next_left = next(x for x in self.min_bounds[::-1] if x < l)\
                     if self.min_bounds[0] < l else self.min_pattern[0]
-            yield next_left, r
+            else:
+                next_left -= self.precision
+
+        next_left_descr = round(next_left, self.ndigits), r, (bound & BoundStatus.RCLOSED) | next_left_bound
+        return iter([next_right_descr, next_left_descr])
 
     def closest_more_precise(
             self,
             description: PatternType,
-            use_lectic_order: bool = False,use_data_values: bool = True
+            intent: PatternType = None,
+            use_lectic_order: bool = False, use_data_values: bool = True
     ) -> Iterator[PatternType]:
         """Return closest descriptions that are more precise than `description`
 
@@ -174,26 +213,38 @@ class IntervalPS(AbstractPS):
         (in case the values from the data are provided).
         """
         if description == self.max_pattern:
-            return
+            return iter([])
 
-        l, r = description
-        if r - l <= self.precision:
-            yield self.max_pattern
-            return
+        l, r, bound = description
+        if r == l:
+            return iter([self.max_pattern])
 
-        next_right = round(r-self.precision, self.ndigits)
-        if use_data_values and self.max_bounds:
-            next_right = next(x for x in self.max_bounds[::-1] if x < r)
-        yield l, next_right
+        intent = description if intent is None else intent
 
-        if not use_lectic_order:
-            next_left = round(l + self.precision, self.ndigits)
+        next_right, next_right_bound = r, (~bound) & BoundStatus.RCLOSED
+        if BoundStatus.RCLOSED not in bound:  # if right bound is open, find next smaller value
+            if use_data_values and self.max_bounds:
+                next_right = next(x for x in self.max_bounds[::-1] if x < r)
+            else:
+                next_right -= self.precision
+
+        next_right_descr = l, round(next_right, self.ndigits), (bound & BoundStatus.LCLOSED) | next_right_bound
+        if use_lectic_order and description[1] < intent[1]:
+            return iter([next_right_descr])
+
+        next_left, next_left_bound = l, (~bound) & BoundStatus.LCLOSED
+        if BoundStatus.LCLOSED not in bound:
             if use_data_values and self.min_bounds:
                 next_left = next(x for x in self.min_bounds if x > l)
-            yield next_left, r
+            else:
+                next_left += self.precision
+
+        next_left_descr = round(next_left, self.ndigits), r, (bound & BoundStatus.RCLOSED) | next_left_bound
+        return iter([next_right_descr, next_left_descr])
 
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
         """Return the least precise descriptions equivalent to the given attrs_order"""
-        out_l = max((l + self.precision for l, _ in data if l < intent[0]), default=self.min_pattern[0])
-        out_r = min((r - self.precision for _, r in data if r > intent[1]), default=self.min_pattern[1])
-        return [(out_l, out_r)]
+        assert intent[2] == BoundStatus.CLOSED, 'Only closed descriptions can be intents'
+        out_l = max((l for l, _, _ in data if l < intent[0]), default=self.min_pattern[0])
+        out_r = min((r for _, r, _ in data if r > intent[1]), default=self.min_pattern[1])
+        return [(out_l, out_r, BoundStatus.OPEN)]
