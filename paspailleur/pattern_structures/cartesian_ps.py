@@ -1,5 +1,9 @@
+from collections import deque
+from functools import reduce
+import itertools as itools
 from typing import Iterator, Union, Iterable, Any, Sequence
 from bitarray import frozenbitarray as fbarray
+from caspailleur.base_functions import isets2bas
 from .abstract_ps import AbstractPS
 
 from tqdm.autonotebook import tqdm
@@ -108,5 +112,79 @@ class CartesianPS(AbstractPS):
                 next_description[i] = next_coord
                 yield tuple(next_description)
 
-    def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
-        """Return the least precise descriptions equivalent to the given attrs_order"""
+#    def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
+#        """Return the least precise descriptions equivalent to the given attrs_order"""
+#        pass
+
+    def passkeys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
+        n_objs, n_attrs = len(data), len(self.basic_structures)
+        extent_final = next(isets2bas([self.extent(data, intent)], n_objs))
+        if extent_final.all():
+            return [self.min_pattern]
+        total_extent = extent_final | (~extent_final)
+
+        data_per_structure = [[] for _ in range(n_attrs)]
+        for item in data:
+            for j, v in enumerate(item):
+                data_per_structure[j].append(v)
+
+        extents_per_structure: list[fbarray] = [
+            next(isets2bas([bs.extent(values, coord)], n_objs))
+            for (bs, coord, values) in zip(self.basic_structures, intent, data_per_structure)
+        ]
+
+        protokeys_per_structure = []
+        for bs_i, (bs, coord, values) in enumerate(zip(self.basic_structures, intent, data_per_structure)):
+            base_extent = reduce(fbarray.__and__, map(extents_per_structure.__getitem__, set(range(n_attrs))-{bs_i}), total_extent)
+            protokey = bs.keys(coord, [values[i] for i in base_extent.search(True)])
+            protokeys_per_structure.append(tuple(protokey))
+
+        keys = []
+        for n_coords in range(1, n_attrs+1):
+            for combination in itools.combinations(range(n_attrs), n_coords):
+                extent = reduce(fbarray.__and__, map(extents_per_structure.__getitem__, combination), total_extent)
+                if extent != extent_final:
+                    continue
+
+                subdata = [tuple([row[j] for j in combination]) for i, row in enumerate(data)]
+                subintent = tuple([intent[j] for j in combination])
+                subps = CartesianPS([self.basic_structures[j] for j in combination])
+
+                protokeys = itools.product(*map(protokeys_per_structure.__getitem__, combination))
+                key_candidates, new_keys, visited = deque(protokeys), [], set()
+                while key_candidates:
+                    candidate = key_candidates.popleft()
+                    if candidate in visited:
+                        continue
+                    visited.add(candidate)
+
+                    extent = next(isets2bas([subps.extent(subdata, candidate)], n_objs))
+                    if extent == extent_final:
+                        new_keys.append(candidate)
+                        continue
+                    next_candidates = [
+                        next_candidate
+                        for next_candidate in subps.closest_more_precise(candidate, use_lectic_order=False)
+                        if subps.is_less_precise(next_candidate, subintent) or next_candidate == subintent
+                    ]
+                    key_candidates.extend(next_candidates)
+
+                while True:
+                    for new_key in list(new_keys):
+                        preciser_keys = {other_key for other_key in new_keys
+                                         if new_key != other_key and subps.is_less_precise(new_key, other_key)}
+                        if preciser_keys:
+                            new_keys = [key for key in new_keys if key not in preciser_keys]
+                            break
+                    else:  # no break => no preciser keys found for any key
+                        break  # the list of keys is maximal
+
+                for new_key in new_keys:
+                    descr = list(self.min_pattern)
+                    for j, v in zip(combination, new_key):
+                        descr[j] = v
+                    keys.append(tuple(descr))
+
+            if keys:
+                break
+        return keys

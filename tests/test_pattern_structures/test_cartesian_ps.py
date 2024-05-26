@@ -1,4 +1,5 @@
 from paspailleur.pattern_structures import CartesianPS, IntervalPS, DisjunctiveSetPS, ConjunctiveSetPS, NgramPS, BoundStatus as BS
+import math
 from bitarray import frozenbitarray as fbarray
 
 
@@ -231,3 +232,20 @@ def test_keys():
     #    ((1, math.inf, BS.OPEN), (1, 7, BS.OPEN))
     #]
     #assert keys == keys_true
+
+
+def test_passkeys():
+    ps = CartesianPS(basic_structures=[
+        IntervalPS(ndigits=2), IntervalPS(ndigits=2),
+    ])
+    data = [
+        (3, 3), (6, 3), (3, 5), (6, 5),
+        (0.5, 5), (1, 4), (2, 1), (2, 7), (7, 7)
+    ]
+    data = list(ps.preprocess_data(data))
+
+    pkeys = ps.passkeys(((3, 6, BS.CLOSED), (3, 5, BS.CLOSED)), data)
+    pkeys_true = [
+        ((2, 7, BS.OPEN), (-math.inf, math.inf, BS.OPEN))
+    ]
+    assert pkeys == pkeys_true
