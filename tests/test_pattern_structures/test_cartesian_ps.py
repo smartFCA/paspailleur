@@ -125,3 +125,79 @@ def test_verbalize():
     params = {0: {'number_format': '.0f'}, 1: {'ngram_separator': ', '}}
     verbose = "0: [1, 2]\n1: hello world, hello\n2: a, b\n3: ∅"
     assert ps.verbalize(description, basic_structures_params=params, separator='\n') == verbose
+
+
+def test_closest_less_precise():
+    ps = CartesianPS(basic_structures=[
+        IntervalPS(ndigits=2), NgramPS(),
+        DisjunctiveSetPS(all_values={'a', 'b', 'c', 'd'}), ConjunctiveSetPS()
+    ])
+
+    description = [(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]
+    next_descrs = set(ps.closest_less_precise(description, use_lectic_order=False))
+    next_descrs_true = {
+        tuple([(0.99, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.44), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello',), ('world',), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'a', 'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c', 'd'}), frozenset()]),
+    }
+    assert next_descrs == next_descrs_true
+
+    next_descrs = set(ps.closest_less_precise(description, use_lectic_order=True))
+    next_descrs_true = {
+        tuple([(1, 2.44), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello',), ('world',), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c', 'd'}), frozenset()]),
+    }
+    assert next_descrs == next_descrs_true
+
+
+def test_closest_more_precise():
+    ps = CartesianPS(basic_structures=[
+        IntervalPS(ndigits=2), NgramPS(),
+        DisjunctiveSetPS(all_values={'a', 'b', 'c', 'd'}), ConjunctiveSetPS(all_values={'x'})
+    ])
+
+    description = [(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]
+    next_descrs = set(ps.closest_more_precise(description, use_lectic_order=False))
+    next_descrs_true = {
+        tuple([(1.01, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.42), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+
+        tuple([(1, 2.43), frozenset({('hello', 'world', '!')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('!', 'hello', 'world')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', '!')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world', 'hello'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', 'hello')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('hello', '!')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('world', 'hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', 'world')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('world', '!')}), frozenset({'b', 'c'}), frozenset()]),
+
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'c'}), frozenset()]),
+
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset({'x'})]),
+    }
+    assert next_descrs == next_descrs_true
+
+    # TODO: Double check the following test
+    next_descrs = set(ps.closest_more_precise(description, use_lectic_order=True))
+    next_descrs_true = {
+        tuple([(1, 2.42), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+
+        tuple([(1, 2.43), frozenset({('hello', 'world', '!')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', '!')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world', 'hello'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', 'hello')}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset()]),
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!', 'world')}), frozenset({'b', 'c'}), frozenset()]),
+
+        tuple([(1, 2.43), frozenset({('hello', 'world'), ('!',)}), frozenset({'b', 'c'}), frozenset({'x'})]),
+    }
+    assert next_descrs == next_descrs_true

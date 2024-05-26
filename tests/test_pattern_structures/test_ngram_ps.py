@@ -108,6 +108,7 @@ def test_closest_less_precise():
     ps = NgramPS()
     assert set(ps.closest_less_precise(frozenset())) == set()
     assert set(ps.closest_less_precise(frozenset({tuple('a')}))) == {frozenset()}
+    assert set(ps.closest_less_precise(frozenset({tuple('ab')}))) == {frozenset({tuple('a'), tuple('b')})}
     assert set(ps.closest_less_precise(frozenset({tuple('ab'), tuple('x')}))) == {
         frozenset({tuple('ab')}), frozenset({tuple('a'), tuple('b'), tuple('x')}),
     }

@@ -73,3 +73,34 @@ class CartesianPS(AbstractPS):
         basic_strs = [f"{pattern_names[i]}: {bps.verbalize(v, **basic_structures_params.get(i, {}))}"
                       for i, (v, bps) in enumerate(zip(description, self.basic_structures))]
         return separator.join(basic_strs)
+
+    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.min_pattern:
+            return iter([])
+
+        for i, bs in enumerate(self.basic_structures):
+            for next_coord in bs.closest_less_precise(description[i], use_lectic_order=use_lectic_order):
+                next_description = list(description)
+                next_description[i] = next_coord
+                yield tuple(next_description)
+
+    def closest_more_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal
+        """
+        if description == self.max_pattern:
+            return iter([])
+
+        for i, bs in enumerate(self.basic_structures):
+            for next_coord in bs.closest_more_precise(description[i], use_lectic_order=use_lectic_order):
+                next_description = list(description)
+                next_description[i] = next_coord
+                yield tuple(next_description)
+
+    def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
+        """Return the least precise descriptions equivalent to the given attrs_order"""
