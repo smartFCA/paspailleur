@@ -20,10 +20,12 @@ class IntervalPS(AbstractPS):
     max_pattern = (None, None, BoundStatus.CLOSED)  # The pattern that always describes no objects
     min_bounds: Optional[tuple[float]] = None  # Left bounds of intervals in the data. Sorted in ascending order
     max_bounds: Optional[tuple[float]] = None  # Right bounds of intervals in the data. Sorted in ascending order
+    only_closed_flg: bool = False  # Use only closed intervals
 
     def __init__(
             self, ndigits: int = 2,
-            values: list[float] = None, min_bounds: list[float] = None, max_bounds: list[float] = None
+            values: list[float] = None, min_bounds: list[float] = None, max_bounds: list[float] = None,
+            only_closed_flag: bool = False
     ):
         self.ndigits = ndigits
 
@@ -39,6 +41,8 @@ class IntervalPS(AbstractPS):
         self.min_bounds = tuple(sorted({round(x, ndigits) for x in min_bounds})) if min_bounds else None
         self.max_bounds = tuple(sorted({round(x, ndigits) for x in max_bounds})) if max_bounds else None
 
+        self.only_closed_flg = only_closed_flag
+
     @property
     def precision(self) -> float:
         return 10**(-self.ndigits)
@@ -51,6 +55,8 @@ class IntervalPS(AbstractPS):
             return a
 
         l, r = min(a[0], b[0]), max(a[1], b[1])
+        if self.only_closed_flg:
+            return l, r, BoundStatus.CLOSED
         lbound = BoundStatus.LCLOSED & (a[2] if a[0] < b[0] else b[2] if b[0] < a[0] else a[2]|b[2])
         rbound = BoundStatus.RCLOSED & (b[2] if a[1] < b[1] else a[2] if b[1] < a[1] else a[2]|b[2])
         return l, r, lbound | rbound
@@ -66,6 +72,9 @@ class IntervalPS(AbstractPS):
             return False
         if not (b[1] <= a[1]):
             return False
+        if self.only_closed_flg:
+            return True
+
         if a[0] == b[0] and BoundStatus.LCLOSED not in a[2] and BoundStatus.LCLOSED in b[2]:
             return False
         if a[1] == b[1] and BoundStatus.RCLOSED not in a[2] and BoundStatus.RCLOSED in b[2]:
@@ -178,24 +187,26 @@ class IntervalPS(AbstractPS):
 
         l, r, bound = description
 
-        next_right, next_right_bound = r, (~bound) & BoundStatus.RCLOSED
+        next_right = r
         if BoundStatus.RCLOSED in bound:  # find next bigger value and make the bound open
             if use_data_values and self.max_bounds:
                 next_right = next(x for x in self.max_bounds if x > r) if r < self.max_bounds[-1] else self.min_pattern[1]
             else:
                 next_right += self.precision
+        next_right_bound = (~bound) & BoundStatus.RCLOSED if not self.only_closed_flg else BoundStatus.CLOSED
 
         next_right_descr = l, round(next_right, self.ndigits), (bound & BoundStatus.LCLOSED) | next_right_bound
         if use_lectic_order:
             return iter([next_right_descr])
 
-        next_left, next_left_bound = l, (~bound) & BoundStatus.LCLOSED
+        next_left = l
         if BoundStatus.LCLOSED in bound:  # find next smaller value and make the bound open
             if use_data_values and self.min_bounds:
                 next_left = next(x for x in self.min_bounds[::-1] if x < l)\
                     if self.min_bounds[0] < l else self.min_pattern[0]
             else:
                 next_left -= self.precision
+        next_left_bound = (~bound) & BoundStatus.LCLOSED if not self.only_closed_flg else BoundStatus.CLOSED
 
         next_left_descr = round(next_left, self.ndigits), r, (bound & BoundStatus.RCLOSED) | next_left_bound
         return iter([next_right_descr, next_left_descr])
@@ -221,23 +232,25 @@ class IntervalPS(AbstractPS):
 
         intent = description if intent is None else intent
 
-        next_right, next_right_bound = r, (~bound) & BoundStatus.RCLOSED
+        next_right = r
         if BoundStatus.RCLOSED not in bound:  # if right bound is open, find next smaller value
             if use_data_values and self.max_bounds:
                 next_right = next(x for x in self.max_bounds[::-1] if x < r)
             else:
                 next_right -= self.precision
+        next_right_bound = (~bound) & BoundStatus.RCLOSED if not self.only_closed_flg else BoundStatus.CLOSED
 
         next_right_descr = l, round(next_right, self.ndigits), (bound & BoundStatus.LCLOSED) | next_right_bound
         if use_lectic_order and description[1] < intent[1]:
             return iter([next_right_descr])
 
-        next_left, next_left_bound = l, (~bound) & BoundStatus.LCLOSED
+        next_left = l
         if BoundStatus.LCLOSED not in bound:
             if use_data_values and self.min_bounds:
                 next_left = next(x for x in self.min_bounds if x > l)
             else:
                 next_left += self.precision
+        next_left_bound = (~bound) & BoundStatus.LCLOSED if not self.only_closed_flg else BoundStatus.CLOSED
 
         next_left_descr = round(next_left, self.ndigits), r, (bound & BoundStatus.RCLOSED) | next_left_bound
         return iter([next_right_descr, next_left_descr])
@@ -245,6 +258,10 @@ class IntervalPS(AbstractPS):
     def keys(self, intent: PatternType, data: list[PatternType]) -> list[PatternType]:
         """Return the least precise descriptions equivalent to the given attrs_order"""
         assert intent[2] == BoundStatus.CLOSED, 'Only closed descriptions can be intents'
+        if self.only_closed_flg:
+            out_l = intent[0] if any(l < intent[0] for l, _, _ in data) else self.min_pattern[0]
+            out_r = intent[1] if any(intent[1] < r for _, r, _ in data) else self.min_pattern[1]
+            return [(out_l, out_r, BoundStatus.OPEN)]
         out_l = max((l for l, _, _ in data if l < intent[0]), default=self.min_pattern[0])
         out_r = min((r for _, r, _ in data if r > intent[1]), default=self.min_pattern[1])
         return [(out_l, out_r, BoundStatus.OPEN)]
