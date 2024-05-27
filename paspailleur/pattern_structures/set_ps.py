@@ -3,10 +3,11 @@ from dataclasses import dataclass
 from functools import reduce
 from math import ceil
 from numbers import Number
-from typing import Iterator, TypeVar, Union, Iterable, Container, Any, Hashable
+from typing import Iterator, TypeVar, Union, Iterable, Container, Hashable
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
 from deprecation import deprecated
+from caspailleur.base_functions import isets2bas
 
 from .abstract_ps import AbstractPS
 
@@ -58,7 +59,7 @@ class DisjunctiveSetPS(AbstractPS):
             return False
         return a & b == b
 
-    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float]= 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -71,29 +72,29 @@ class DisjunctiveSetPS(AbstractPS):
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
         min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+        n_objects = len(data)
+        empty_extent = fbarray(bazeros(n_objects))
 
-        unique_values = set()
-        for data_row in data:
-            unique_values |= data_row
-        unique_values = sorted(unique_values)
+        vals_extents: dict[T, bitarray] = {}
+        for i, pattern in enumerate(data):
+            for v in pattern:
+                if v not in vals_extents:
+                    vals_extents[v] = bitarray(empty_extent)
+                vals_extents[v][i] = True
 
-        for comb_size in range(len(unique_values), -1, -1):
-            combs = combinations(unique_values, comb_size)
-            for combination in combs:
-                pattern = frozenset(combination)
-                extent = fbarray((data_row & pattern == data_row for data_row in data))
-                if extent.count() < min_support:  # TODO: Optimize min_support check
-                    continue
-                yield pattern, extent
+        for value in reversed(sorted(vals_extents)):
+            pattern = frozenset(vals_extents) - {value}
+            extent = reduce(fbarray.__or__, (vals_extents[v] for v in pattern), empty_extent)
+            if extent.count() < min_support:
+                continue
+            yield pattern, extent
 
     def n_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
             -> int:
         """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
-            unique_values = set()
-            for data_row in data:
-                unique_values |= data_row
-            return 2**len(unique_values)
+            unique_values = reduce(set.__or__, data, set())
+            return len(unique_values)
         return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
@@ -207,7 +208,8 @@ class ConjunctiveSetPS(AbstractPS):
         :return
             iterator of (description: PatternType, extent of the description: frozenbitarray)
         """
-        min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
+        n_objects = len(data)
+        min_support = ceil(n_objects * min_support) if 0 < min_support < 1 else int(min_support)
 
         empty_extent = bazeros(len(data))
         vals_extents: dict[T, bitarray] = {}
@@ -217,36 +219,23 @@ class ConjunctiveSetPS(AbstractPS):
                     vals_extents[v] = empty_extent.copy()
                 vals_extents[v][i] = True
 
-        total_pattern = {v for v, extent in vals_extents.items() if extent.all()}
-        yield frozenset(total_pattern), fbarray(~empty_extent)
+        for v in sorted(vals_extents):
+            extent = vals_extents[v]
+            if extent.count() < min_support:
+                continue
+            yield frozenset({v}), fbarray(extent)
 
-        vals_to_pop = [v for v, extent in vals_extents.items() if extent.count() < min_support or extent.all()]
-        for v in vals_to_pop:
-            del vals_extents[v]
+        # bottom_extent = reduce(fbarray.__and__, vals_extents.values(), ~empty_extent)
+        # if bottom_extent.count() >= min_support:
+        #     yield frozenset(vals_extents), fbarray(bottom_extent)
 
-        vals, extents = [list(vals) for vals in zip(*vals_extents.items())]
-        n_vals = len(vals)
-
-        queue = deque([({v}, extent, i) for i, (v, extent) in enumerate(zip(vals, extents))])
-        while queue:
-            words, extent, max_val_id = queue.popleft()
-            yield frozenset(words), fbarray(extent)
-
-            for i in range(max_val_id + 1, n_vals):
-                next_extent = extent & extents[i]
-                if not next_extent.any() or next_extent.count() < min_support:
-                    continue
-
-                if extent & extents[i] == extent or extents[i] & extent == extents[i]:
-                    continue
-
-                next_words = words | {vals[i]}
-                queue.append((next_words, next_extent, i))
-
+    def n_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0, use_tqdm: bool = False)\
+            -> int:
+        """Count the number of attributes in the binary representation of `data`"""
         if min_support == 0:
-            bottom_extent = reduce(lambda a, b: a & b, vals_extents.values(), ~empty_extent)
-            if not bottom_extent.any():
-                yield frozenset(vals_extents), fbarray(bottom_extent)
+            unique_values = reduce(set.__or__, data, set())
+            return len(unique_values)
+        return super().n_attributes(data, min_support)
 
     def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""

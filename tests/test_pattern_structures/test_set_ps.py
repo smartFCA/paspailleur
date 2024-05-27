@@ -20,20 +20,16 @@ def test_intersect_patterns():
 
 def test_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
-    patterns_true = ({'a', 'b', 'c'}, {'a', 'b'}, {'a', 'c'}, {'b', 'c'}, {'a'}, {'b'}, {'c'}, set())
+
+    sps = DisjunctiveSetPS()
+    patterns_true = ({'a', 'b'}, {'a', 'c'}, {'b', 'c'})
     flags_true = (
-        '111',  # {'a', 'b', 'c'},
-        '110',  # {'a', 'b'},
+        '111',  # {'a', 'b'},
         '101',  # {'a', 'c'},
-        '010',  # {'b', 'c'},
-        '100',  # {'a'},
-        '010',  # {'b'},
-        '000',  # {'c'},
-        '000',  # set(),
+        '011',  # {'b', 'c'},
     )
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
-    sps = DisjunctiveSetPS()
     patterns, flags = list(zip(*list(sps.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
@@ -45,17 +41,15 @@ def test_bin_attributes():
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
 
     # SubsetPS
-    patterns_true = (set(), {'a'}, {'b'}, {'c'}, {'a', 'b', 'c'})
+    sps = ConjunctiveSetPS()
+    patterns_true = ({'a'}, {'b'}, {'c'})
     flags_true = (
-        '111',  # set(),
-        '101',  # {'a'}
-        '010',  # {'b'}
-        '001',  # {'c'}
-        '000',  # {'a','b','c'}
+        '101',  # {'a'},
+        '010',  # {'b'},
+        '001',  # {'c'},
     )
     flags_true = tuple([fbarray(flag) for flag in flags_true])
 
-    sps = ConjunctiveSetPS()
     patterns, flags = list(zip(*list(sps.iter_attributes(data))))
     assert patterns == patterns_true
     assert flags == flags_true
@@ -65,6 +59,7 @@ def test_bin_attributes():
 
     patterns, flags = list(zip(*list(sps.iter_attributes(data, min_support=2))))
     assert set(flags) == {flg for flg in flags_true if flg.count() >= 2}
+
 
 def test_is_subpattern():
     sps = DisjunctiveSetPS()
@@ -81,10 +76,10 @@ def test_n_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 
     sps = DisjunctiveSetPS()
-    assert sps.n_attributes(data) == 8
+    assert sps.n_attributes(data) == 3
 
     sps = ConjunctiveSetPS()
-    assert sps.n_attributes(data) == 5
+    assert sps.n_attributes(data) == 3
 
 
 def test_intent():
