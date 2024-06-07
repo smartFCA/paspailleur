@@ -1,7 +1,7 @@
 from functools import reduce
 from itertools import product, chain
 from math import ceil
-from typing import Iterator, Iterable, Union
+from typing import Iterator, Iterable, Union, Literal
 
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
@@ -19,7 +19,11 @@ class NgramPS(AbstractPS):
     def __init__(self, min_n: int = 1):
         self.min_n = min_n
 
-    def preprocess_data(self, data: Iterable[str], separator=' ', update_params: bool = False) -> Iterator[PatternType]:
+    def preprocess_data(
+            self,
+            data: Iterable[str], separator=' ',
+            update_params_mode:  Literal['write', 'append', False] = 'append'
+    ) -> Iterator[PatternType]:
         for text in data:
             if not text:
                 yield set()

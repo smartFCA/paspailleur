@@ -1,10 +1,10 @@
 from collections import deque
 from functools import reduce
 import itertools as itools
-from typing import Iterator, Union, Iterable, Any, Sequence
+from typing import Iterator, Union, Iterable, Any, Sequence, Literal
 from bitarray import frozenbitarray as fbarray
 from caspailleur.base_functions import isets2bas
-from .abstract_ps import AbstractPS
+from .abstract_ps import AbstractPS, WrongUpdateParametersModeError
 
 from tqdm.autonotebook import tqdm
 
@@ -61,16 +61,30 @@ class CartesianPS(AbstractPS):
             n_bin_attrs += ps.n_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
         return n_bin_attrs
 
-    def preprocess_data(self, data: Iterable[Sequence[Any]], update_params: bool = False) -> Iterator[PatternType]:
+    def preprocess_data(
+            self,
+            data: Iterable[Sequence[Any]],
+            update_params_mode: Literal['write', 'append', False] = 'append'
+    ) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         vals_per_structures = [[] for _ in self.basic_structures]
         for description in data:
             for column, value in enumerate(description):
                 vals_per_structures[column].append(value)
 
-        processed_per_structures = [list(bs.preprocess_data(vals, update_params=update_params))
+        assert update_params_mode in {'write', 'append', False}, \
+            'Possible values for `update_params_mode` are: ' \
+            '"write" to overwrite intrinsic parameters based on the provided data, ' \
+            '"append" to fill in undefined intrinsic parameters based on the provided data, ' \
+            'and False to change no parameters'
+
+        processed_per_structures = [list(bs.preprocess_data(vals, update_params_mode=update_params_mode))
                                     for bs, vals in zip(self.basic_structures, vals_per_structures)]
-        if update_params:
+
+        if update_params_mode not in {'write', 'append', False}:
+            raise WrongUpdateParametersModeError()
+
+        if update_params_mode:
             self.min_pattern = tuple([ps.min_pattern for ps in self.basic_structures])
             self.max_pattern = tuple([ps.max_pattern for ps in self.basic_structures])
         return zip(*processed_per_structures)

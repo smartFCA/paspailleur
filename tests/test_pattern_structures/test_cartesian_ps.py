@@ -118,7 +118,7 @@ def test_preprocess_data():
     data = [(1, (3, 4), 'ClassA'),
             (2, (2, 5), 'ClassB')]
     cps = CartesianPS(basic_structures=[IntervalPS(), IntervalPS(), DisjunctiveSetPS()])
-    dp = list(cps.preprocess_data(data, update_params=True))
+    dp = list(cps.preprocess_data(data))
     assert dp == [((1., 1., BS.CLOSED), (3., 4., BS.CLOSED), frozenset({'ClassA'})),
                   ((2., 2., BS.CLOSED), (2., 5., BS.CLOSED), frozenset({'ClassB'}))]
     assert cps.basic_structures[0].min_bounds == (1., 2.)
@@ -244,7 +244,7 @@ def test_passkeys():
         (3, 3), (6, 3), (3, 5), (6, 5),
         (0.5, 5), (1, 4), (2, 1), (2, 7), (7, 7)
     ]
-    data = list(ps.preprocess_data(data, update_params=True))
+    data = list(ps.preprocess_data(data))
 
     pkeys = ps.passkeys(((3, 6, BS.CLOSED), (3, 5, BS.CLOSED)), data)
     pkeys_true = [((2, 7, BS.OPEN), (-math.inf, math.inf, BS.OPEN))]
@@ -263,7 +263,7 @@ def test_passkeys():
         (13, 'Gryffindor', 'Fred Weasley'),
         (11, 'Slytherin', 'Draco Malfoy')
     ]
-    data = list(ps.preprocess_data(data, update_params=True))
+    data = list(ps.preprocess_data(data))
     schools = ps.min_pattern[1]
 
     intent = ((11, 13, BS.CLOSED), schools, frozenset())

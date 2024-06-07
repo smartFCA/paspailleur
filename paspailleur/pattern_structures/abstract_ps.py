@@ -1,6 +1,6 @@
 from collections import deque
 from dataclasses import dataclass
-from typing import TypeVar, Iterator, Iterable, Union, Optional
+from typing import TypeVar, Iterator, Iterable, Union, Optional, Literal
 from bitarray import frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 from tqdm.autonotebook import tqdm
@@ -13,6 +13,14 @@ class ProjectionNotFoundError(ValueError):
 
     def __str__(self):
         return f"Projection #{self.projection_number} could not be computed"
+
+
+class WrongUpdateParametersModeError(ValueError):
+    def __str__(self):
+        return 'Possible values for `update_params_mode` are: ' \
+               '"write" to overwrite intrinsic parameters based on the provided data, ' \
+               '"append" to fill in undefined intrinsic parameters based on the provided data, ' \
+               'and False to change no parameters'
 
 
 class AbstractPS:
@@ -135,7 +143,7 @@ class AbstractPS:
         itemsets_ba = [fbarray(ba) for ba in itemsets_ba]
         return list(patterns), itemsets_ba
 
-    def preprocess_data(self, data: Iterable, update_params: bool = False) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable, update_params_mode: Literal['write', 'append', False] = 'append') -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         for description in data:
             yield description

@@ -1,8 +1,8 @@
 from enum import Flag
 from numbers import Number
-from typing import Iterator, Optional, Union, Iterable, Sequence
+from typing import Iterator, Optional, Union, Iterable, Sequence, Literal
 from bitarray import frozenbitarray as fbarray
-from .abstract_ps import AbstractPS
+from .abstract_ps import AbstractPS, WrongUpdateParametersModeError
 from math import inf, ceil
 
 
@@ -146,7 +146,11 @@ class IntervalPS(AbstractPS):
             return len({lb for lb, _, _ in data}) + len({ub for _, ub, _ in data})
         return super().n_attributes(data, min_support)
 
-    def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]], update_params: bool = False) -> Iterator[PatternType]:
+    def preprocess_data(
+            self,
+            data: Iterable[Union[Number, Sequence[Number]]],
+            update_params_mode: Literal['write', 'append', False] = 'append'
+    ) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         lbounds, rbounds = [], []
         for descr in data:
@@ -178,9 +182,19 @@ class IntervalPS(AbstractPS):
             lbounds.append(descr[0])
             rbounds.append(descr[1])
 
-        if update_params:
-            self.min_bounds = tuple(sorted(set(lbounds)))
-            self.max_bounds = tuple(sorted(set(rbounds)))
+        if update_params_mode not in {'write', 'append', False}:
+            raise WrongUpdateParametersModeError()
+
+        if not update_params_mode:
+            return
+
+        # update_params_mode in {'write', 'append'}
+        update_min, update_max = True, True
+        if update_params_mode == 'append':
+            update_min, update_max = self.min_bounds is None, self.max_bounds is None
+
+        self.min_bounds = tuple(sorted(set(lbounds))) if update_min else self.min_bounds
+        self.max_bounds = tuple(sorted(set(rbounds))) if update_max else self.max_bounds
 
     def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
         """Convert `description` into human-readable string"""
