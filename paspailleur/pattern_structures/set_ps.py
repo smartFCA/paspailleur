@@ -97,7 +97,7 @@ class DisjunctiveSetPS(AbstractPS):
             return len(unique_values)
         return super().n_attributes(data, min_support)
 
-    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]], update_params: bool = False) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         all_values = set()
         for description in data:
@@ -112,7 +112,7 @@ class DisjunctiveSetPS(AbstractPS):
             yield description
             all_values |= description
 
-        if self.min_pattern == self.MIN_PATTERN_PLACEHOLDER:
+        if update_params:
             self.min_pattern = frozenset(all_values)
 
     def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:
@@ -237,7 +237,7 @@ class ConjunctiveSetPS(AbstractPS):
             return len(unique_values)
         return super().n_attributes(data, min_support)
 
-    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]]) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable[Union[Number, str, Container[Hashable]]], update_params: bool = False) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         all_values = set()
         for description in data:
@@ -252,7 +252,7 @@ class ConjunctiveSetPS(AbstractPS):
             yield description
             all_values |= description
 
-        if self.max_pattern == self.MAX_PATTERN_PLACEHOLDER:
+        if update_params:
             self.max_pattern = frozenset(all_values)
 
     def verbalize(self, description: PatternType, separator: str = ', ', add_curly_braces: bool = False) -> str:

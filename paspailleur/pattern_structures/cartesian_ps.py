@@ -57,17 +57,18 @@ class CartesianPS(AbstractPS):
             n_bin_attrs += ps.n_attributes(ps_data, min_support=min_support, use_tqdm=use_tqdm)
         return n_bin_attrs
 
-    def preprocess_data(self, data: Iterable[Sequence[Any]]) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable[Sequence[Any]], update_params: bool = False) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         vals_per_structures = [[] for _ in self.basic_structures]
         for description in data:
             for column, value in enumerate(description):
                 vals_per_structures[column].append(value)
 
-        processed_per_structures = [list(bs.preprocess_data(vals))
+        processed_per_structures = [list(bs.preprocess_data(vals, update_params=update_params))
                                     for bs, vals in zip(self.basic_structures, vals_per_structures)]
-        self.min_pattern = tuple([ps.min_pattern for ps in self.basic_structures])
-        self.max_pattern = tuple([ps.max_pattern for ps in self.basic_structures])
+        if update_params:
+            self.min_pattern = tuple([ps.min_pattern for ps in self.basic_structures])
+            self.max_pattern = tuple([ps.max_pattern for ps in self.basic_structures])
         return zip(*processed_per_structures)
 
     def verbalize(

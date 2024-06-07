@@ -19,7 +19,7 @@ class NgramPS(AbstractPS):
     def __init__(self, min_n: int = 1):
         self.min_n = min_n
 
-    def preprocess_data(self, data: Iterable[str], separator=' ') -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable[str], separator=' ', update_params: bool = False) -> Iterator[PatternType]:
         for text in data:
             if not text:
                 yield set()

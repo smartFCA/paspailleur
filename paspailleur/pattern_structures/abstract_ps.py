@@ -131,7 +131,7 @@ class AbstractPS:
         itemsets_ba = [fbarray(ba) for ba in itemsets_ba]
         return list(patterns), itemsets_ba
 
-    def preprocess_data(self, data: Iterable) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable, update_params: bool = False) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         for description in data:
             yield description

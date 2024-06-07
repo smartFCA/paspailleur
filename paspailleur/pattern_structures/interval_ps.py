@@ -97,8 +97,8 @@ class IntervalPS(AbstractPS):
         # TODO: Add support for open and half-open intervals
         min_support = ceil(len(data) * min_support) if 0 < min_support < 1 else int(min_support)
 
-        lower_bounds = sorted({lb for lb, _, _ in data})
-        upper_bounds = sorted({ub for _, ub, _ in data})
+        lower_bounds = sorted({lb for lb, _, _ in data}) if self.min_bounds is None else sorted(self.min_bounds)
+        upper_bounds = sorted({ub for _, ub, _ in data}) if self.max_bounds is None else sorted(self.max_bounds)
         min_, max_ = lower_bounds.pop(0), upper_bounds.pop(-1)
 
         yield (min_, max_, BoundStatus.CLOSED), fbarray([True]*len(data))
@@ -125,7 +125,7 @@ class IntervalPS(AbstractPS):
             return len({lb for lb, _, _ in data}) + len({ub for _, ub, _ in data})
         return super().n_attributes(data, min_support)
 
-    def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]]) -> Iterator[PatternType]:
+    def preprocess_data(self, data: Iterable[Union[Number, Sequence[Number]]], update_params: bool = False) -> Iterator[PatternType]:
         """Preprocess the data into to the format, supported by attrs_order/extent functions"""
         lbounds, rbounds = [], []
         for descr in data:
@@ -157,8 +157,9 @@ class IntervalPS(AbstractPS):
             lbounds.append(descr[0])
             rbounds.append(descr[1])
 
-        self.min_bounds = tuple(sorted(set(lbounds)))
-        self.max_bounds = tuple(sorted(set(rbounds)))
+        if update_params:
+            self.min_bounds = tuple(sorted(set(lbounds)))
+            self.max_bounds = tuple(sorted(set(rbounds)))
 
     def verbalize(self, description: PatternType, number_format: str = '.2f') -> str:
         """Convert `description` into human-readable string"""
