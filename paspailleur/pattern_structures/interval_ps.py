@@ -57,8 +57,29 @@ class IntervalPS(AbstractPS):
         l, r = min(a[0], b[0]), max(a[1], b[1])
         if self.only_closed_flg:
             return l, r, BoundStatus.CLOSED
-        lbound = BoundStatus.LCLOSED & (a[2] if a[0] < b[0] else b[2] if b[0] < a[0] else a[2]|b[2])
-        rbound = BoundStatus.RCLOSED & (b[2] if a[1] < b[1] else a[2] if b[1] < a[1] else a[2]|b[2])
+        lbound = BoundStatus.LCLOSED & (a[2] if a[0] < b[0] else b[2] if b[0] < a[0] else a[2] | b[2])
+        rbound = BoundStatus.RCLOSED & (b[2] if a[1] < b[1] else a[2] if b[1] < a[1] else a[2] | b[2])
+        return l, r, lbound | rbound
+
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        if a == self.min_pattern or b == self.min_pattern:
+            return self.min_pattern
+
+        a, b = (a, b) if a[0] <= b[0] else (b, a)  # so now a[0] <= b[0]
+        if a[1] < b[0]:
+            return self.max_pattern
+
+        if self.only_closed_flg:
+            return b[0], min(a[1], b[1]), BoundStatus.CLOSED
+
+        # now if at least one of the patterns is (half)open
+        if a[1] == b[0] and not (BoundStatus.RCLOSED in a[2] and BoundStatus.LCLOSED in b[2]):
+            return self.max_pattern
+
+        l, r = max(a[0], b[0]), min(a[1], b[1])
+        lbound = BoundStatus.LCLOSED & (b[2] if a[0] < b[0] else a[2] & b[2])  # we already know that a[0] <= b[0]
+        rbound = BoundStatus.RCLOSED & (a[2] if a[1] < b[1] else b[2] if b[1] < a[1] else a[2] & b[2])
         return l, r, lbound | rbound
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:

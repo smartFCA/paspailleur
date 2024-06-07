@@ -84,6 +84,15 @@ class NgramPS(AbstractPS):
 
         return frozenset(common_ngrams)
 
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        if a == self.min_pattern:
+            return b
+        if b == self.min_pattern:
+            return a
+
+        return self.filter_max_ngrams(a | b)
+
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
         if b == self.max_pattern:

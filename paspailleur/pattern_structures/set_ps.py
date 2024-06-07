@@ -51,6 +51,14 @@ class DisjunctiveSetPS(AbstractPS):
             return a
         return a | b
 
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        if a == self.min_pattern:
+            return b
+        if b == self.min_pattern:
+            return a
+        return a & b
+
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
         if b == self.max_pattern:
@@ -187,6 +195,14 @@ class ConjunctiveSetPS(AbstractPS):
         if a == self.max_pattern:
             return b
         return a.intersection(b)
+
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        if a == self.min_pattern:
+            return b
+        if b == self.min_pattern:
+            return a
+        return a.union(b)
 
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""

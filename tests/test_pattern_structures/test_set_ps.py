@@ -18,6 +18,18 @@ def test_intersect_patterns():
     assert sps.join_patterns({'a'}, sps.max_pattern) == {'a'}
 
 
+def test_meet_patterns():
+    sps = DisjunctiveSetPS()
+    assert sps.meet_patterns({'a', 'b'}, {'c', 'b'}) == {'b'}
+    assert sps.meet_patterns(set(), {'a'}) == set()
+    assert sps.meet_patterns({'b'}, set()) == set()
+
+    sps = ConjunctiveSetPS()
+    assert sps.meet_patterns({'a', 'b'}, {'c', 'b'}) == {'a', 'b', 'c'}
+    assert sps.meet_patterns(set(), {'a'}) == {'a'}
+    assert sps.meet_patterns({'b'}, set()) == {'b'}
+
+
 def test_bin_attributes():
     data = [{'a'}, {'b'}, {'a', 'c'}]
 

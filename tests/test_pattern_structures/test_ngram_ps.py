@@ -72,6 +72,12 @@ def test_ngram_join_patterns():
     assert ps.join_patterns({('a', 'b')}, {('a',)}) == {('a',)}
 
 
+def test_ngram_meet_patterns():
+    ps = NgramPS()
+    assert ps.meet_patterns({('hello', 'world')}, {('hello', 'there')}) == frozenset({('hello', 'world'), ('hello', 'there')})
+    assert ps.meet_patterns({('hello',)}, {('hello', 'world')}) == frozenset({('hello', 'world')})
+
+
 def test_ngram_iter_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
 

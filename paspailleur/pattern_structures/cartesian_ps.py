@@ -24,6 +24,10 @@ class CartesianPS(AbstractPS):
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
         return tuple([ps.join_patterns(a_, b_) for (ps, a_, b_) in zip(self.basic_structures, a, b)])
 
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        return tuple([ps.meet_patterns(a_, b_) for (ps, a_, b_) in zip(self.basic_structures, a, b)])
+
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
         return all(ps.is_less_precise(a_, b_) for ps, a_, b_ in zip(self.basic_structures, a, b))

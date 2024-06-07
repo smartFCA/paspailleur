@@ -24,6 +24,10 @@ class AbstractPS:
         """Return the most precise common pattern, describing both patterns `a` and `b`"""
         raise NotImplementedError
 
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        raise NotImplementedError
+
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
         return self.join_patterns(a, b) == a
