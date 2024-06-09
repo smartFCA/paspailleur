@@ -28,6 +28,17 @@ def test_intersect_patterns():
     assert ips.join_patterns((2, 3, BS.CLOSED), ips.max_pattern) == (2, 3, BS.CLOSED)
 
 
+def test_meet_patterns():
+    ips = IntervalPS()
+
+    assert ips.meet_patterns((0, 5, BS.CLOSED), (2, 10, BS.CLOSED)) == (2, 5, BS.CLOSED)
+    assert ips.meet_patterns((0, 5, BS.RCLOSED), (2, 10, BS.LCLOSED)) == (2, 5, BS.CLOSED)
+    assert ips.meet_patterns((0, 5, BS.LCLOSED), (2, 10, BS.RCLOSED)) == (2, 5, BS.OPEN)
+    assert ips.meet_patterns((0, 5, BS.LCLOSED), (5, 10, BS.LCLOSED)) == ips.max_pattern
+    assert ips.meet_patterns(ips.min_pattern, (0, 5, BS.CLOSED)) == (0, 5, BS.CLOSED)
+    assert ips.meet_patterns((0, 5, BS.CLOSED), ips.min_pattern) == (0, 5, BS.CLOSED)
+
+
 def test_bin_attributes():
     data = [(0, 1, BS.CLOSED), (2, 3, BS.CLOSED), (1.5, 2, BS.CLOSED)]
     patterns_true = ((0, 3, BS.CLOSED), (1.5, 3, BS.CLOSED), (2, 3, BS.CLOSED),
@@ -53,15 +64,6 @@ def test_is_subpattern():
 
     assert ips.is_less_precise((0, 1, BS.CLOSED), (0.5, 0.7, BS.CLOSED))
     assert not ips.is_less_precise((0, 6, BS.CLOSED), (3, 10, BS.CLOSED))
-
-
-def test_meet_patterns():
-    ips = IntervalPS()
-
-    assert ips.meet_patterns((0, 5, BS.CLOSED), (2, 10, BS.CLOSED)) == (2, 5, BS.CLOSED)
-    assert ips.meet_patterns((0, 5, BS.RCLOSED), (2, 10, BS.LCLOSED)) == (2, 5, BS.CLOSED)
-    assert ips.meet_patterns((0, 5, BS.LCLOSED), (2, 10, BS.RCLOSED)) == (2, 5, BS.OPEN)
-    assert ips.meet_patterns((0, 5, BS.LCLOSED), (5, 10, BS.LCLOSED)) == ips.max_pattern
 
 
 def test_n_bin_attributes():
@@ -97,6 +99,10 @@ def test_preprocess_data():
 
     with pytest.raises(ValueError):
         next(ips.preprocess_data(['x']))
+
+    data = [(0, 1), (1, 2), (5, 9)]
+    ips = IntervalPS(values=[0, 5, 10])
+    assert list(ips.preprocess_data(data)) == [(0., 5., BS.CLOSED), (0., 5., BS.CLOSED), (5, 10, BS.CLOSED)]
 
 
 def test_verbalize():

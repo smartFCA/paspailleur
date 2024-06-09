@@ -63,8 +63,10 @@ class IntervalPS(AbstractPS):
 
     def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
         """Return the least precise pattern, described by both `a` and `b`"""
-        if a == self.min_pattern or b == self.min_pattern:
-            return self.min_pattern
+        if a == self.min_pattern:
+            return b
+        if b == self.min_pattern:
+            return a
 
         a, b = (a, b) if a[0] <= b[0] else (b, a)  # so now a[0] <= b[0]
         if a[1] < b[0]:
@@ -165,19 +167,31 @@ class IntervalPS(AbstractPS):
                 else:  # if start == stop, then there is not closed interval inside [start, stop) == [start, start)
                     descr = self.max_pattern
 
-            if isinstance(descr, Sequence)\
-                    and len(descr) == 2 and all(isinstance(x, Number) for x in descr):
-                descr = (descr[0], descr[1], BoundStatus.CLOSED)
-            if isinstance(descr, Sequence) and len(descr) == 3 \
-                    and all(isinstance(x, Number) for x in descr[:2]) and isinstance(descr[2], BoundStatus):
-                pass
-            else:
+            is_pair_of_numbers = isinstance(descr, Sequence) and len(descr) == 2\
+                                 and all(isinstance(x, Number) for x in descr)
+            descr = (descr[0], descr[1], BoundStatus.CLOSED) if is_pair_of_numbers else descr
+
+            is_valid_interval = isinstance(descr, Sequence) and len(descr) == 3 \
+                                and all(isinstance(x, Number) for x in descr[:2]) and isinstance(descr[2], BoundStatus)
+            if not is_valid_interval:
                 raise ValueError(f'Cannot preprocess this description: {descr}. '
                                  f'Provide either a number, or a sequence of two numbers,'
                                  f' or a sequence of two numbers + border status'
                                  f' (0 for open, 1 for right-closed, 2 for left-closed, 3 for closed interval).')
 
-            descr = (float(round(descr[0], self.ndigits)), float(round(descr[1], self.ndigits)), descr[2])
+            descr = list(descr)
+            if update_params_mode != 'write' and self.min_bounds:
+                if self.min_bounds[0] <= descr[0]:
+                    descr[0] = next(v for v in self.min_bounds[::-1] if v <= descr[0])
+                else:
+                    descr[0] = self.min_pattern[0]
+            if update_params_mode != 'write' and self.max_bounds:
+                if descr[1] <= self.max_bounds[-1]:
+                    descr[1] = next(v for v in self.max_bounds if descr[1] <= v)
+                else:
+                    descr[1] = self.min_pattern[1]
+            descr[:2] = [float(round(v, self.ndigits)) for v in descr[:2]]
+            descr = tuple(descr)
             yield descr
             lbounds.append(descr[0])
             rbounds.append(descr[1])
