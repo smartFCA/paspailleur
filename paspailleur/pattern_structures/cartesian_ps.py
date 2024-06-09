@@ -209,3 +209,6 @@ class CartesianPS(AbstractPS):
             if keys:
                 break
         return keys
+
+    def __getitem__(self, item: int) -> AbstractPS:
+        return self.basic_structures[item]

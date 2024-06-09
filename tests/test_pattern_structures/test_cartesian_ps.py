@@ -290,3 +290,9 @@ def test_passkeys():
         ((-math.inf, 13, BS.OPEN), schools, frozenset()),
     ]
     assert set(pkeys) == set(pkeys_true)
+
+
+def test_getitem():
+    cart_ps = CartesianPS([IntervalPS(values=[1,2,3]), IntervalPS(values=[1,4,5])])
+    assert cart_ps[0] == cart_ps.basic_structures[0]
+    assert cart_ps[1] == cart_ps.basic_structures[1]
