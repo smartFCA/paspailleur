@@ -137,6 +137,9 @@ def test_closest_less_precise():
     #assert list(ips.closest_less_precise((1, 2.99), use_lectic_order=True)) == [(1, 3)]
     assert list(ips.closest_less_precise((0, 5, BS.CLOSED))) == [(0, math.inf, BS.LCLOSED), (-math.inf, 5, BS.RCLOSED)]
 
+    ips = IntervalPS(ndigits=2, values=[0, 1, 2, 3, 4, 5], only_closed_flag=True)
+    assert list(ips.closest_less_precise((1, 2, BS.CLOSED))) == [(1, 3, BS.CLOSED), (0, 2, BS.CLOSED)]
+
 
 def test_closest_more_precise():
     # TODO: Setup tests for lectic order
@@ -159,6 +162,10 @@ def test_closest_more_precise():
     assert list(ips.closest_more_precise((0, 0, BS.CLOSED))) == [ips.max_pattern]
     assert list(ips.closest_more_precise((-math.inf, math.inf, BS.OPEN))) == [
         (-math.inf, 5, BS.RCLOSED), (0, math.inf, BS.LCLOSED)]
+
+
+    ips = IntervalPS(ndigits=2, values=[0, 1, 2, 3, 4, 5], only_closed_flag=True)
+    assert list(ips.closest_more_precise((1, 2, BS.CLOSED))) == [(1, 1, BS.CLOSED), (2, 2, BS.CLOSED)]
 
 
 def test_keys():

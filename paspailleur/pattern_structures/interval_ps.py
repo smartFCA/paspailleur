@@ -238,7 +238,7 @@ class IntervalPS(AbstractPS):
         l, r, bound = description
 
         next_right = r
-        if BoundStatus.RCLOSED in bound:  # find next bigger value and make the bound open
+        if BoundStatus.RCLOSED in bound or self.only_closed_flg:  # find next bigger value and make the bound open
             if use_data_values and self.max_bounds:
                 next_right = next(x for x in self.max_bounds if x > r) if r < self.max_bounds[-1] else self.min_pattern[1]
             else:
@@ -251,7 +251,7 @@ class IntervalPS(AbstractPS):
 
         next_left = l
         if BoundStatus.LCLOSED in bound:  # find next smaller value and make the bound open
-            if use_data_values and self.min_bounds:
+            if use_data_values and self.min_bounds or self.only_closed_flg:
                 next_left = next(x for x in self.min_bounds[::-1] if x < l)\
                     if self.min_bounds[0] < l else self.min_pattern[0]
             else:
@@ -283,7 +283,7 @@ class IntervalPS(AbstractPS):
         intent = description if intent is None else intent
 
         next_right = r
-        if BoundStatus.RCLOSED not in bound:  # if right bound is open, find next smaller value
+        if BoundStatus.RCLOSED not in bound or self.only_closed_flg:  # if right bound is open, find next smaller value
             if use_data_values and self.max_bounds:
                 next_right = next(x for x in self.max_bounds[::-1] if x < r)
             else:
@@ -295,7 +295,7 @@ class IntervalPS(AbstractPS):
             return iter([next_right_descr])
 
         next_left = l
-        if BoundStatus.LCLOSED not in bound:
+        if BoundStatus.LCLOSED not in bound or self.only_closed_flg:
             if use_data_values and self.min_bounds:
                 next_left = next(x for x in self.min_bounds if x > l)
             else:
