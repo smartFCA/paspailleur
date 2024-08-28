@@ -1,6 +1,7 @@
-from itertools import product
+from functools import reduce
+from itertools import product, chain
 from math import ceil
-from typing import Iterator, Iterable, Union
+from typing import Iterator, Iterable, Union, Literal
 
 from bitarray import frozenbitarray as fbarray, bitarray
 from bitarray.util import zeros as bazeros
@@ -10,13 +11,19 @@ from .abstract_ps import AbstractPS
 
 class NgramPS(AbstractPS):
     PatternType = frozenset[tuple[str, ...]]  # Every tuple represents an ngram of words. A pattern is a set of incomparable ngrams
-    max_pattern: PatternType = frozenset({('<MAX_NGRAM>',)})  # the set of the most specific ngrams for the data. Might be huge
+    MAX_PATTERN_PLACEHOLDER = frozenset({('<MAX_NGRAM>',)})
+    min_pattern: PatternType = frozenset()  # Empty set of ngrams contained in any other set of ngrams
+    max_pattern: PatternType = MAX_PATTERN_PLACEHOLDER  # the set of the most specific ngrams for the data. Might be huge
     min_n: int = 1  # Minimal size of an ngram to consider
 
     def __init__(self, min_n: int = 1):
         self.min_n = min_n
 
-    def preprocess_data(self, data: Iterable[str], separator=' ') -> Iterator[PatternType]:
+    def preprocess_data(
+            self,
+            data: Iterable[str], separator=' ',
+            update_params_mode:  Literal['write', 'append', False] = 'append'
+    ) -> Iterator[PatternType]:
         for text in data:
             if not text:
                 yield set()
@@ -81,6 +88,15 @@ class NgramPS(AbstractPS):
 
         return frozenset(common_ngrams)
 
+    def meet_patterns(self, a: PatternType, b: PatternType) -> PatternType:
+        """Return the least precise pattern, described by both `a` and `b`"""
+        if a == self.min_pattern:
+            return b
+        if b == self.min_pattern:
+            return a
+
+        return self.filter_max_ngrams(a | b)
+
     def is_less_precise(self, a: PatternType, b: PatternType) -> bool:
         """Return True if pattern `a` is less precise than pattern `b`"""
         if b == self.max_pattern:
@@ -113,7 +129,7 @@ class NgramPS(AbstractPS):
                 return False
         return True
 
-    def iter_bin_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
+    def iter_attributes(self, data: list[PatternType], min_support: Union[int, float] = 0)\
             -> Iterator[tuple[PatternType, fbarray]]:
         """Iterate binary attributes obtained from `data` (from the most general to the most precise ones)
 
@@ -226,6 +242,64 @@ class NgramPS(AbstractPS):
         if not description:
             return '∅'
         return ngram_separator.join([' '.join(ngram) for ngram in sorted(description, key=lambda ngram: -len(ngram))])
+
+    def closest_less_precise(self, description: PatternType, use_lectic_order: bool = False) -> Iterator[PatternType]:
+        """Return closest descriptions that are less precise than `description`
+
+        Use lectic order for optimisation of description traversal.
+
+        IMPORTANT: Lectic order is not yet implemented
+        """
+        if description == self.min_pattern:
+            return iter([])
+
+        for ngram in description:
+            if len(ngram) == 1:
+                yield description - {ngram}
+            else:
+                shortened_right = self.filter_max_ngrams(description - {ngram} | {ngram[:-1], ngram[-1:]})
+                shortened_left = self.filter_max_ngrams(description - {ngram} | {ngram[1:], ngram[:1]})
+
+                if shortened_left != description:
+                    yield shortened_left
+                if shortened_right != shortened_left and shortened_right != description:
+                    yield shortened_right
+
+    def closest_more_precise(
+            self, description: PatternType, use_lectic_order: bool = False, vocabulary: set[str] = None
+    ) -> Iterator[PatternType]:
+        """Return closest descriptions that are more precise than `description`
+
+        Use lectic order for optimisation of description traversal.
+        Note that the resulting descriptions may repeat in case `use_lectic_order` is set to False
+        """
+        if vocabulary is None:
+            vocabulary = reduce(set.__or__, map(set, description), set())
+
+        for word in vocabulary:
+            wordgram = word,
+            new_ngrams = chain(
+                [wordgram],
+                (ngram + wordgram for ngram in description),
+                (wordgram + ngram for ngram in description) if not use_lectic_order else []
+            )
+            next_descriptions = (self.filter_max_ngrams(description | {new_ngram}) for new_ngram in new_ngrams
+                                 if new_ngram not in description)
+
+            for next_descr in next_descriptions:
+                if next_descr != description:
+                    yield next_descr
+
+    def filter_max_ngrams(self, description: PatternType) -> PatternType:
+        description = sorted(description, key=lambda ngram: len(ngram), reverse=True)
+        i = 0
+        while i < len(description):
+            cur_ngram = ' '.join(description[i])
+            if any(cur_ngram in ' '.join(ngram) for ngram in description[:i]):
+                description.pop(i)
+                continue
+            i += 1
+        return frozenset(description)
 
 
 if __name__ == '__main__':

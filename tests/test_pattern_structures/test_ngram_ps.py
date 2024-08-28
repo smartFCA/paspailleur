@@ -72,11 +72,17 @@ def test_ngram_join_patterns():
     assert ps.join_patterns({('a', 'b')}, {('a',)}) == {('a',)}
 
 
+def test_ngram_meet_patterns():
+    ps = NgramPS()
+    assert ps.meet_patterns({('hello', 'world')}, {('hello', 'there')}) == frozenset({('hello', 'world'), ('hello', 'there')})
+    assert ps.meet_patterns({('hello',)}, {('hello', 'world')}) == frozenset({('hello', 'world')})
+
+
 def test_ngram_iter_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
 
     ps = NgramPS()
-    subpatterns, extents = zip(*ps.iter_bin_attributes(patterns))
+    subpatterns, extents = zip(*ps.iter_attributes(patterns))
     assert subpatterns[0] == set()
     assert extents[0].all()
     assert not extents[-1].any()
@@ -85,7 +91,7 @@ def test_ngram_iter_bin_attributes():
                     fbarray('1000'), fbarray('0100'), fbarray('0010'), fbarray('0000')}
     assert set(extents) == extents_true
 
-    subpatterns, extents = zip(*ps.iter_bin_attributes(patterns, min_support=2))
+    subpatterns, extents = zip(*ps.iter_attributes(patterns, min_support=2))
     assert subpatterns == (set(), ('hello',))
     assert extents == (fbarray('1111'), fbarray('1100'))
 
@@ -93,8 +99,8 @@ def test_ngram_iter_bin_attributes():
 def test_ngram_n_bin_attributes():
     patterns = [{('hello', 'world')}, {('hello', 'there')}, {('hi',)}, set()]
     ps = NgramPS()
-    bin_attrs = list(ps.iter_bin_attributes(patterns))
-    assert ps.n_bin_attributes(patterns) == len(bin_attrs)
+    bin_attrs = list(ps.iter_attributes(patterns))
+    assert ps.n_attributes(patterns) == len(bin_attrs)
 
 
 def test_verbalize():
@@ -102,3 +108,65 @@ def test_verbalize():
     assert ps.verbalize({('hello', 'world'), ('hi',)}) == 'hello world; hi'
     assert ps.verbalize({('hello', 'world'), ('hi',)}, ngram_separator='\n') == 'hello world\nhi'
     assert ps.verbalize(set()) == '∅'
+
+
+def test_closest_less_precise():
+    ps = NgramPS()
+    assert set(ps.closest_less_precise(frozenset())) == set()
+    assert set(ps.closest_less_precise(frozenset({tuple('a')}))) == {frozenset()}
+    assert set(ps.closest_less_precise(frozenset({tuple('ab')}))) == {frozenset({tuple('a'), tuple('b')})}
+    assert set(ps.closest_less_precise(frozenset({tuple('ab'), tuple('x')}))) == {
+        frozenset({tuple('ab')}), frozenset({tuple('a'), tuple('b'), tuple('x')}),
+    }
+    assert set(ps.closest_less_precise(frozenset({tuple('ab'), tuple('ac')}), use_lectic_order=True)) == {
+        frozenset({tuple('ab'), tuple('c')}), frozenset({tuple('ac'), tuple('b')})
+    }
+
+
+def test_closest_more_precise():
+    ps = NgramPS()
+    assert set(ps.closest_more_precise(frozenset())) == set()
+
+    result = set(ps.closest_more_precise(frozenset({('a',), ('b',)})))
+    result_true = {
+        frozenset({('a', 'a'), ('b',)}), frozenset({('a', ), ('b', 'b')}),
+        frozenset({('a', 'b')}), frozenset({('b', 'a')})
+    }
+    assert result == result_true
+
+    result = set(ps.closest_more_precise(frozenset(), vocabulary={'a', 'b', 'c'}))
+    result_true = {frozenset({('a',)}), frozenset({('b',)}), frozenset({('c',)})}
+    assert result == result_true
+
+    result = set(ps.closest_more_precise(frozenset({('a', 'b'), ('c',)})))
+    result_true = {
+        frozenset({('a', 'b', 'a'), ('c',)}), frozenset({('a', 'a', 'b'), ('c',)}),
+        frozenset({('a', 'b'), ('c', 'a')}), frozenset({('a', 'b'), ('a', 'c',)}),
+        frozenset({('a', 'b', 'b'), ('c',)}), frozenset({('b', 'a', 'b'), ('c',)}),
+        frozenset({('a', 'b'), ('c', 'b')}), frozenset({('a', 'b'), ('b', 'c')}),
+        frozenset({('a', 'b', 'c')}), frozenset({('c', 'a', 'b')}),
+        frozenset({('a', 'b'), ('c', 'c')}),
+    }
+    assert result == result_true
+
+    result = list(ps.closest_more_precise(frozenset({('a', 'b'), ('c',)}), use_lectic_order=True))
+    result_true = {
+        frozenset({('a', 'b', 'a'), ('c',)}), frozenset({('a', 'b'), ('c', 'a')}),
+        frozenset({('a', 'b', 'b'), ('c',)}), frozenset({('a', 'b'), ('c', 'b')}),
+        frozenset({('a', 'b', 'c')}), frozenset({('a', 'b'), ('c', 'c')}),
+    }
+    assert len(result) == len(result_true)
+    assert set(result) == result_true
+
+
+def test_keys():
+    ps = NgramPS()
+    data = [
+        frozenset({('a', 'b'), ('c',)}),
+        frozenset({('c', 'a')}),
+        frozenset({('a',)})
+    ]
+    assert ps.keys(frozenset({('a',)}), data) == [frozenset()]
+    assert set(ps.keys(frozenset({('a', 'b'), ('c',)}), data)) == {frozenset({('b',)})}
+    assert ps.keys(frozenset({('c', 'a')}), data) == [frozenset({('c', 'a')})]
+    assert ps.keys(frozenset({('a',), ('c',)}), data) == [frozenset({('c',)})]

@@ -39,7 +39,7 @@ assert ps.is_less_precise(d1, d2)
 ```
 
 
-**SubSetPS**
+**ConjunctiveSetPS**
 
 Every description is a set of values.
 Description `A` is less precise than description `B` if `A` is a subset of `B`: `A ⊆ B`.
@@ -47,11 +47,11 @@ For example description `{green, cubic}` is less precise than `{green, cubic, he
 
 ```python
 d1, d2 = {'green', 'cubic'}, {'green', 'cubic', 'heavy'}
-ps = PS.SubSetPS()
+ps = PS.ConjunctiveSetPS()
 assert ps.is_less_precise(d1, d2)
 ```
 
-**SuperSetPS**
+**DisjunctiveSetPS**
 
 Every description is a set of values.
 Description `A` is less precise than description `B` if `A` is a superset of `B`: `A ⊇ B`.
@@ -59,7 +59,7 @@ For example description `{green, yellow, red}` is less precise than `{green, yel
 
 ```python
 d1, d2 = {'green', 'yellow', 'red'}, {'green', 'yellow'}
-ps = PS.SuperSetPS()
+ps = PS.DisjunctiveSetPS()
 assert ps.is_less_precise(d1, d2)
 ```
 
@@ -71,7 +71,7 @@ A pattern structure to combine various independent basic pattern structures in o
 # Combining three previous examples together
 d1 = [(1.5, 3.14), {'green', 'cubic'}, {'green', 'yellow', 'red'}]
 d2 = [(2, 3), {'green', 'cubic', 'heavy'}, {'green', 'yellow'}]
-basic_structures = [PS.IntervalPS(), PS.SubSetPS(), PS.SuperSetPS()]
+basic_structures = [PS.IntervalPS(), PS.ConjunctiveSetPS(), PS.DisjunctiveSetPS()]
 ps = PS.CartesianPS(basic_structures)
 assert ps.is_less_precise(d1, d2)
 ```
