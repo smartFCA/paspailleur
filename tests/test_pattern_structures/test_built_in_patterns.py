@@ -32,5 +32,7 @@ def test_ItemSetPattern():
     a = bip.ItemSetPattern(range(1, 5))
     assert str(a) == "ItemSetPattern({1, 2, 3, 4})"
 
-
-
+    a = bip.ItemSetPattern({1, 2, 3, 4})
+    b = bip.ItemSetPattern({3, 4, 5, 6, 7})
+    sub = bip.ItemSetPattern({1, 2})
+    assert a - b == sub

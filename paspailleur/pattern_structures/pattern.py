@@ -33,11 +33,13 @@ class Pattern:
 
     def __le__(self, other: Self) -> bool:
         """Return self<=other, i.e. whether self is less precise or equal to other"""
-        return self.value <= other.value
+        if self == other:
+            return True
+        return self & other == self
 
     def __lt__(self, other: Self) -> bool:
         """Return self<other, i.e. whether self is less precise than other"""
-        return (self != other) and (self <= other)
+        return (self != other) and (self & other == self)
 
     def intersection(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
