@@ -17,7 +17,6 @@ def test_ItemSetPattern():
     assert c == c2
     assert b <= a
     assert not (a <= b)
-    assert not (b <= a)
 
     assert z.value == {'1', '2', '3'}
 
