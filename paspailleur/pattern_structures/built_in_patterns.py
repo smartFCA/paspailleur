@@ -1,4 +1,5 @@
 from typing import Self, Union
+from numbers import Number
 
 from .pattern import Pattern
 
@@ -89,3 +90,25 @@ class IntervalPattern(Pattern):
         """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
         # TODO: Find out how to implement this. And should it be implemented
         raise NotImplementedError
+
+
+class ClosedIntervalPattern(IntervalPattern):
+    PatternValueType = tuple[float, float]
+
+    def __init__(self, value: Union[PatternValueType, str]):
+        if isinstance(value, str):
+            assert value[0] == '[' and value[-1] == ']', \
+                'Only closed intervals are supported within ClosedIntervalPattern. ' \
+                'Change the bounds of interval {value} to square brackets to make it close'
+        else:
+            # Use this to accomodate the functions of the parent class
+            value = [(v, True) if isinstance(v, Number) else v for v in value]
+
+        super().__init__(value)
+
+    @property
+    def value(self) -> PatternValueType:
+        return self._lower_bound, self._upper_bound
+
+    def __repr__(self) -> str:
+        return super().__repr__().replace('Interval', 'ClosedInterval')

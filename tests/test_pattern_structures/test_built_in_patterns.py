@@ -1,5 +1,7 @@
 import math
 
+import pytest
+
 from paspailleur.pattern_structures import built_in_patterns as bip
 
 
@@ -68,3 +70,31 @@ def test_IntervalPattern():
     assert a | b == join
 
     assert str(a) == 'IntervalPattern([1.0, 10.0))'
+
+
+def test_ClosedIntervalPattern():
+    a = bip.ClosedIntervalPattern((1, 10))
+    a2 = bip.ClosedIntervalPattern('[1, 10]')
+    assert a.value == (1, 10)
+    assert a == a2
+
+    with pytest.raises(AssertionError):
+        bip.ClosedIntervalPattern('(10, 25)')
+        bip.ClosedIntervalPattern('(10, 25]')
+        bip.ClosedIntervalPattern('[10, 25)')
+
+    a = bip.ClosedIntervalPattern('[-inf, ∞]')
+    assert a._lower_bound == -math.inf
+    assert a._upper_bound == math.inf
+
+    a = bip.ClosedIntervalPattern('[1, 10]')
+    b = bip.ClosedIntervalPattern('[1, 20]')
+    assert a & b == b
+    assert a | b == a
+    assert a >= b
+    assert a.issuperpattern(b)
+    assert b <= a
+    assert b.issubpattern(a)
+    assert not a.issubpattern(b)
+
+    assert str(a) == 'ClosedIntervalPattern([1.0, 10.0])'
