@@ -1,3 +1,4 @@
+import math
 from typing import Self, Union, Collection
 from numbers import Number
 import re
@@ -17,6 +18,11 @@ class ItemSetPattern(Pattern):
 
     def __repr__(self) -> str:
         return f"ItemSetPattern({self.value})"
+
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        return {self.__class__({v}) for v in self.value}
 
 
 class IntervalPattern(Pattern):
@@ -92,6 +98,21 @@ class IntervalPattern(Pattern):
         # TODO: Find out how to implement this. And should it be implemented
         raise NotImplementedError
 
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        atoms = [
+            ((-math.inf, True), (math.inf, True)),
+            ((-math.inf, True), (self._upper_bound, self._is_closed_upper_bound)),
+            ((self._lower_bound, self._is_closed_lower_bound), (math.inf, True))
+        ]
+        if not self._is_closed_upper_bound:
+            atoms.append(tuple([(-math.inf, True), (self._upper_bound, True)]))
+        if not self._is_closed_lower_bound:
+            atoms.append(tuple([(self._lower_bound, True), (math.inf, True)]))
+
+        return {self.__class__(v) for v in atoms}
+
 
 class ClosedIntervalPattern(IntervalPattern):
     PatternValueType = tuple[float, float]
@@ -113,6 +134,16 @@ class ClosedIntervalPattern(IntervalPattern):
 
     def __repr__(self) -> str:
         return super().__repr__().replace('Interval', 'ClosedInterval')
+
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        atoms = [
+            (-math.inf, math.inf),
+            (-math.inf, self._upper_bound),
+            (self._lower_bound, math.inf)
+        ]
+        return {self.__class__(v) for v in atoms}
 
 
 class NgramSetPattern(Pattern):
@@ -189,4 +220,16 @@ class NgramSetPattern(Pattern):
             i += 1
         return set(ngrams)
 
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        atoms = set()
+
+        for ngram in self.value:
+            for atom_size in range(len(ngram)+1):
+                atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
+
+        # TODO: Right tests to see if it all works
+
+        return {self.__class__(v) for v in atoms}
 

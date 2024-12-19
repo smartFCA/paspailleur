@@ -71,3 +71,8 @@ class Pattern:
 
     def __hash__(self):
         return hash(self.value)
+
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        raise NotImplementedError
