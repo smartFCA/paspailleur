@@ -46,7 +46,7 @@ def test_extent():
 
 def test_intent():
     patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({0, 4})), Pattern(frozenset({1, 2, 4}))]
-    context = {'a': patterns[0], 'b': patterns[1], 'c': patterns[2]}
+    context = dict(zip('abc', patterns))
 
     ps = PatternStructure()
     ps.fit(context)
@@ -57,3 +57,17 @@ def test_intent():
     assert ps.intent({'a', 'c'}) == Pattern(frozenset({1, 2}))
     assert ps.intent({'b', 'c'}) == Pattern(frozenset({4}))
     assert ps.intent([]) == Pattern(frozenset({0, 1, 2, 3, 4}))
+
+
+def test_min_pattern():
+    patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({0, 4})), Pattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+
+    ps = PatternStructure()
+    ps.fit(context)
+    assert ps.min_pattern == Pattern(frozenset())
+
+    patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({0, 1, 4})), Pattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+    ps.fit(context)
+    assert ps.min_pattern == Pattern(frozenset({1}))

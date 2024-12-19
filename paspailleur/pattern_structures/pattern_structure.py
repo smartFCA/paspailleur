@@ -58,3 +58,9 @@ class PatternStructure:
 
         self._object_names = object_names
         self._object_irreducibles = object_irreducibles
+
+    @property
+    def min_pattern(self):
+        if not self._object_irreducibles:
+            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
+        return reduce(self.PatternType.__and__, self._object_irreducibles)
