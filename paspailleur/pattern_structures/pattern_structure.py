@@ -13,6 +13,7 @@ class PatternStructure:
         self.PatternType = pattern_type
         self._object_irreducibles: dict[pattern_type, fbarray] = None
         self._object_names: list[str] = None
+        self._atomic_patterns: list[pattern_type] = None
 
     def extent(self, pattern: PatternType, return_bitarray: bool = False) -> Union[set[str], fbarray]:
         if not self._object_irreducibles or not self._object_names:
@@ -63,4 +64,8 @@ class PatternStructure:
     def min_pattern(self):
         if not self._object_irreducibles:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
-        return reduce(self.PatternType.__and__, self._object_irreducibles)
+        return reduce(self.PatternType.__and__, self._object_irreducibles, list(self._object_irreducibles)[0])
+
+    def init_atomic_patterns(self):
+        """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
+        self._atomic_patterns = list(reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set()))

@@ -71,3 +71,20 @@ def test_min_pattern():
     context = dict(zip('abc', patterns))
     ps.fit(context)
     assert ps.min_pattern == Pattern(frozenset({1}))
+
+
+def test_atomic_patterns():
+    class APattern(Pattern):  # short for atomised pattern
+        @property
+        def atomic_patterns(self):
+            return {self.__class__(frozenset([v])) for v in self.value}
+
+    patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+
+    ps = PatternStructure()
+    assert ps._atomic_patterns is None
+
+    ps.fit(context)
+    ps.init_atomic_patterns()
+    assert set(ps._atomic_patterns) == {APattern(frozenset({i})) for i in range(5)}
