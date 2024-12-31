@@ -1,5 +1,5 @@
 import math
-from typing import Self, Union, Collection
+from typing import Self, Union, Collection, Optional
 from numbers import Number
 import re
 
@@ -24,6 +24,11 @@ class ItemSetPattern(Pattern):
         """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
         return {self.__class__({v}) for v in self.value}
 
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return self.__class__(frozenset())
+
 
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
@@ -32,11 +37,16 @@ class IntervalPattern(Pattern):
     def __init__(self, value: Union[PatternValueType, str]):
         super().__init__(None)
         if isinstance(value, str):
-            lb, ub = map(str.strip, value[1:-1].replace('∞', 'inf').split(','))
-            closed_lb, closed_ub = value[0] == '[', value[-1] == ']'
+            if value != 'ø':
+                lb, ub = map(str.strip, value[1:-1].replace('∞', 'inf').split(','))
+                closed_lb, closed_ub = value[0] == '[', value[-1] == ']'
+            else:
+                lb, ub = 0, 0
+                closed_lb, closed_ub = False, False
         else:
             lb, closed_lb = value[0]
             ub, closed_ub = value[1]
+
         self._lower_bound = float(lb)
         self._upper_bound = float(ub)
         self._is_closed_lower_bound = bool(closed_lb)
@@ -47,12 +57,19 @@ class IntervalPattern(Pattern):
         return (self._lower_bound, self._is_closed_lower_bound), (self._upper_bound, self._is_closed_upper_bound)
 
     def __repr__(self) -> str:
-        lbound_sign = '[' if self._is_closed_lower_bound else '('
-        ubound_sign = ']' if self._is_closed_upper_bound else ')'
-        return f"IntervalPattern({lbound_sign}{self._lower_bound}, {self._upper_bound}{ubound_sign})"
+        if self == self.max_pattern:
+            str_descr = 'ø'
+        else:
+            lbound_sign = '[' if self._is_closed_lower_bound else '('
+            ubound_sign = ']' if self._is_closed_upper_bound else ')'
+            str_descr = f"{lbound_sign}{self._lower_bound}, {self._upper_bound}{ubound_sign}"
+        return f"IntervalPattern({str_descr})"
 
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
+        if self == self.min_pattern or other == self.min_pattern:
+            return self.min_pattern
+
         if self._lower_bound < other._lower_bound:
             lbound, closed_lb = self._lower_bound, self._is_closed_lower_bound
         elif other._lower_bound < self._lower_bound:
@@ -74,6 +91,9 @@ class IntervalPattern(Pattern):
 
     def __or__(self, other: Self) -> Self:
         """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
+        if self == self.max_pattern or other == self.max_pattern:
+            return self.max_pattern
+
         if self._lower_bound < other._lower_bound:
             lbound, closed_lb = other._lower_bound, other._is_closed_lower_bound
         elif other._lower_bound < self._lower_bound:
@@ -91,6 +111,9 @@ class IntervalPattern(Pattern):
             closed_ub = self._is_closed_upper_bound and other._is_closed_upper_bound
 
         new_value = (lbound, closed_lb), (ubound, closed_ub)
+        if (lbound > ubound) \
+                or (lbound == ubound and not (closed_lb and closed_ub)):
+            return self.max_pattern
         return self.__class__(new_value)
 
     def __sub__(self, other: Self) -> Self:
@@ -113,15 +136,26 @@ class IntervalPattern(Pattern):
 
         return {self.__class__(v) for v in atoms}
 
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return self.__class__("[-inf, +inf]")
+
+    @property
+    def max_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return self.__class__("ø")
+
 
 class ClosedIntervalPattern(IntervalPattern):
     PatternValueType = tuple[float, float]
 
     def __init__(self, value: Union[PatternValueType, str]):
         if isinstance(value, str):
-            assert value[0] == '[' and value[-1] == ']', \
-                'Only closed intervals are supported within ClosedIntervalPattern. ' \
-                'Change the bounds of interval {value} to square brackets to make it close'
+            if value != 'ø':
+                assert value[0] == '[' and value[-1] == ']', \
+                    'Only closed intervals are supported within ClosedIntervalPattern. ' \
+                    'Change the bounds of interval {value} to square brackets to make it close'
         else:
             # Use this to accomodate the functions of the parent class
             value = [(v, True) if isinstance(v, Number) else v for v in value]
@@ -161,7 +195,7 @@ class NgramSetPattern(Pattern):
 
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
-        common_ngrams = []
+        common_ngrams: list[tuple[str, ...]] = []
         for ngram_a in self.value:
             words_pos_a = dict()
             for i, word in enumerate(ngram_a):
@@ -233,3 +267,7 @@ class NgramSetPattern(Pattern):
 
         return {self.__class__(v) for v in atoms}
 
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return self.__class__([])

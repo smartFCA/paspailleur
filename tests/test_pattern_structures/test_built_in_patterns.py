@@ -40,6 +40,9 @@ def test_ItemSetPattern():
     sub = bip.ItemSetPattern({1, 2})
     assert a - b == sub
 
+    assert a.min_pattern == bip.ItemSetPattern(set())
+    assert b.max_pattern is None
+
 
 def test_IntervalPattern():
     a = bip.IntervalPattern(((1, True), (10, False)))
@@ -68,9 +71,18 @@ def test_IntervalPattern():
     assert a & b == meet
     assert a | b == join
 
+    c = bip.IntervalPattern('[-20, 1)')
+    assert a | c == a.max_pattern
+    assert a.max_pattern | a.min_pattern == a.max_pattern
+    assert a.max_pattern & a.min_pattern == a.min_pattern
+
     assert str(a) == 'IntervalPattern([1.0, 10.0))'
 
     assert {a, b}  # Test if hashable
+
+    assert a.min_pattern == bip.IntervalPattern('[-inf, +inf]')
+    assert a.max_pattern == bip.IntervalPattern('ø')
+    assert {a.max_pattern}  # Test if max pattern is hashable
 
 
 def test_ClosedIntervalPattern():
@@ -98,9 +110,18 @@ def test_ClosedIntervalPattern():
     assert b.issubpattern(a)
     assert not a.issubpattern(b)
 
+    c = bip.ClosedIntervalPattern('[-20, 0]')
+    assert a | c == a.max_pattern
+    assert a.max_pattern | a.min_pattern == a.max_pattern
+    assert a.max_pattern & a.min_pattern == a.min_pattern
+
     assert str(a) == 'ClosedIntervalPattern([1.0, 10.0])'
 
     assert {a, b}  # Test if hashable
+
+    assert a.min_pattern == bip.ClosedIntervalPattern('[-inf, +inf]')
+    assert a.max_pattern == bip.ClosedIntervalPattern('ø')
+    assert {a.max_pattern}  # Test if max pattern is hashable
 
 
 def test_NgramSetPattern():

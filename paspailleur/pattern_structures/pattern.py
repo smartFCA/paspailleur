@@ -96,8 +96,10 @@ class Pattern:
 
     @property
     def min_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return None
 
     @property
     def max_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return None
