@@ -45,7 +45,7 @@ class PatternStructure:
             return reduce(self.PatternType.__and__, super_patterns)
         return reduce(self.PatternType.__or__, self._object_irreducibles)
 
-    def fit(self, object_descriptions: dict[str, PatternType]):
+    def fit(self, object_descriptions: dict[str, PatternType], compute_atomic_patterns: bool = None):
         n_objects = len(object_descriptions)
         empty_extent = bazeros(n_objects)
 
@@ -60,6 +60,17 @@ class PatternStructure:
 
         self._object_names = object_names
         self._object_irreducibles = object_irreducibles
+
+        if compute_atomic_patterns is None:
+            # Set to True if the values can be computed
+            pattern = list(object_irreducibles)[0]
+            try:
+                _ = pattern.atomic_patterns
+                compute_atomic_patterns = True
+            except NotImplementedError:
+                compute_atomic_patterns = False
+        if compute_atomic_patterns:
+            self.init_atomic_patterns()
 
     @property
     def min_pattern(self):

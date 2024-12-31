@@ -23,6 +23,17 @@ def test_fit():
     assert ps._object_names == ['a', 'b', 'c']
     object_irreducibles = {patterns[0]: fbarray('100'), patterns[1]: fbarray('010'), patterns[2]: fbarray('001')}
     assert ps._object_irreducibles == object_irreducibles
+    assert ps._atomic_patterns is None
+
+    class APattern(Pattern):  # short for atomised pattern
+        @property
+        def atomic_patterns(self):
+            return {self.__class__(frozenset([v])) for v in self.value}
+
+    patterns = [APattern(p.value) for p in patterns]
+    context = {'a': patterns[0], 'b': patterns[1], 'c': patterns[2]}
+    ps.fit(context)
+    assert ps._atomic_patterns is not None
 
 
 def test_extent():
