@@ -85,6 +85,35 @@ def test_min_pattern():
     ps.fit(context)
     assert ps.min_pattern == Pattern(frozenset({1}))
 
+    class BPattern(Pattern):  # short for bounded pattern
+        @property
+        def min_pattern(self):
+            return self.__class__(frozenset())
+
+    patterns = [BPattern(frozenset({1, 2, 3})), BPattern(frozenset({0, 1, 4})), BPattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+    ps.fit(context)
+    assert ps.min_pattern == BPattern(frozenset())
+
+
+def test_max_pattern():
+    patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({0, 4})), Pattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+
+    ps = PatternStructure()
+    ps.fit(context)
+    assert ps.max_pattern == Pattern(frozenset(range(5)))
+
+    class BPattern(Pattern):  # short for bounded pattern
+        @property
+        def max_pattern(self):
+            return self.__class__(frozenset(range(10)))
+
+    patterns = [BPattern(frozenset({1, 2, 3})), BPattern(frozenset({0, 1, 4})), BPattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+    ps.fit(context)
+    assert ps.max_pattern == BPattern(frozenset(range(10)))
+
 
 def test_atomic_patterns():
     class APattern(Pattern):  # short for atomised pattern

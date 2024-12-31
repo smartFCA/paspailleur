@@ -73,10 +73,27 @@ class PatternStructure:
             self.init_atomic_patterns()
 
     @property
-    def min_pattern(self):
+    def min_pattern(self) -> PatternType:
         if not self._object_irreducibles:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
-        return reduce(self.PatternType.__and__, self._object_irreducibles, list(self._object_irreducibles)[0])
+        some_pattern = list(self._object_irreducibles)[0]
+        if some_pattern.min_pattern is None:
+            min_pattern = reduce(self.PatternType.__and__, self._object_irreducibles, some_pattern)
+        else:
+            min_pattern = some_pattern.min_pattern
+        return min_pattern
+
+    @property
+    def max_pattern(self) -> PatternType:
+        if not self._object_irreducibles:
+            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
+
+        some_pattern = list(self._object_irreducibles)[0]
+        if some_pattern.max_pattern is None:
+            max_pattern = reduce(self.PatternType.__or__, self._object_irreducibles, some_pattern)
+        else:
+            max_pattern = some_pattern.max_pattern
+        return max_pattern
 
     def init_atomic_patterns(self):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""

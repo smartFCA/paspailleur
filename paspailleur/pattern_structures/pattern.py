@@ -1,4 +1,4 @@
-from typing import TypeVar, Self
+from typing import TypeVar, Self, Optional
 
 
 class Pattern:
@@ -13,10 +13,26 @@ class Pattern:
 
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
+        if self.min_pattern is not None and other.min_pattern is not None:
+            assert self.min_pattern == other.min_pattern, \
+                "Minimal patterns defined for `self` (left-hand side value) and `other` (right-hand side value) differ." \
+                " That should not be possible"
+
+            if self.min_pattern == self or self.min_pattern == other:
+                return self.min_pattern
+
         return self.__class__(self.value & other.value)
 
     def __or__(self, other: Self) -> Self:
         """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
+        if self.max_pattern is not None and other.max_pattern is not None:
+            assert self.max_pattern == other.max_pattern, \
+                "Maximal patterns defined for `self` (left-hand side value) and `other` (right-hand side value) differ." \
+                " That should not be possible"
+
+            if self.max_pattern == self or self.max_pattern == other:
+                return self.max_pattern
+
         return self.__class__(self.value | other.value)
 
     def __sub__(self, other: Self) -> Self:
@@ -35,6 +51,7 @@ class Pattern:
         """Return self<=other, i.e. whether self is less precise or equal to other"""
         if self == other:
             return True
+
         return self & other == self
 
     def __lt__(self, other: Self) -> bool:
@@ -76,3 +93,11 @@ class Pattern:
     def atomic_patterns(self) -> set[Self]:
         """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
         raise NotImplementedError
+
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        return None
+
+    @property
+    def max_pattern(self) -> Optional[Self]:
+        return None
