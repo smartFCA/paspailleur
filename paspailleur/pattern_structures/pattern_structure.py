@@ -1,5 +1,6 @@
+from collections import deque, OrderedDict
 from functools import reduce
-from typing import Type, TypeVar, Union, Collection
+from typing import Type, TypeVar, Union, Collection, Optional
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -11,9 +12,9 @@ class PatternStructure:
 
     def __init__(self, pattern_type: Type[Pattern] = Pattern):
         self.PatternType = pattern_type
-        self._object_irreducibles: dict[pattern_type, fbarray] = None
-        self._object_names: list[str] = None
-        self._atomic_patterns: list[pattern_type] = None
+        self._object_irreducibles: Optional[dict[pattern_type, fbarray]] = None
+        self._object_names: Optional[list[str]] = None
+        self._atomic_patterns: Optional[OrderedDict[pattern_type, fbarray]] = None
 
     def extent(self, pattern: PatternType, return_bitarray: bool = False) -> Union[set[str], fbarray]:
         if not self._object_irreducibles or not self._object_names:
@@ -68,4 +69,18 @@ class PatternStructure:
 
     def init_atomic_patterns(self):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
-        self._atomic_patterns = list(reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set()))
+        atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
+        patterns_per_extent: dict[fbarray, deque[Pattern]] = dict()
+        for atomic_pattern in atomic_patterns:
+            extent: fbarray = self.extent(atomic_pattern, return_bitarray=True)
+            if extent not in patterns_per_extent:
+                patterns_per_extent[extent] = deque([atomic_pattern])
+                continue
+            # extent in patterns_per_extent, i.e. there are already some known patterns per extent
+            equiv_patterns = patterns_per_extent[extent]
+            greater_patterns = (i for i, other in enumerate(equiv_patterns) if atomic_pattern <= other)
+            first_greater_pattern = next(greater_patterns, len(equiv_patterns)+1)
+            patterns_per_extent[extent].insert(first_greater_pattern-1, atomic_pattern)
+
+        sorted_extents = sorted(patterns_per_extent, key=lambda ext: (-ext.count(), ext.search(True)))
+        self._atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])

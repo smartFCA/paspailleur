@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from paspailleur.pattern_structures.pattern_structure import PatternStructure
 from paspailleur.pattern_structures.pattern import Pattern
 
@@ -80,6 +82,13 @@ def test_atomic_patterns():
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
+    atomic_patterns_true = OrderedDict([
+        (APattern(frozenset({2})), fbarray('101')),  # supp: 2
+        (APattern(frozenset({1})), fbarray('101')),  # supp: 2
+        (APattern(frozenset({4})), fbarray('011')),  # supp: 2
+        (APattern(frozenset({3})), fbarray('100')),  # supp: 1
+        (APattern(frozenset({0})), fbarray('010')),  # supp: 1
+    ])
     context = dict(zip('abc', patterns))
 
     ps = PatternStructure()
@@ -87,4 +96,4 @@ def test_atomic_patterns():
 
     ps.fit(context)
     ps.init_atomic_patterns()
-    assert set(ps._atomic_patterns) == {APattern(frozenset({i})) for i in range(5)}
+    assert ps._atomic_patterns == atomic_patterns_true
