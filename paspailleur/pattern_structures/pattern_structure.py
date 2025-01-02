@@ -12,8 +12,10 @@ class PatternStructure:
 
     def __init__(self, pattern_type: Type[Pattern] = Pattern):
         self.PatternType = pattern_type
+        # patterns introduced by objects, related to what exact objects they introduce
         self._object_irreducibles: Optional[dict[pattern_type, fbarray]] = None
         self._object_names: Optional[list[str]] = None
+        # smallest nontrivial patterns, related to what objects they describe
         self._atomic_patterns: Optional[OrderedDict[pattern_type, fbarray]] = None
 
     def extent(self, pattern: PatternType, return_bitarray: bool = False) -> Union[set[str], fbarray]:
@@ -126,3 +128,40 @@ class PatternStructure:
     @property
     def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
         return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
+
+    def iter_premaximal_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
+        Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
+    ]:
+        assert self._object_irreducibles is not None, \
+            "Please define object-irreducible patterns (i.e. via .fit() function) " \
+            "to be able to define premaximal_patterns"
+
+        border_pattern_extents = {
+            pattern: self.extent(pattern=pattern, return_bitarray=True) for pattern in self._object_irreducibles}
+        premaximals = sorted(
+            border_pattern_extents,
+            key=lambda pattern: (border_pattern_extents[pattern].count(), border_pattern_extents[pattern].search(True)))
+        # now smallest patterns at the start, maximals at the end
+
+        i = 0
+        while i < len(premaximals):
+            pattern = premaximals[i]
+            if any(other >= pattern for other in premaximals[:i]):
+                del premaximals[i]
+                continue
+            # current pattern is premaximal, i.e. exists no bigger nontrivial pattern
+            i += 1
+
+            if not return_extents:
+                yield pattern
+            else:
+                extent = border_pattern_extents[pattern]
+                if return_bitarrays:
+                    yield pattern, extent
+                else:
+                    yield pattern, {self._object_names[g] for g in extent.search(True)}
+
+    @property
+    def premaximal_patterns(self) -> dict[PatternType, set[str]]:
+        """Maximal patterns that describe fewest objects (and their extents)"""
+        return dict(self.iter_premaximal_patterns(return_extents=True, return_bitarrays=False))

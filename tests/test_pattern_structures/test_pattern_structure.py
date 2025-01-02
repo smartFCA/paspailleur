@@ -226,3 +226,28 @@ def test_builtin_atomic_patterns():
     assert set(ps.atomic_patterns) == set(atomic_patterns_true_verb)
     assert all(len(ps.atomic_patterns[prev]) >= len(ps.atomic_patterns[next])
                for prev, next in zip(ps.atomic_patterns, list(ps.atomic_patterns)[1:]))
+
+
+def test_iter_premaximal_patterns():
+    patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({4})), Pattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+
+    premaximal_true = [patterns[0], patterns[2]]
+    premaximal_true_set = {patterns[0]: set('a'), patterns[2]: set('c')}
+    premaximal_true_ba = {patterns[0]: fbarray('100'), patterns[2]: fbarray('001')}
+    ps = PatternStructure()
+    ps.fit(context)
+    assert dict(ps.iter_premaximal_patterns()) == premaximal_true_set
+    assert list(ps.iter_premaximal_patterns(return_extents=False)) == premaximal_true
+    assert dict(ps.iter_premaximal_patterns(return_extents=True, return_bitarrays=True)) == premaximal_true_ba
+
+
+def test_premaximal_patterns():
+    patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({4})), Pattern(frozenset({1, 2, 4}))]
+    context = dict(zip('abc', patterns))
+
+    premaximal_true = {patterns[0]: set('a'), patterns[2]: set('c')}
+
+    ps = PatternStructure()
+    ps.fit(context)
+    assert ps.premaximal_patterns == premaximal_true
