@@ -234,7 +234,7 @@ class NgramSetPattern(Pattern):
             for j in ngrams_to_pop:
                 common_ngrams.pop(j)
 
-        return self.__class__(set(common_ngrams))
+        return self.__class__(frozenset(common_ngrams))
 
     def __or__(self, other: Self) -> Self:
         """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
@@ -255,7 +255,7 @@ class NgramSetPattern(Pattern):
                 ngrams.pop(i)
                 continue
             i += 1
-        return set(ngrams)
+        return frozenset(ngrams)
 
     @property
     def atomic_patterns(self) -> set[Self]:
@@ -265,8 +265,6 @@ class NgramSetPattern(Pattern):
         for ngram in self.value:
             for atom_size in range(1, len(ngram)+1):
                 atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
-
-        # TODO: Right tests to see if it all works
 
         return {self.__class__([v]) for v in atoms}
 

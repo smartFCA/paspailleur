@@ -155,3 +155,4 @@ def test_NgramSetPattern():
                             }
     atomic_patterns_true = {bip.NgramSetPattern({ngram}) for ngram in atomic_patterns_true}
     assert a.atomic_patterns == atomic_patterns_true
+
