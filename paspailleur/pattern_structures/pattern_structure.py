@@ -1,6 +1,6 @@
 from collections import deque, OrderedDict
 from functools import reduce
-from typing import Type, TypeVar, Union, Collection, Optional
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -107,8 +107,22 @@ class PatternStructure:
             # extent in patterns_per_extent, i.e. there are already some known patterns per extent
             equiv_patterns = patterns_per_extent[extent]
             greater_patterns = (i for i, other in enumerate(equiv_patterns) if atomic_pattern <= other)
-            first_greater_pattern = next(greater_patterns, len(equiv_patterns)+1)
-            patterns_per_extent[extent].insert(first_greater_pattern-1, atomic_pattern)
+            first_greater_pattern = next(greater_patterns, len(equiv_patterns))
+            patterns_per_extent[extent].insert(first_greater_pattern, atomic_pattern)
 
         sorted_extents = sorted(patterns_per_extent, key=lambda ext: (-ext.count(), ext.search(True)))
         self._atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+
+    def iter_atomic_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
+        Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
+    ]:
+        for pattern, extent in self._atomic_patterns.items():
+            if return_extents:
+                extent = extent if return_bitarrays else {self._object_names[g] for g in extent.search(True)}
+                yield pattern, extent
+            else:
+                yield pattern
+
+    @property
+    def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
+        return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))

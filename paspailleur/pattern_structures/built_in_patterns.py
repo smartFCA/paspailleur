@@ -29,6 +29,9 @@ class ItemSetPattern(Pattern):
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__(frozenset())
 
+    def __hash__(self):
+        return hash(self._value)
+
 
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
@@ -260,12 +263,12 @@ class NgramSetPattern(Pattern):
         atoms = set()
 
         for ngram in self.value:
-            for atom_size in range(len(ngram)+1):
+            for atom_size in range(1, len(ngram)+1):
                 atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
 
         # TODO: Right tests to see if it all works
 
-        return {self.__class__(v) for v in atoms}
+        return {self.__class__([v]) for v in atoms}
 
     @property
     def min_pattern(self) -> Optional[Self]:

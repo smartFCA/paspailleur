@@ -32,6 +32,9 @@ def test_ItemSetPattern():
     except TypeError as e:
         assert e
 
+    assert {bip.ItemSetPattern({2, 3})}  # test if hashable
+    assert {bip.ItemSetPattern([2, 3])}  # test if hashable
+
     a = bip.ItemSetPattern(range(1, 5))
     assert str(a) == "ItemSetPattern({1, 2, 3, 4})"
 
@@ -143,3 +146,12 @@ def test_NgramSetPattern():
     assert str(a) == "NgramSetPattern({'who is there', 'hello world'})"
 
     assert {a, b, meet, join}  # Test if hashable
+
+    assert a.min_pattern == bip.NgramSetPattern([])
+    assert b.max_pattern is None
+
+    atomic_patterns_true = {'hello', 'world', 'hello world',
+                            'who', 'is', 'there', 'who is', 'is there', 'who is there'
+                            }
+    atomic_patterns_true = {bip.NgramSetPattern({ngram}) for ngram in atomic_patterns_true}
+    assert a.atomic_patterns == atomic_patterns_true
