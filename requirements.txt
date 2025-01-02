@@ -4,11 +4,11 @@
 #
 #    pip-compile pyproject.toml
 #
-bitarray==2.9.2
+bitarray==3.0.0
     # via
     #   caspailleur
     #   paspailleur (pyproject.toml)
-caspailleur==0.1.2
+caspailleur==0.2.1
     # via paspailleur (pyproject.toml)
 contourpy==1.1.0
     # via matplotlib
@@ -17,7 +17,9 @@ cycler==0.11.0
 dataclasses==0.6
     # via scikit-mine
 deprecation==2.1.0
-    # via paspailleur (pyproject.toml)
+    # via
+    #   caspailleur
+    #   paspailleur (pyproject.toml)
 fonttools==4.40.0
     # via matplotlib
 graphviz==0.20.1
@@ -62,6 +64,8 @@ python-dateutil==2.8.2
     #   pandas
 pytz==2023.3
     # via pandas
+pyyaml==6.0.2
+    # via caspailleur
 scikit-learn==1.2.2
     # via scikit-mine
 scikit-mine==1.0.0

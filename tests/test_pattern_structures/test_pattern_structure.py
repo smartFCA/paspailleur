@@ -171,9 +171,10 @@ def test_atomic_patterns():
     ps = PatternStructure()
     assert ps._atomic_patterns is None
 
-    ps.fit(context)
+    ps.fit(context, compute_atomic_patterns=False)
     ps.init_atomic_patterns()
     assert ps._atomic_patterns == atomic_patterns_true
+    assert ps._atomic_patterns_order == [fbarray('0'*len(atomic_patterns_true))] * len(atomic_patterns_true)
 
     atomic_patterns_true_verb = OrderedDict([(k, {'abc'[g] for g in ext_ba.search(True)})
                                              for k, ext_ba in atomic_patterns_true.items()])
@@ -222,6 +223,11 @@ def test_builtin_atomic_patterns():
     ps.fit(context)
     assert ps.atomic_patterns == atomic_patterns_true_verb
 
+    atomic_patterns_order_true = {(2,): [], (1,): [], (4,): [], (3,): [], (0,): []}
+    atomic_patterns_order_true = {bip.ItemSetPattern(k): {bip.ItemSetPattern(v) for v in vs}
+                                  for k, vs in atomic_patterns_order_true.items()}
+    assert ps.atomic_patterns_order == atomic_patterns_order_true
+
     patterns = [bip.IntervalPattern('[0, 10]'), bip.IntervalPattern('(2, 11]'), bip.IntervalPattern('[5, 10]')]
     context = dict(zip('abc', patterns))
     atomic_patterns_true_verb = [
@@ -231,9 +237,22 @@ def test_builtin_atomic_patterns():
     ]
     atomic_patterns_true_verb = OrderedDict([(bip.IntervalPattern(ptrn), set(ext))
                                              for ptrn, ext in atomic_patterns_true_verb])
+    atomic_patterns_order_true = {
+        '[-inf, +inf]': {'[-inf, 11]', '[0, +inf]', '[-inf, 10]', '[2, +inf]', '(2, +inf]', '[5, +inf]'},
+        '[-inf, 11]': {'[-inf, 10]'},
+        '[0, +inf]': {'[2, +inf]', '(2, +inf]', '[5, +inf]'},
+        '[-inf, 10]': set(),
+        '[2, +inf]': {'(2, +inf]', '[5, +inf]'},
+        '(2, +inf]': {'[5, +inf]'},
+        '[5, +inf]': set(),
+    }
+    atomic_patterns_order_true = {bip.IntervalPattern(k): {bip.IntervalPattern(v) for v in vs}
+                                  for k, vs in atomic_patterns_order_true.items()}
 
     ps.fit(context)
     assert ps.atomic_patterns == atomic_patterns_true_verb
+    assert ps.atomic_patterns_order == atomic_patterns_order_true
+
 
     patterns = [['hello world', 'who is there'], ['hello world'], ['world is there']]
     patterns = [bip.NgramSetPattern(ngram) for ngram in patterns]
@@ -247,10 +266,28 @@ def test_builtin_atomic_patterns():
     ]
     atomic_patterns_true_verb = OrderedDict([(bip.NgramSetPattern([ptrn]), set(ext))
                                              for ptrn, ext in atomic_patterns_true_verb])
+
     ps.fit(context)
     assert set(ps.atomic_patterns) == set(atomic_patterns_true_verb)
     assert all(len(ps.atomic_patterns[prev]) >= len(ps.atomic_patterns[next])
                for prev, next in zip(ps.atomic_patterns, list(ps.atomic_patterns)[1:]))
+
+    atomic_patterns_order_true = {
+        'world': ['hello world', 'world is', 'world is there'],
+        'hello': ['hello world'],
+        'hello world': [],
+        'is': ['is there', 'who is', 'who is there', 'world is', 'world is there'],
+        'there': ['is there', 'who is there', 'world is there'],
+        'is there': ['who is there', 'world is there'],
+        'who': ['who is', 'who is there'],
+        'who is': ['who is there'],
+        'who is there': [],
+        'world is': ['world is there'],
+        'world is there': [],
+    }
+    atomic_patterns_order_true = {bip.NgramSetPattern([k]): {bip.NgramSetPattern([v]) for v in vs}
+                                  for k, vs in atomic_patterns_order_true.items()}
+    assert ps.atomic_patterns_order == atomic_patterns_order_true
 
 
 def test_builtin_premaximal_patterns():

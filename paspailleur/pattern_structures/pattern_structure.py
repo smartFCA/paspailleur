@@ -4,6 +4,7 @@ from typing import Type, TypeVar, Union, Collection, Optional, Iterator
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
+from caspailleur.order import sort_intents_inclusion, inverse_order
 from .pattern import Pattern
 
 
@@ -17,6 +18,8 @@ class PatternStructure:
         self._object_names: Optional[list[str]] = None
         # smallest nontrivial patterns, related to what objects they describe
         self._atomic_patterns: Optional[OrderedDict[pattern_type, fbarray]] = None
+        # list of indices of greater atomic patterns per every atomic pattern
+        self._atomic_patterns_order: Optional[list[fbarray]] = None
 
     def extent(self, pattern: PatternType, return_bitarray: bool = False) -> Union[set[str], fbarray]:
         if not self._object_irreducibles or not self._object_names:
@@ -100,6 +103,8 @@ class PatternStructure:
     def init_atomic_patterns(self):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
         atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
+
+        # Step 1. Group patterns by their extents. For every extent, list patterns in topological sorting
         patterns_per_extent: dict[fbarray, deque[Pattern]] = dict()
         for atomic_pattern in atomic_patterns:
             extent: fbarray = self.extent(atomic_pattern, return_bitarray=True)
@@ -112,8 +117,64 @@ class PatternStructure:
             first_greater_pattern = next(greater_patterns, len(equiv_patterns))
             patterns_per_extent[extent].insert(first_greater_pattern, atomic_pattern)
 
-        sorted_extents = sorted(patterns_per_extent, key=lambda ext: (-ext.count(), ext.search(True)))
-        self._atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+        # Step 2. Find order on atomic patterns.
+        def sort_extents_subsumption(extents):
+            empty_extent = extents[0] & ~extents[0]
+            if not extents[0].all():
+                extents.insert(0, ~empty_extent)
+            if extents[-1].any():
+                extents.append(empty_extent)
+            inversed_extents_subsumption_order = inverse_order(sort_intents_inclusion(extents[::-1], use_tqdm=False, return_transitive_order=True)[1])
+            extents_subsumption_order = [ba[::-1] for ba in inversed_extents_subsumption_order[::-1]]
+            if ~empty_extent not in patterns_per_extent:
+                extents.pop(0)
+                extents_subsumption_order = [ba[1:] for ba in extents_subsumption_order[1:]]
+            if empty_extent not in patterns_per_extent:
+                extents.pop(-1)
+                extents_subsumption_order = [ba[:-1] for ba in extents_subsumption_order[:-1]]
+            return extents_subsumption_order
+
+        sorted_extents = sorted(patterns_per_extent, key=lambda ext: (-ext.count(), tuple(ext.search(True))))
+        extents_order = sort_extents_subsumption(sorted_extents)
+        extents_to_idx_map = {extent: idx for idx, extent in enumerate(sorted_extents)}
+
+        atomic_patterns, atomic_extents = zip(*[(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+        pattern_to_idx_map = {pattern: idx for idx, pattern in enumerate(atomic_patterns)}
+        n_patterns = len(atomic_patterns)
+
+        # patterns pointing to the bitarray of indices of next greater patterns
+        patterns_order: list[bitarray] = [None for _ in range(n_patterns)]
+        for pattern in reversed(atomic_patterns):
+            idx = pattern_to_idx_map[pattern]
+            extent = atomic_extents[idx]
+            extent_idx = extents_to_idx_map[extent]
+
+            # select patterns that might be greater than the current one
+            patterns_to_test = bazeros(n_patterns)
+            n_greater_patterns_same_extent = len(patterns_per_extent[extent]) - patterns_per_extent[extent].index(pattern)-1
+            patterns_to_test[idx+1:idx+n_greater_patterns_same_extent+1] = True
+            for smaller_extent_idx in extents_order[extent_idx].search(True):
+                other_extent = sorted_extents[smaller_extent_idx]
+                first_other_pattern_idx = pattern_to_idx_map[patterns_per_extent[other_extent][0]]
+                n_patterns_other_extent = len(patterns_per_extent[other_extent])
+                patterns_to_test[first_other_pattern_idx:first_other_pattern_idx+n_patterns_other_extent] = True
+
+            # find patterns that are greater than the current one
+            super_patterns = bazeros(n_patterns)
+            while patterns_to_test.any():
+                other_idx = patterns_to_test.find(True)
+                patterns_to_test[other_idx] = False
+
+                other = atomic_patterns[other_idx]
+                if pattern < other:
+                    super_patterns[other_idx] = True
+                    super_patterns |= patterns_order[other_idx]
+                    patterns_to_test &= ~patterns_order[other_idx]
+            patterns_order[idx] = super_patterns
+
+        atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+        self._atomic_patterns = atomic_patterns
+        self._atomic_patterns_order = [fbarray(ba) for ba in patterns_order]
 
     def iter_atomic_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
         Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
@@ -128,6 +189,14 @@ class PatternStructure:
     @property
     def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
         return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
+
+    @property
+    def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
+        if self._atomic_patterns_order is None:
+            return None
+        atomic_patterns_list = list(self._atomic_patterns)
+        return {atomic_patterns_list[idx]: {atomic_patterns_list[v] for v in vs.search(True)}
+                for idx, vs in enumerate(self._atomic_patterns_order)}
 
     def iter_premaximal_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
         Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
