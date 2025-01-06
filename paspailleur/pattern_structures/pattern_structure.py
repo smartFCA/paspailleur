@@ -7,6 +7,8 @@ from bitarray.util import zeros as bazeros, subset as basubset
 from caspailleur.order import sort_intents_inclusion, inverse_order
 from .pattern import Pattern
 
+import paspailleur.algorithms.base_functions as bfuncs
+
 
 class PatternStructure:
     PatternType = TypeVar('PatternType', bound=Pattern)
@@ -25,10 +27,7 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        n_objects = len(self._object_names)
-        empty_extent = fbarray(bazeros(n_objects))
-        sub_extents = (extent for ptrn, extent in self._object_irreducibles.items() if pattern <= ptrn)
-        extent = reduce(fbarray.__or__, sub_extents, empty_extent)
+        extent = bfuncs.extension(pattern, self._object_irreducibles)
 
         if return_bitarray:
             return fbarray(extent)
@@ -38,33 +37,20 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        if not isinstance(objects, bitarray):
+        objects_ba = objects
+        if not isinstance(objects_ba, bitarray):
             objects_ba = bazeros(len(self._object_names))
             for object_name in objects:
                 objects_ba[self._object_names.index(object_name)] = True
-        else:
-            objects_ba = objects
 
-        super_patterns = [ptrn for ptrn, irr_ext in self._object_irreducibles.items() if basubset(irr_ext, objects_ba)]
-        if super_patterns:
-            return reduce(self.PatternType.__and__, super_patterns)
-        return reduce(self.PatternType.__or__, self._object_irreducibles)
+        return bfuncs.intention(objects_ba, self._object_irreducibles)
 
     def fit(self, object_descriptions: dict[str, PatternType], compute_atomic_patterns: bool = None):
-        n_objects = len(object_descriptions)
-        empty_extent = bazeros(n_objects)
+        object_names, objects_patterns = zip(*object_descriptions.items())
+        object_irreducibles = bfuncs.group_objects_by_patterns(objects_patterns)
 
-        object_names = []
-        object_irreducibles = dict()
-        for g, (object_name, object_description) in enumerate(object_descriptions.items()):
-            object_names.append(object_name)
-            if object_description not in object_irreducibles:
-                object_irreducibles[object_description] = empty_extent.copy()
-            object_irreducibles[object_description][g] = True
-        object_irreducibles = {pattern: fbarray(extent) for pattern, extent in object_irreducibles.items()}
-
-        self._object_names = object_names
-        self._object_irreducibles = object_irreducibles
+        self._object_names = list(object_names)
+        self._object_irreducibles = {k: fbarray(v) for k, v in object_irreducibles.items()}
 
         if compute_atomic_patterns is None:
             # Set to True if the values can be computed
@@ -81,24 +67,14 @@ class PatternStructure:
     def min_pattern(self) -> PatternType:
         if not self._object_irreducibles:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
-        some_pattern = list(self._object_irreducibles)[0]
-        if some_pattern.min_pattern is None:
-            min_pattern = reduce(self.PatternType.__and__, self._object_irreducibles, some_pattern)
-        else:
-            min_pattern = some_pattern.min_pattern
-        return min_pattern
+        return bfuncs.minimal_pattern(self._object_irreducibles)
 
     @property
     def max_pattern(self) -> PatternType:
         if not self._object_irreducibles:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        some_pattern = list(self._object_irreducibles)[0]
-        if some_pattern.max_pattern is None:
-            max_pattern = reduce(self.PatternType.__or__, self._object_irreducibles, some_pattern)
-        else:
-            max_pattern = some_pattern.max_pattern
-        return max_pattern
+        return bfuncs.maximal_pattern(self._object_irreducibles)
 
     def init_atomic_patterns(self):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
@@ -209,7 +185,8 @@ class PatternStructure:
             pattern: self.extent(pattern=pattern, return_bitarray=True) for pattern in self._object_irreducibles}
         premaximals = sorted(
             border_pattern_extents,
-            key=lambda pattern: (border_pattern_extents[pattern].count(), border_pattern_extents[pattern].search(True)))
+            key=lambda pattern: (border_pattern_extents[pattern].count(),
+                                 tuple(border_pattern_extents[pattern].search(True))))
         # now smallest patterns at the start, maximals at the end
 
         i = 0

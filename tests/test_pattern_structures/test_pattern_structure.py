@@ -73,6 +73,30 @@ def test_intent():
     assert ps.intent({'b', 'c'}) == Pattern(frozenset({4}))
     assert ps.intent([]) == Pattern(frozenset({0, 1, 2, 3, 4}))
 
+    context = {
+        'Stewart Island': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'Fjordland NP': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'Invercargill': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'Milford Sound': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'MT. Aspiring NP': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'Te Anau': {'Hiking', 'Jet Boating', 'Observing Nature', 'Sightseeing Flights'},
+        'Dunedin': {'Hiking', 'Observing Nature', 'Sightseeing Flights'},
+        'Oamaru': {'Hiking', 'Observing Nature'},
+        'Queenstown': {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights', 'Skiing',
+                       'Wildwater Rafting'},
+        'Wanaka': {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights',
+                   'Skiing', 'Wildwater Rafting'},
+        'Otago Peninsula': {'Hiking', 'Observing Nature'},
+        'Haast': {'Hiking', 'Observing Nature'},
+        'Catlins': {'Hiking', 'Observing Nature'}
+    }
+    context = {obj: Pattern(frozenset(descr)) for obj, descr in context.items()}
+
+    ps.fit(context)
+    assert ps.intent(set(context)) == Pattern(frozenset({'Hiking'}))
+    intent = ps.intent({'Fjordland NP'})
+    assert intent == Pattern(frozenset({'Hiking', 'Observing Nature', 'Sightseeing Flights'}))
+
 
 def test_min_pattern():
     patterns = [Pattern(frozenset({1, 2, 3})), Pattern(frozenset({0, 4})), Pattern(frozenset({1, 2, 4}))]
