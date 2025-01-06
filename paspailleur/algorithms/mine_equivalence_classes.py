@@ -1,5 +1,10 @@
-from paspailleur.pattern_structures import AbstractPS
+from typing import Iterator
 from bitarray import bitarray
+from bitarray.util import zeros as bazeros
+
+from paspailleur.algorithms import base_functions as bfuncs
+from paspailleur.pattern_structures import AbstractPS
+from paspailleur.pattern_structures.pattern import Pattern
 
 
 def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -> list['PatternDescription']:
@@ -78,3 +83,30 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -
         Lattice_data_intents.append(ps.intent([data[j] for j in Lattice_data_extents[i]]))
 
     return Lattice_data_intents
+
+
+def iter_intents_via_ocbo(
+        patterns: list[Pattern]
+) -> Iterator[Pattern]:
+    """Iterate intents in patterns by running object-wise version of Close By One algorithm"""
+    objects_per_pattern = bfuncs.group_objects_by_patterns(patterns)
+
+    n_objects = len(patterns)
+    # create a stack of pairs: 'known_extent', 'object_to_add'
+    stack: list[tuple[bitarray, int]] = [(bazeros(n_objects), -1)]
+    while stack:
+        known_extent, object_to_add = stack.pop()
+        proto_extent = known_extent.copy()
+        if object_to_add >= 0:
+            proto_extent[object_to_add] = True
+
+        intent = bfuncs.intention(proto_extent, objects_per_pattern)
+        extent = bfuncs.extension(intent, objects_per_pattern)
+
+        has_objects_not_in_lex_order = (object_to_add >= 0) and (extent & ~proto_extent)[:object_to_add].any()
+        if has_objects_not_in_lex_order:
+            continue
+
+        yield intent
+        next_steps = [(extent, g) for g in extent.search(False, object_to_add+1)]
+        stack.extend(next_steps[::-1])
