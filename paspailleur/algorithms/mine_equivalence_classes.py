@@ -1,4 +1,4 @@
-from .pattern_structures import AbstractPS
+from paspailleur.pattern_structures import AbstractPS
 from bitarray import bitarray
 
 
