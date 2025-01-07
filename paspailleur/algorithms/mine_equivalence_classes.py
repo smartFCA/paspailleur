@@ -1,4 +1,5 @@
-from typing import Iterator
+from functools import reduce
+from typing import Iterator, OrderedDict
 from bitarray import bitarray
 from bitarray.util import zeros as bazeros
 
@@ -89,6 +90,7 @@ def iter_intents_via_ocbo(
         patterns: list[Pattern]
 ) -> Iterator[Pattern]:
     """Iterate intents in patterns by running object-wise version of Close By One algorithm"""
+    # TODO: Update the function to return extents too? As they are already computed?
     objects_per_pattern = bfuncs.group_objects_by_patterns(patterns)
 
     n_objects = len(patterns)
@@ -109,4 +111,44 @@ def iter_intents_via_ocbo(
 
         yield intent
         next_steps = [(extent, g) for g in extent.search(False, object_to_add+1)]
+        stack.extend(next_steps[::-1])
+
+
+def iter_all_patterns(atomic_patterns_extents: OrderedDict[Pattern, bitarray], min_support: int = 0) -> Iterator[tuple[Pattern, bitarray]]:
+    # The algo is inspired by CloseByOne
+    # For the start, let us just rewrite CloseByOne algorithm
+    # with no though on how to optimise it for this particular case
+    atomic_patterns = list(atomic_patterns_extents)
+    first_pattern = atomic_patterns[0]
+    total_extent = atomic_patterns_extents[first_pattern] | ~atomic_patterns_extents[first_pattern]
+    meet_func, join_func = first_pattern.__class__.__and__, first_pattern.__class__.__or__
+
+    min_pattern = reduce(meet_func, atomic_patterns) if first_pattern.min_pattern is None else first_pattern.min_pattern
+    yield min_pattern, total_extent
+
+    # create a stack of pairs: 'involved_patterns', 'pattern_to_add'
+    n_atoms = len(atomic_patterns_extents)
+    stack: list[tuple[bitarray, int]] = [(bazeros(n_atoms), i) for i in range(n_atoms)][::-1]
+    while stack:
+        involved_patterns, pattern_to_add = stack.pop()
+        proto_closure = involved_patterns.copy()
+        proto_closure[pattern_to_add] = True
+
+        proto_closure_extents = (atomic_patterns_extents[atomic_patterns[i]] for i in proto_closure.search(True))
+        extent = reduce(bitarray.__and__, proto_closure_extents, total_extent)
+        if extent.count() < min_support:
+            continue
+
+        new_pattern = reduce(join_func, (atomic_patterns[i] for i in proto_closure.search(True)), min_pattern)
+        has_atoms_not_in_lex_order = any(atomic_patterns[i] <= new_pattern
+                                         for i in involved_patterns.search(False, 0, pattern_to_add))
+        if has_atoms_not_in_lex_order:
+            continue
+
+        yield new_pattern, extent
+
+        closure = proto_closure.copy()
+        for i in proto_closure.search(False, pattern_to_add+1):
+            closure[i] = atomic_patterns[i] <= new_pattern
+        next_steps = [(closure, i) for i in closure.search(False, pattern_to_add+1)]
         stack.extend(next_steps[::-1])
