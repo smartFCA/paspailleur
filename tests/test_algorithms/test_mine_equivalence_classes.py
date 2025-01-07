@@ -31,22 +31,23 @@ def test_iter_intents_via_ocbo():
     data_list = [data[k] for k in objects_order]
 
     # the intents are ordered lexicographically w.r.t. their extents ordered w.r.t. objects_order
-    intents_true = [
-        {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Observing Nature', 'Parachute Gliding', 'Sightseeing Flights',
-         'Skiing', 'Wildwater Rafting'},  # extent: []
-        {'Hiking', 'Observing Nature', 'Sightseeing Flights'},  # extent: [0, 1, 2, 3, 4, 5, 6]
-        {'Hiking', 'Observing Nature'},  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12]
-        {'Hiking'},  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        {'Hiking', 'Sightseeing Flights'},  # extent: [0, 1, 2, 3, 4, 5, 6, 8, 9]
-        {'Hiking', 'Jet Boating', 'Observing Nature', 'Sightseeing Flights'},  # extent: [5]
-        {'Hiking', 'Jet Boating', 'Sightseeing Flights'},  # extent: [5, 8, 9]
-        {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights', 'Skiing',
-         'Wildwater Rafting'}  # extent: [8, 9]
-    ]
-    intents_true = [bip.ItemSetPattern(intent) for intent in intents_true]
+    intents_true = OrderedDict([
+        (('Bungee Jumping', 'Hiking', 'Jet Boating', 'Observing Nature', 'Parachute Gliding', 'Sightseeing Flights',
+         'Skiing', 'Wildwater Rafting'), bitarray('0000000000000')),  # extent: []
+        (('Hiking', 'Observing Nature', 'Sightseeing Flights'), bitarray('1111111000000')),  # extent: [0, 1, 2, 3, 4, 5, 6]
+        (('Hiking', 'Observing Nature'), bitarray('1111111100111')),  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12]
+        (('Hiking',), bitarray('1111111111111')),  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        (('Hiking', 'Sightseeing Flights'), bitarray('1111111011000')),  # extent: [0, 1, 2, 3, 4, 5, 6, 8, 9]
+        (('Hiking', 'Jet Boating', 'Observing Nature', 'Sightseeing Flights'), bitarray('0000010000000')),  # extent: [5]
+        (('Hiking', 'Jet Boating', 'Sightseeing Flights'), bitarray('0000010011000')),  # extent: [5, 8, 9]
+        (('Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights', 'Skiing',
+         'Wildwater Rafting'), bitarray('0000000011000'))  # extent: [8, 9]
+    ])
+    intents_true = OrderedDict([(bip.ItemSetPattern(intent), extent) for intent, extent in intents_true.items()])
 
-    intents = list(mec.iter_intents_via_ocbo(data_list))
+    intents = OrderedDict(mec.iter_intents_via_ocbo(data_list))
     assert len(intents) == len(intents_true)
+    assert list(intents) == list(intents_true)
     assert intents == intents_true
 
 

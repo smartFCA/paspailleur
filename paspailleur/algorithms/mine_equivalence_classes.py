@@ -88,9 +88,8 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -
 
 def iter_intents_via_ocbo(
         patterns: list[Pattern]
-) -> Iterator[Pattern]:
+) -> Iterator[tuple[Pattern, bitarray]]:
     """Iterate intents in patterns by running object-wise version of Close By One algorithm"""
-    # TODO: Update the function to return extents too? As they are already computed?
     objects_per_pattern = bfuncs.group_objects_by_patterns(patterns)
 
     n_objects = len(patterns)
@@ -109,7 +108,7 @@ def iter_intents_via_ocbo(
         if has_objects_not_in_lex_order:
             continue
 
-        yield intent
+        yield intent, extent
         next_steps = [(extent, g) for g in extent.search(False, object_to_add+1)]
         stack.extend(next_steps[::-1])
 
