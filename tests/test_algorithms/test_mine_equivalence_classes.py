@@ -106,3 +106,23 @@ def test_iter_all_patterns():
     assert len(all_patterns) == len(all_patterns_true)
     assert list(all_patterns) == list(all_patterns_true)
     assert all_patterns == all_patterns_true
+
+    all_patterns_true_breadth = OrderedDict([
+        ('', bitarray('111111111')),
+        ('hello', bitarray('111111111')),
+        ('world', bitarray('111111001')),
+        ('!', bitarray('110111111')),
+        ('hello, world', bitarray('111111001')),
+        ('hello, !', bitarray('110111111')),
+        ('world, !', bitarray('110111001')),
+        ('hello world', bitarray('001111001')),
+        ('hello, world, !', bitarray('110111001')),
+        ('hello world, !', bitarray('000111001')),
+    ])
+    all_patterns_true_breadth = OrderedDict([(bip.NgramSetPattern(k.split(', ') if k else []), v)
+                                             for k, v in all_patterns_true_breadth.items()])
+
+    all_patterns = OrderedDict(list(mec.iter_all_patterns(atomic_patterns_extents, min_support=0, depth_first=False)))
+    assert len(all_patterns) == len(all_patterns_true_breadth)
+    assert list(all_patterns) == list(all_patterns_true_breadth)
+    assert all_patterns == all_patterns_true_breadth

@@ -114,7 +114,10 @@ def iter_intents_via_ocbo(
         stack.extend(next_steps[::-1])
 
 
-def iter_all_patterns(atomic_patterns_extents: OrderedDict[Pattern, bitarray], min_support: int = 0) -> Iterator[tuple[Pattern, bitarray]]:
+def iter_all_patterns(
+        atomic_patterns_extents: OrderedDict[Pattern, bitarray],
+        min_support: int = 0, depth_first: bool = True
+) -> Iterator[tuple[Pattern, bitarray]]:
     # The algo is inspired by CloseByOne
     # For the start, let us just rewrite CloseByOne algorithm
     # with no though on how to optimise it for this particular case
@@ -150,5 +153,5 @@ def iter_all_patterns(atomic_patterns_extents: OrderedDict[Pattern, bitarray], m
         closure = proto_closure.copy()
         for i in proto_closure.search(False, pattern_to_add+1):
             closure[i] = atomic_patterns[i] <= new_pattern
-        next_steps = [(closure, i) for i in closure.search(False, pattern_to_add+1)]
-        stack.extend(next_steps[::-1])
+        next_steps = [(closure, i) for i in closure.search(False, pattern_to_add+1)][::-1]
+        stack = stack + next_steps if depth_first else next_steps + stack
