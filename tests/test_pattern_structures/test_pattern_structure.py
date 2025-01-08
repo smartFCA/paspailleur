@@ -349,7 +349,7 @@ def test_iter_atomic_patterns():
 
     ps = PatternStructure()
     ps._atomic_patterns = atomic_patterns_true
-    atomic_patterns = OrderedDict(list(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, controlled_iteration=False)))
+    atomic_patterns = OrderedDict(list(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True)))
     assert len(atomic_patterns) == len(atomic_patterns_true)
     assert list(atomic_patterns) == list(atomic_patterns_true)
     assert atomic_patterns == atomic_patterns_true
@@ -360,7 +360,7 @@ def test_iter_atomic_patterns():
     del atomic_patterns_true_stopped[bip.NgramSetPattern(['hello world'])]
 
     atomic_patterns_stopped, pattern = [], None
-    iterator = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, controlled_iteration=True)
+    iterator = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, kind='ascending controlled')
     next(iterator)  # initialisation
 
     while True:

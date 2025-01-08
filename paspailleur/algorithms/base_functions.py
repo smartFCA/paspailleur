@@ -1,5 +1,6 @@
+from collections import OrderedDict
 from functools import reduce
-from typing import Callable, Optional
+from typing import Optional, Generator, Union, Any
 
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
@@ -56,3 +57,29 @@ def group_objects_by_patterns(objects_patterns: list[Pattern]) -> dict[Pattern, 
     assert sum(objs.count() for objs in objects_by_patterns.values()) == len(objects_patterns)
 
     return objects_by_patterns
+
+
+def iter_patterns_ascending(
+        patterns: Union[list[Pattern], OrderedDict[Pattern, Any]],
+        greater_patterns_ordering: list[bitarray],
+        controlled_iteration: bool = False
+) -> Generator[Union[Pattern, tuple[Pattern, Any]], bool, None]:
+    assert all(not greater_ptrns[:i].any() for i, greater_ptrns in enumerate(greater_patterns_ordering)), \
+        'The list of `patterns` from the smaller to the greater patterns. ' \
+        'So for every i-th pattern, there should be no greater patter among patterns[:i]'
+
+    patterns_to_pass = ~bazeros(len(patterns))
+    patterns_list = list(patterns)
+
+    if controlled_iteration:
+        yield  # Initialisation
+
+    while patterns_to_pass.any():
+        i = patterns_to_pass.find(True)
+        patterns_to_pass[i] = False
+
+        pattern = patterns_list[i]
+        yielded_value = (pattern, patterns[pattern]) if isinstance(patterns, dict) else pattern
+        go_more_precise = yield yielded_value
+        if controlled_iteration and not go_more_precise:
+            patterns_to_pass &= ~greater_patterns_ordering[i]

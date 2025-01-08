@@ -1,6 +1,6 @@
 from collections import deque, OrderedDict
 from functools import reduce
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -155,34 +155,43 @@ class PatternStructure:
     def iter_atomic_patterns(
         self,
         return_extents: bool = True, return_bitarrays: bool = False,
-        controlled_iteration: bool = False
+        kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce'
     ) -> Union[
         Generator[PatternType, bool, None],
         Generator[tuple[PatternType, set[str]], bool, None],
         Generator[tuple[PatternType, fbarray], bool, None]
     ]:
-        patterns_to_pass = ~bazeros(len(self._atomic_patterns))
-        atomic_patterns_extents = list(self._atomic_patterns.items())
+        assert self._atomic_patterns is not None
 
-        if controlled_iteration:
-            yield  # Initialisation
+        def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray):
+            if not return_extents:
+                return ptrn
+            if not return_bitarrays:
+                return ptrn, {self._object_names[g] for g in ext.search(True)}
+            return ptrn, ext
 
-        while patterns_to_pass.any():
-            i = patterns_to_pass.find(True)
-            patterns_to_pass[i] = False
+        if kind == 'bruteforce':
+            for pattern, extent in self._atomic_patterns.items():
+                yield form_yielded_value(pattern, extent)
 
-            pattern, extent = atomic_patterns_extents[i]
+        if kind == 'ascending':
+            assert self._atomic_patterns_order is not None
+            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, False)
+            for pattern, extent in iterator:
+                yield form_yielded_value(pattern, extent)
 
-            if return_extents:
-                extent = extent if return_bitarrays else {self._object_names[g] for g in extent.search(True)}
-                yielded_value = pattern, extent
-            else:
-                yielded_value = pattern
-
-            go_more_precise = yield yielded_value
-            if controlled_iteration and not go_more_precise:
-                greater_patterns = self._atomic_patterns_order[i]
-                patterns_to_pass &= ~greater_patterns
+        if kind == 'ascending controlled':
+            assert self._atomic_patterns_order is not None
+            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, True)
+            next(iterator)  # initialise
+            yield
+            go_more_precise = True
+            while True:
+                try:
+                    pattern, extent = iterator.send(go_more_precise)
+                except StopIteration:
+                    break
+                go_more_precise = yield form_yielded_value(pattern, extent)
 
     @property
     def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
