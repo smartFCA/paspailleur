@@ -1,6 +1,6 @@
 from collections import deque, OrderedDict
 from functools import reduce
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -152,15 +152,37 @@ class PatternStructure:
         self._atomic_patterns = atomic_patterns
         self._atomic_patterns_order = [fbarray(ba) for ba in patterns_order]
 
-    def iter_atomic_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
-        Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
+    def iter_atomic_patterns(
+        self,
+        return_extents: bool = True, return_bitarrays: bool = False,
+        controlled_iteration: bool = False
+    ) -> Union[
+        Generator[PatternType, bool, None],
+        Generator[tuple[PatternType, set[str]], bool, None],
+        Generator[tuple[PatternType, fbarray], bool, None]
     ]:
-        for pattern, extent in self._atomic_patterns.items():
+        patterns_to_pass = ~bazeros(len(self._atomic_patterns))
+        atomic_patterns_extents = list(self._atomic_patterns.items())
+
+        if controlled_iteration:
+            yield  # Initialisation
+
+        while patterns_to_pass.any():
+            i = patterns_to_pass.find(True)
+            patterns_to_pass[i] = False
+
+            pattern, extent = atomic_patterns_extents[i]
+
             if return_extents:
                 extent = extent if return_bitarrays else {self._object_names[g] for g in extent.search(True)}
-                yield pattern, extent
+                yielded_value = pattern, extent
             else:
-                yield pattern
+                yielded_value = pattern
+
+            go_more_precise = yield yielded_value
+            if controlled_iteration and not go_more_precise:
+                greater_patterns = self._atomic_patterns_order[i]
+                patterns_to_pass &= ~greater_patterns
 
     @property
     def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:

@@ -5,7 +5,7 @@ from paspailleur.pattern_structures.pattern_structure import PatternStructure
 from paspailleur.pattern_structures.pattern import Pattern
 from paspailleur.pattern_structures import built_in_patterns as bip
 
-from bitarray import frozenbitarray as fbarray
+from bitarray import frozenbitarray as fbarray, bitarray
 
 
 def test_init():
@@ -139,41 +139,6 @@ def test_max_pattern():
     context = dict(zip('abc', patterns))
     ps.fit(context)
     assert ps.max_pattern == BPattern(frozenset(range(10)))
-
-
-def test_iter_atomic_patterns():
-    class APattern(Pattern):  # short for atomised pattern
-        @property
-        def atomic_patterns(self):
-            return {self.__class__(frozenset([v])) for v in self.value}
-
-    patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
-    atomic_patterns_true = OrderedDict([
-        (APattern(frozenset({2})), fbarray('101')),  # supp: 2
-        (APattern(frozenset({1})), fbarray('101')),  # supp: 2
-        (APattern(frozenset({4})), fbarray('011')),  # supp: 2
-        (APattern(frozenset({3})), fbarray('100')),  # supp: 1
-        (APattern(frozenset({0})), fbarray('010')),  # supp: 1
-    ])
-    context = dict(zip('abc', patterns))
-
-    ps = PatternStructure()
-    ps.fit(context, compute_atomic_patterns=False)
-    ps._atomic_patterns = atomic_patterns_true
-
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=False, return_bitarrays=False)
-    assert isinstance(atomic_patterns, Iterator)
-    assert list(atomic_patterns) == list(atomic_patterns_true.keys())
-
-    atomic_patterns_true_verb = OrderedDict([(k, {'abc'[g] for g in ext_ba.search(True)})
-                                             for k, ext_ba in atomic_patterns_true.items()])
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=False)
-    assert isinstance(atomic_patterns, Iterator)
-    assert list(atomic_patterns) == list(atomic_patterns_true_verb.items())
-
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True)
-    assert isinstance(atomic_patterns, Iterator)
-    assert list(atomic_patterns) == list(atomic_patterns_true.items())
 
 
 def test_atomic_patterns():
@@ -332,3 +297,80 @@ def test_builtin_premaximal_patterns():
     context = dict(zip('abc', patterns))
     ps.fit(context)
     assert ps.premaximal_patterns == {patterns[0]: {'a'}, patterns[2]: {'c'}}
+
+
+def test_iter_atomic_patterns():
+    #####################################################################
+    # Test Atomised patterns where all atomic patterns are incomparable #
+    #####################################################################
+    class APattern(Pattern):  # short for atomised pattern
+        @property
+        def atomic_patterns(self):
+            return {self.__class__(frozenset([v])) for v in self.value}
+
+    patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
+    atomic_patterns_true = OrderedDict([
+        (APattern(frozenset({2})), fbarray('101')),  # supp: 2
+        (APattern(frozenset({1})), fbarray('101')),  # supp: 2
+        (APattern(frozenset({4})), fbarray('011')),  # supp: 2
+        (APattern(frozenset({3})), fbarray('100')),  # supp: 1
+        (APattern(frozenset({0})), fbarray('010')),  # supp: 1
+    ])
+    context = dict(zip('abc', patterns))
+
+    ps = PatternStructure()
+    ps.fit(context, compute_atomic_patterns=False)
+    ps._atomic_patterns = atomic_patterns_true
+
+    atomic_patterns = ps.iter_atomic_patterns(return_extents=False, return_bitarrays=False)
+    assert isinstance(atomic_patterns, Iterator)
+    assert list(atomic_patterns) == list(atomic_patterns_true.keys())
+
+    atomic_patterns_true_verb = OrderedDict([(k, {'abc'[g] for g in ext_ba.search(True)})
+                                             for k, ext_ba in atomic_patterns_true.items()])
+    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=False)
+    assert isinstance(atomic_patterns, Iterator)
+    assert list(atomic_patterns) == list(atomic_patterns_true_verb.items())
+
+    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True)
+    assert isinstance(atomic_patterns, Iterator)
+    assert list(atomic_patterns) == list(atomic_patterns_true.items())
+
+    ##################################################################
+    # Test NgramSetPatterns when some atomic patterns are comparable #
+    ##################################################################
+    atomic_patterns_true = OrderedDict([
+        ('hello', bitarray('111111111')),
+        ('world', bitarray('111111001')),
+        ('hello world', bitarray('001111001')),
+        ('!', bitarray('110111111'))
+    ])
+    atomic_patterns_true = OrderedDict([(bip.NgramSetPattern([k]), v) for k, v in atomic_patterns_true.items()])
+
+    ps = PatternStructure()
+    ps._atomic_patterns = atomic_patterns_true
+    atomic_patterns = OrderedDict(list(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, controlled_iteration=False)))
+    assert len(atomic_patterns) == len(atomic_patterns_true)
+    assert list(atomic_patterns) == list(atomic_patterns_true)
+    assert atomic_patterns == atomic_patterns_true
+
+    ps._atomic_patterns_order = [bitarray('0010'), bitarray('0010'), bitarray('0000'), bitarray('0000')]
+    stop_pattern = bip.NgramSetPattern(['world'])
+    atomic_patterns_true_stopped = atomic_patterns_true.copy()
+    del atomic_patterns_true_stopped[bip.NgramSetPattern(['hello world'])]
+
+    atomic_patterns_stopped, pattern = [], None
+    iterator = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, controlled_iteration=True)
+    next(iterator)  # initialisation
+
+    while True:
+        go_deeper = pattern is None or pattern != stop_pattern
+        try:
+            pattern, extent = iterator.send(go_deeper)
+        except StopIteration:
+            break
+        atomic_patterns_stopped.append((pattern, extent))
+    atomic_patterns_stopped = OrderedDict(atomic_patterns_stopped)
+    assert len(atomic_patterns_stopped) == len(atomic_patterns_true_stopped)
+    assert list(atomic_patterns_stopped) == list(atomic_patterns_true_stopped)
+    assert atomic_patterns_stopped == atomic_patterns_true_stopped
