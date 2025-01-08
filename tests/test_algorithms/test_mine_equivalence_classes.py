@@ -52,6 +52,9 @@ def test_iter_intents_via_ocbo():
 
 
 def test_iter_all_patterns():
+    #######################################################################
+    # Tests for ItemSetPattern where all atomic patterns are incomparable #
+    #######################################################################
     atomic_patterns_extents = OrderedDict([
         ('Hiking', bitarray('111111111')),
         ('Observing Nature', bitarray('111111001')),
@@ -80,6 +83,9 @@ def test_iter_all_patterns():
     all_patterns = OrderedDict(list(mec.iter_all_patterns(atomic_patterns_extents, min_support=7)))
     assert all_patterns == OrderedDict([(k, v) for k, v in all_patterns_true.items() if v.count() >= 7])
 
+    ######################################################################
+    # Test for NgramSetPattern where some atomic patterns are comparable #
+    ######################################################################
     atomic_patterns_extents = OrderedDict([
         ('hello', bitarray('111111111')),
         ('world', bitarray('111111001')),
@@ -108,6 +114,9 @@ def test_iter_all_patterns():
     assert list(all_patterns) == list(all_patterns_true)
     assert all_patterns == all_patterns_true
 
+    ######################################################
+    # Test for NgramSetPattern with breadth-first search #
+    ######################################################
     all_patterns_true_breadth = OrderedDict([
         ('', bitarray('111111111')),
         ('hello', bitarray('111111111')),
@@ -127,3 +136,38 @@ def test_iter_all_patterns():
     assert len(all_patterns) == len(all_patterns_true_breadth)
     assert list(all_patterns) == list(all_patterns_true_breadth)
     assert all_patterns == all_patterns_true_breadth
+
+    #####################################################
+    # Test NgramSetPattern with controllable navigation #
+    #####################################################
+    stop_pattern = bip.NgramSetPattern(['hello', 'world'])
+    all_patterns_true_stopped = OrderedDict([(k, v) for k, v in all_patterns_true.items()
+                                             if not k > stop_pattern])
+    iterator = mec.iter_all_patterns(atomic_patterns_extents, controlled_iteration=True)
+    _ = next(iterator)
+    all_patterns_stopped, pattern = [], None
+    while True:
+        go_deeper = (pattern is None) or (pattern != stop_pattern)
+        try:
+            pattern, extent = iterator.send(go_deeper)
+        except StopIteration:
+            break
+        all_patterns_stopped.append((pattern, extent))
+    all_patterns_stopped = OrderedDict(all_patterns_stopped)
+    assert len(all_patterns_stopped) == len(all_patterns_true_stopped)
+    assert list(all_patterns_stopped) == list(all_patterns_true_stopped)
+    assert all_patterns_stopped == all_patterns_true_stopped
+
+    stop_pattern = bip.NgramSetPattern([])
+    iterator = mec.iter_all_patterns(atomic_patterns_extents, controlled_iteration=True)
+    _ = next(iterator)
+    all_patterns_stopped, pattern = [], None
+    while True:
+        go_deeper = (pattern is None) or (pattern != stop_pattern)
+        try:
+            pattern, extent = iterator.send(go_deeper)
+        except StopIteration:
+            break
+        all_patterns_stopped.append((pattern, extent))
+    all_patterns_stopped = OrderedDict(all_patterns_stopped)
+    assert len(all_patterns_stopped) == 1
