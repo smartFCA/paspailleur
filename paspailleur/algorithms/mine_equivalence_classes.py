@@ -113,7 +113,7 @@ def iter_intents_via_ocbo(
         stack.extend(next_steps[::-1])
 
 
-def iter_all_patterns(
+def iter_all_patterns_ascending(
         atomic_patterns_extents: OrderedDict[Pattern, bitarray],
         min_support: int = 0, depth_first: bool = True,
         controlled_iteration: bool = False,
