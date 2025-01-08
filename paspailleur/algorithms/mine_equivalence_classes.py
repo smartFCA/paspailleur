@@ -216,13 +216,11 @@ def list_stable_extents_via_gsofia(
             new_children.append(child_new)
         return new_delta, maximal_bitarrays(new_children)
 
-    if use_tqdm:
-        atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns)
-
     if not atomic_patterns_iterator.gi_suspended:
         next(atomic_patterns_iterator)
+    atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns, disable=not use_tqdm)
 
-    # extent => (delta_index, children_extents)
+    # dict: extent => (delta_index, children_extents)
     stable_extents: dict[fbarray, tuple[int, set[fbarray]]] = dict()
     refine_previous_pattern: bool = True
 

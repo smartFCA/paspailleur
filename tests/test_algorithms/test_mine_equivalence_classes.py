@@ -1,7 +1,8 @@
 from collections import OrderedDict
 
-from bitarray import bitarray
+from bitarray import bitarray, frozenbitarray as fbarray
 
+import paspailleur.algorithms.base_functions as bfuncs
 import paspailleur.pattern_structures.built_in_patterns as bip
 import paspailleur.algorithms.mine_equivalence_classes as mec
 
@@ -171,3 +172,33 @@ def test_iter_all_patterns_ascending():
         all_patterns_stopped.append((pattern, extent))
     all_patterns_stopped = OrderedDict(all_patterns_stopped)
     assert len(all_patterns_stopped) == 1
+
+
+def test_list_stable_extents_via_gsofia():
+    ###################################
+    # Simplest tests for simple cases #
+    ###################################
+    atomic_patterns = OrderedDict([
+        (bip.Pattern('a'), fbarray('110')),
+        (bip.Pattern('b'), fbarray('101')),
+        (bip.Pattern('c'), fbarray('011'))
+    ])
+    ordering = [fbarray('000'), fbarray('000'), fbarray('000')]
+    extents_true = {
+        fbarray('111'),
+        fbarray('110'), fbarray('101'), fbarray('011'),
+        fbarray('100'), fbarray('010'), fbarray('001'),
+        fbarray('000')
+    }
+
+    atomic_patterns_iterator = bfuncs.iter_patterns_ascending(atomic_patterns, ordering, controlled_iteration=True)
+    stable_extents = mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=0)
+    assert stable_extents == extents_true
+
+    atomic_patterns_iterator = bfuncs.iter_patterns_ascending(atomic_patterns, ordering, controlled_iteration=True)
+    stable_extents = mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=1)
+    assert stable_extents == extents_true - {fbarray('000')}
+
+    atomic_patterns_iterator = bfuncs.iter_patterns_ascending(atomic_patterns, ordering, controlled_iteration=True)
+    stable_extents = mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=2)
+    assert stable_extents == set()
