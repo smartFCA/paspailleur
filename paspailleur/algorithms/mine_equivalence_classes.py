@@ -1,7 +1,11 @@
+import heapq
 from functools import reduce
-from typing import Iterator, OrderedDict, Generator
-from bitarray import bitarray
-from bitarray.util import zeros as bazeros
+from itertools import takewhile
+
+from tqdm.auto import tqdm
+from typing import Iterator, OrderedDict, Generator, Collection, Iterable, Optional
+from bitarray import bitarray, frozenbitarray as fbarray
+from bitarray.util import zeros as bazeros, subset as basubset
 
 from paspailleur.algorithms import base_functions as bfuncs
 from paspailleur.pattern_structures import AbstractPS
@@ -161,3 +165,110 @@ def iter_all_patterns_ascending(
             closure[i] = atomic_patterns[i] <= new_pattern
         previous_pattern_next_steps = [(closure, i) for i in closure.search(False, pattern_to_add + 1)][::-1]
         stack = stack + previous_pattern_next_steps if depth_first else previous_pattern_next_steps + stack
+
+
+def list_stable_extents_via_gsofia(
+        atomic_patterns_iterator: Generator[tuple[Pattern, fbarray], bool, None],
+        min_delta_stability: int = 0,
+        n_stable_extents: int = None,
+        min_supp: int = 0,
+        use_tqdm: bool = False,
+        n_atomic_patterns: int = None
+) -> set[fbarray]:
+    def maximal_bitarrays(bas: Collection[fbarray]) -> set[fbarray]:
+        bas = sorted(bas, key=lambda ba: ba.count(), reverse=True)
+        i = 0
+        while i < len(bas):
+            ba = bas[i]
+            has_subarray = any(basubset(ba, bigger_ba) for bigger_ba in bas[:i])
+            if has_subarray:
+                del bas[i]
+            else:
+                i += 1
+        return set(bas)
+
+    def n_most_stable_extents(
+            extents_data: Iterable[tuple[fbarray, tuple[int, set[fbarray]]]],
+            n_most_stable=n_stable_extents
+    ) -> list[tuple[fbarray, tuple[int, set[fbarray]]]]:
+        extents_data = list(extents_data)
+        most_stable_extents = heapq.nlargest(n_most_stable, extents_data, key=lambda x: x[1][0])
+
+        # remove least-stable most stable extents if some of the left out extents have the same stability
+        thold = most_stable_extents[-1][1][0]
+        n_borderline_most_stable = sum(1 for _ in takewhile(lambda x: x[1][0] == thold, reversed(most_stable_extents)))
+        n_borderline_total = sum(delta == thold for _, (delta, _) in extents_data)
+        if n_borderline_most_stable < n_borderline_total:
+            most_stable_extents = most_stable_extents[:-n_borderline_most_stable]
+        return most_stable_extents
+
+    def init_new_pattern(
+            new_extent: fbarray, new_atomic_extent: fbarray, old_children: Collection[fbarray],
+            min_stability=min_delta_stability
+    ) -> tuple[Optional[int], Optional[set[fbarray]]]:
+        # Find the delta-index of the new extent and its children extents, aka "InitNewPattern" in the gSofia paper
+        new_delta, new_children = new_extent.count(), []
+        for child in old_children:
+            child_new = child & new_atomic_extent
+            new_delta = min(new_delta, new_extent.count() - child_new.count())
+            if new_delta < min_stability:
+                return new_delta, None
+            new_children.append(child_new)
+        return new_delta, maximal_bitarrays(new_children)
+
+    if use_tqdm:
+        atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns)
+
+    if not atomic_patterns_iterator.gi_suspended:
+        next(atomic_patterns_iterator)
+
+    # extent => (delta_index, children_extents)
+    stable_extents: dict[fbarray, tuple[int, set[fbarray]]] = dict()
+    refine_previous_pattern: bool = True
+
+    # special treatment for the first atomic pattern
+    atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
+    top_extent = atomic_extent | ~atomic_extent
+    n_objects = len(top_extent)
+    stable_extents[top_extent] = n_objects - atomic_extent.count(), {atomic_extent}
+    stable_extents[atomic_extent] = atomic_extent.count(), set()
+
+    while True:
+        try:
+            atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
+        except StopIteration:
+            break
+
+        old_stable_extents, stable_extents = dict(stable_extents), dict()
+        refine_previous_pattern = False
+        for extent, (delta, children) in old_stable_extents.items():
+            # Create new extent
+            extent_new: fbarray = extent & atomic_extent
+            if extent_new == extent:
+                stable_extents[extent] = delta, children
+                refine_previous_pattern = True
+                continue
+
+            # Update the stability of the old extent given its new child: `extent_new`
+            delta = min(delta, extent.count() - extent_new.count())
+            if delta >= min_delta_stability:
+                stable_extents[extent] = delta, children | {extent_new}
+
+            # Skip the new extent if it is too small
+            if extent_new.count() < min_supp:
+                # the pattern is to rare, so all refined (i.e. more precise) patterns would be even rarer
+                continue
+
+            delta_new, children_new = init_new_pattern(extent_new, atomic_extent, children, min_delta_stability)
+            if delta_new < min_delta_stability:  # Skip the new extent if it is too unstable
+                continue
+
+            # At this point we know that `extent_new` is big enough and is stable enough
+            stable_extents[extent_new] = (delta_new, children_new)
+            refine_previous_pattern = True
+
+        # after generating all new stable extents
+        if n_stable_extents is not None and len(stable_extents) > n_stable_extents:
+            stable_extents = dict(n_most_stable_extents(stable_extents.items(), n_stable_extents))
+
+    return set(stable_extents)
