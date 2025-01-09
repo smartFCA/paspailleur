@@ -92,12 +92,12 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -
 
 
 def iter_intents_via_ocbo(
-        patterns: list[Pattern]
+        objects_patterns: list[Pattern]
 ) -> Iterator[tuple[Pattern, bitarray]]:
     """Iterate intents in patterns by running object-wise version of Close By One algorithm"""
-    objects_per_pattern = bfuncs.group_objects_by_patterns(patterns)
+    objects_per_pattern = bfuncs.group_objects_by_patterns(objects_patterns)
 
-    n_objects = len(patterns)
+    n_objects = len(objects_patterns)
     # create a stack of pairs: 'known_extent', 'object_to_add'
     stack: list[tuple[bitarray, int]] = [(bazeros(n_objects), -1)]
     while stack:
@@ -255,7 +255,7 @@ def list_stable_extents_via_gsofia(
 
             # Skip the new extent if it is too small
             if extent_new.count() < min_supp:
-                # the pattern is to rare, so all refined (i.e. more precise) patterns would be even rarer
+                # the pattern is to rare, so all refined (i.e. more precise) objects_patterns would be even rarer
                 continue
 
             delta_new, children_new = init_new_pattern(extent_new, atomic_extent, children, min_delta_stability)

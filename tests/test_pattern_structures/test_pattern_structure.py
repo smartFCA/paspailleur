@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from collections.abc import Iterator
 
+import pytest
+
 from paspailleur.pattern_structures.pattern_structure import PatternStructure
 from paspailleur.pattern_structures.pattern import Pattern
 from paspailleur.pattern_structures import built_in_patterns as bip
@@ -374,3 +376,67 @@ def test_iter_atomic_patterns():
     assert len(atomic_patterns_stopped) == len(atomic_patterns_true_stopped)
     assert list(atomic_patterns_stopped) == list(atomic_patterns_true_stopped)
     assert atomic_patterns_stopped == atomic_patterns_true_stopped
+
+
+def test_mine_concepts():
+    # data is inspired by newzealand_en context from FCA_repository
+    data = OrderedDict([
+        ('Stewart Island', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Fjordland NP', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Invercargill', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Milford Sound', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('MT. Aspiring NP', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Te Anau', {'Hiking', 'Jet Boating', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Dunedin', {'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ('Oamaru', {'Hiking', 'Observing Nature'}),
+        ('Queenstown', {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights', 'Skiing',
+                       'Wildwater Rafting'}),
+        ('Wanaka', {'Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights',
+                   'Skiing', 'Wildwater Rafting'}),
+        ('Otago Peninsula', {'Hiking', 'Observing Nature'}),
+        ('Haast', {'Hiking', 'Observing Nature'}),
+        ('Catlins', {'Hiking', 'Observing Nature'})
+    ])
+    data = OrderedDict([(obj, bip.ItemSetPattern(descr)) for obj, descr in data.items()])
+
+    # the intents are ordered lexicographically w.r.t. their extents ordered w.r.t. objects_order
+    concepts_true = [
+        (bitarray('1111111111111'), ('Hiking',)),  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        (bitarray('1111111100111'), ('Hiking', 'Observing Nature')),  # extent: [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12]
+        (bitarray('1111111011000'), ('Hiking', 'Sightseeing Flights')),  # extent: [0, 1, 2, 3, 4, 5, 6, 8, 9]
+        (bitarray('1111111000000'), ('Hiking', 'Observing Nature', 'Sightseeing Flights')),
+        # extent: [0, 1, 2, 3, 4, 5, 6]
+        (bitarray('0000010011000'), ('Hiking', 'Jet Boating', 'Sightseeing Flights')),  # extent: [5, 8, 9]
+        (bitarray('0000000011000'), ('Bungee Jumping', 'Hiking', 'Jet Boating', 'Parachute Gliding', 'Sightseeing Flights',
+          'Skiing', 'Wildwater Rafting')),  # extent: [8, 9]
+        (bitarray('0000010000000'), ('Hiking', 'Jet Boating', 'Observing Nature', 'Sightseeing Flights')),
+        # extent: [5]
+        (bitarray('0000000000000'), ('Bungee Jumping', 'Hiking', 'Jet Boating', 'Observing Nature', 'Parachute Gliding',
+                                     'Sightseeing Flights', 'Skiing', 'Wildwater Rafting')),  # extent: []
+    ]
+    concepts_true = [(extent, bip.ItemSetPattern(intent)) for extent, intent in concepts_true]
+
+    ps = PatternStructure()
+    ps.fit(data)
+
+    concepts = ps.mine_concepts(min_support=0, min_delta_stability=0, return_objects_as_bitarrays=True)
+    assert len(concepts) == len(concepts_true)
+    assert concepts == concepts_true
+
+
+    concepts = ps.mine_concepts(min_support=0, min_delta_stability=0, return_objects_as_bitarrays=True, algorithm='gSofia')
+    assert len(concepts) == len(concepts_true)
+    assert concepts == concepts_true
+
+    with pytest.warns(UserWarning):
+        concepts = ps.mine_concepts(min_support=10000, min_delta_stability=0, return_objects_as_bitarrays=True,
+                                    algorithm='CloseByOne object-wise')
+    assert len(concepts) == len(concepts_true)
+    assert concepts == concepts_true
+
+    freq_concepts_true = [(extent, intent) for extent, intent in concepts_true if extent.count() >= 3]
+    freq_concepts = ps.mine_concepts(min_support=3, return_objects_as_bitarrays=True)
+    assert len(freq_concepts) == len(freq_concepts_true)
+    assert freq_concepts == freq_concepts_true
+
+    # TODO: Add tests for min_delta_stability threshold

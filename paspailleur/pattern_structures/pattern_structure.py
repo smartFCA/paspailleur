@@ -1,13 +1,15 @@
+import warnings
 from collections import deque, OrderedDict
 from functools import reduce
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal
 from bitarray import bitarray, frozenbitarray as fbarray
-from bitarray.util import zeros as bazeros, subset as basubset
+from bitarray.util import zeros as bazeros
 
+from caspailleur.io import to_absolute_number
 from caspailleur.order import sort_intents_inclusion, inverse_order
 from .pattern import Pattern
 
-import paspailleur.algorithms.base_functions as bfuncs
+from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec
 
 
 class PatternStructure:
@@ -242,3 +244,63 @@ class PatternStructure:
     def premaximal_patterns(self) -> dict[PatternType, set[str]]:
         """Maximal patterns that describe fewest objects (and their extents)"""
         return dict(self.iter_premaximal_patterns(return_extents=True, return_bitarrays=False))
+
+    def mine_concepts(
+            self,
+            min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            return_objects_as_bitarrays: bool = False,
+            use_tqdm: bool = False
+    ) -> Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]:
+        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia'}
+        assert algorithm is None or algorithm in SUPPORTED_ALGOS,\
+            f"Only the following algorithms are supported: {SUPPORTED_ALGOS}. " \
+            f"Either choose of the supported algorithm or set algorithm=None " \
+            f"to automatically choose the best algorithm based on the other hyperparameters"
+
+        n_objects = len(self._object_names)
+        min_support = to_absolute_number(min_support, n_objects)
+        min_delta_stability = to_absolute_number(min_delta_stability, n_objects)
+
+        if algorithm is None:
+            if min_delta_stability > 0 or min_support > 0:
+                algorithm = 'gSofia'
+            else:
+                algorithm = 'CloseByOne object-wise'
+
+        if algorithm == 'CloseByOne object-wise':
+            unused_parameters = []
+            if min_support > 0:
+                unused_parameters.append(f"{min_support=}")
+            if min_delta_stability > 0:
+                unused_parameters.append(f"{min_delta_stability}")
+            if unused_parameters:
+                warnings.warn(UserWarning(
+                    f'The following parameters {", ".join(unused_parameters)} do not affect algorithm {algorithm}'))
+
+            objects_patterns = [next(p for p, objs in self._object_irreducibles.items() if objs[g]) for g in range(n_objects)]
+            concepts_generator = mec.iter_intents_via_ocbo(objects_patterns)
+            extents_intents_dict: dict[fbarray, Pattern] = {fbarray(extent): intent for intent, extent in concepts_generator}
+
+        if algorithm == 'gSofia':
+            atomic_patterns_iterator = self.iter_atomic_patterns(
+                return_extents=True, return_bitarrays=True, kind='ascending controlled'
+            )
+            extents_ba = mec.list_stable_extents_via_gsofia(
+                atomic_patterns_iterator,
+                min_delta_stability=min_delta_stability,
+                min_supp=min_support,
+                use_tqdm=use_tqdm,
+                n_atomic_patterns=len(self._atomic_patterns)
+            )
+            extents_intents_dict: dict[fbarray, Pattern] = {fbarray(extent): self.intent(extent) for extent in extents_ba}
+
+        extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
+        concepts = [(
+            extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
+            extents_intents_dict[extent_ba]
+        ) for extent_ba in extents_order]
+        return concepts
+
+    def verbalise_extent(self, extent: Union[bitarray, set[str]]) -> set[str]:
+        return extent if not isinstance(extent, bitarray) else {self._object_names[g] for g in extent.search(True)}
