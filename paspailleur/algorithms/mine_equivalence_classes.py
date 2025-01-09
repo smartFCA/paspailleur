@@ -1,9 +1,10 @@
 import heapq
 from functools import reduce
 from itertools import takewhile
+from collections import OrderedDict
 
 from tqdm.auto import tqdm
-from typing import Iterator, OrderedDict, Generator, Collection, Iterable, Optional
+from typing import Iterator, Generator, Collection, Iterable, Optional
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -270,3 +271,83 @@ def list_stable_extents_via_gsofia(
             stable_extents = dict(n_most_stable_extents(stable_extents.items(), n_stable_extents))
 
     return set(stable_extents)
+
+
+def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern, fbarray]) -> Iterator[Pattern]:
+    # second condition implies the first one. But the first one is easier to test
+    atoms_to_iterate = (atom for atom in atomic_patterns if atom <= pattern)
+    atoms_to_iterate = sorted(atoms_to_iterate, key=lambda atom: atomic_patterns[atom].count())
+    if not atoms_to_iterate:
+        yield pattern.min_pattern if pattern.min_pattern is not None else pattern
+        return
+
+    extent = reduce(fbarray.__and__, (atomic_patterns[atom] for atom in atoms_to_iterate))
+    pattern_iterator = iter_all_patterns_ascending(
+        OrderedDict([(p, atomic_patterns[p]) for p in atoms_to_iterate]),
+        min_support=extent.count(), depth_first=False, controlled_iteration=True
+    )
+    next(pattern_iterator)  # initialise the iterator
+
+    go_more_precise = True
+    while True:
+        try:
+            key_candidate, candidate_extent = pattern_iterator.send(go_more_precise)
+        except StopIteration:
+            break
+
+        go_more_precise = extent != candidate_extent
+        if not go_more_precise:
+            yield key_candidate
+
+
+def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[Pattern, fbarray])\
+        -> Iterator[tuple[Pattern, int]]:
+    n_objects = len(atomic_patterns[next(p for p in atomic_patterns)])
+    top_extent = fbarray(~bazeros(n_objects))
+
+    atoms_per_pattern: list[list[Pattern]] = [[atom for atom in atomic_patterns if atom <= pattern]
+                                              for pattern in patterns]
+
+    atoms_to_iterate = reduce(set.__or__, map(set, atoms_per_pattern))
+    atoms_to_iterate = sorted(atoms_to_iterate, key=lambda atom: atomic_patterns[atom].count())
+    if not atoms_to_iterate:
+        min_pattern_candidates = [p.min_pattern if p.min_pattern is not None else p for p in patterns]
+        min_pattern = reduce(patterns[0].__class__.__and__, min_pattern_candidates)
+        for pattern_idx in range(len(patterns)):
+            yield min_pattern, pattern_idx
+        return
+
+    extents_per_pattern: dict[fbarray, list[int]] = {}
+    for pattern_idx, atoms in enumerate(atoms_per_pattern):
+        extent = fbarray(reduce(fbarray.__and__, (atomic_patterns[atom] for atom in atoms), top_extent))
+        if extent not in extents_per_pattern:
+            extents_per_pattern[extent] = []
+        extents_per_pattern[extent].append(pattern_idx)
+
+    min_support = min(extent.count() for extent in extents_per_pattern)
+    pattern_iterator = iter_all_patterns_ascending(
+        OrderedDict([(p, atomic_patterns[p]) for p in atoms_to_iterate]),
+        min_support=min_support, depth_first=False, controlled_iteration=True
+    )
+    next(pattern_iterator)  # initialise the iterator
+
+    keys_per_pattern: list[list[Pattern]] = [[] for _ in patterns]
+    go_more_precise = True
+    while True:
+        try:
+            key_candidate, candidate_extent = pattern_iterator.send(go_more_precise)
+        except StopIteration:
+            break
+
+        go_more_precise = any(basubset(extent, candidate_extent) and extent != candidate_extent
+                              for extent in extents_per_pattern)
+
+        same_extents = (extent for extent in extents_per_pattern if extent == candidate_extent)
+        for extent in same_extents:
+            super_patterns_indices = (
+                i for i in extents_per_pattern[extent]
+                if key_candidate <= patterns[i] and not any(key <= key_candidate for key in keys_per_pattern[i])
+            )
+            for i in super_patterns_indices:
+                yield key_candidate, i
+                keys_per_pattern[i].append(key_candidate)

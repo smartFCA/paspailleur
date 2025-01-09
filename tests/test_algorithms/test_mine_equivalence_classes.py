@@ -202,3 +202,58 @@ def test_list_stable_extents_via_gsofia():
     atomic_patterns_iterator = bfuncs.iter_patterns_ascending(atomic_patterns, ordering, controlled_iteration=True)
     stable_extents = mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=2)
     assert stable_extents == set()
+
+
+def test_iter_keys_of_pattern():
+    # CopyPaste from tests from Caspailleur
+    atomic_patterns = OrderedDict([
+        (bip.ItemSetPattern(['a']), fbarray('1100')), (bip.ItemSetPattern(['b']), fbarray('0011')),
+        (bip.ItemSetPattern(['c']), fbarray('1011')), (bip.ItemSetPattern(['d']), fbarray('0110')),
+        (bip.ItemSetPattern(['e']), fbarray('0000'))
+    ])
+    patterns_keys_true = {
+        bip.ItemSetPattern([]): [bip.ItemSetPattern([])],
+        bip.ItemSetPattern(['a']): [bip.ItemSetPattern(['a'])],
+        bip.ItemSetPattern(['c']): [bip.ItemSetPattern(['c'])],
+        bip.ItemSetPattern(['d']): [bip.ItemSetPattern(['d'])],
+        bip.ItemSetPattern(['a', 'c']): [bip.ItemSetPattern(['a', 'c'])],
+        bip.ItemSetPattern(['a', 'd']): [bip.ItemSetPattern(['a', 'd'])],
+        bip.ItemSetPattern(['b', 'c']): [bip.ItemSetPattern(['b'])],
+        bip.ItemSetPattern(['b', 'c', 'd']): [bip.ItemSetPattern(['b', 'd']), bip.ItemSetPattern(['c', 'd'])],
+        bip.ItemSetPattern(['a', 'b', 'c', 'd', 'e']): [
+            bip.ItemSetPattern(['e']), bip.ItemSetPattern(['a', 'b']), bip.ItemSetPattern(['a', 'c', 'd'])]
+    }
+
+    for pattern, keys_true in patterns_keys_true.items():
+        keys = list(mec.iter_keys_of_pattern(pattern, atomic_patterns))
+        assert keys == keys_true, f"{pattern}: true keys {keys_true}, mined keys {keys}"
+
+
+def test_iter_keys_of_patterns():
+    atomic_patterns = OrderedDict([
+        (bip.ItemSetPattern(['a']), fbarray('1100')), (bip.ItemSetPattern(['b']), fbarray('0011')),
+        (bip.ItemSetPattern(['c']), fbarray('1011')), (bip.ItemSetPattern(['d']), fbarray('0110')),
+        (bip.ItemSetPattern(['e']), fbarray('0000'))
+    ])
+    patterns_keys_true = {
+        bip.ItemSetPattern([]): [bip.ItemSetPattern([])],
+        bip.ItemSetPattern(['a']): [bip.ItemSetPattern(['a'])],
+        bip.ItemSetPattern(['c']): [bip.ItemSetPattern(['c'])],
+        bip.ItemSetPattern(['d']): [bip.ItemSetPattern(['d'])],
+        bip.ItemSetPattern(['a', 'c']): [bip.ItemSetPattern(['a', 'c'])],
+        bip.ItemSetPattern(['a', 'd']): [bip.ItemSetPattern(['a', 'd'])],
+        bip.ItemSetPattern(['b', 'c']): [bip.ItemSetPattern(['b'])],
+        bip.ItemSetPattern(['b', 'c', 'd']): [bip.ItemSetPattern(['b', 'd']), bip.ItemSetPattern(['c', 'd'])],
+        bip.ItemSetPattern(['a', 'b', 'c', 'd', 'e']): [
+            bip.ItemSetPattern(['e']), bip.ItemSetPattern(['a', 'b']), bip.ItemSetPattern(['a', 'c', 'd'])]
+    }
+    patterns = list(patterns_keys_true)
+
+    patterns_keys = dict()
+    for key, pattern_i in mec.iter_keys_of_patterns(patterns, atomic_patterns):
+        pattern = patterns[pattern_i]
+        if pattern not in patterns_keys:
+            patterns_keys[pattern] = []
+        patterns_keys[pattern].append(key)
+
+    assert patterns_keys == patterns_keys_true
