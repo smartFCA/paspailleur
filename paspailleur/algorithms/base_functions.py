@@ -9,9 +9,15 @@ from paspailleur.pattern_structures.pattern import Pattern
 
 
 def extension(pattern: Pattern, objects_per_pattern: dict[Pattern, bitarray]) -> bitarray:
+    """Return the set of objects whose patterns are more precise than `pattern`.
+
+    `objects_per_pattern` matches objects' patterns with the objects themselves
+    (in case some objects share the same patterns)
+    """
     n_objects = len(list(objects_per_pattern.values())[0])
     empty_extent = bazeros(n_objects)
-    sub_extents = (extent for ptrn, extent in objects_per_pattern.items() if pattern <= ptrn)
+    super_patterns = (ptrn for ptrn in objects_per_pattern if pattern <= ptrn)
+    sub_extents = (objects_per_pattern[ptrn] for ptrn in super_patterns)
     return reduce(fbarray.__or__, sub_extents, empty_extent)
 
 
