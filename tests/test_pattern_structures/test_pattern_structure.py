@@ -6,6 +6,7 @@ import pytest
 from paspailleur.pattern_structures.pattern_structure import PatternStructure
 from paspailleur.pattern_structures.pattern import Pattern
 from paspailleur.pattern_structures import built_in_patterns as bip
+from paspailleur.algorithms import mine_equivalence_classes as mec
 
 from bitarray import frozenbitarray as fbarray, bitarray
 
@@ -440,3 +441,37 @@ def test_mine_concepts():
     assert freq_concepts == freq_concepts_true
 
     # TODO: Add tests for min_delta_stability threshold
+
+
+def test_iter_patterns():
+    atomic_patterns_extents = OrderedDict([
+        (bip.NgramSetPattern(['hello']), bitarray('111111111')),
+        (bip.NgramSetPattern(['world']), bitarray('111111001')),
+        (bip.NgramSetPattern(['hello world']), bitarray('001111001')),
+        (bip.NgramSetPattern(['!']), bitarray('110111111'))
+    ])
+    context = OrderedDict([
+        ('a', bip.NgramSetPattern(['hello', 'world', '!'])),
+        ('b', bip.NgramSetPattern(['hello', 'world', '!'])),
+        ('c', bip.NgramSetPattern(['hello world'])),
+        ('d', bip.NgramSetPattern(['hello world', '!'])),
+        ('e', bip.NgramSetPattern(['hello world', '!'])),
+        ('f', bip.NgramSetPattern(['hello world', '!'])),
+        ('g', bip.NgramSetPattern(['hello', '!'])),
+        ('h', bip.NgramSetPattern(['hello', '!'])),
+        ('i', bip.NgramSetPattern(['hello world', '!'])),
+    ])
+
+    ps = PatternStructure()
+    ps.fit(context, compute_atomic_patterns=False)
+    ps._atomic_patterns = atomic_patterns_extents
+
+    iterator_tested = mec.iter_all_patterns_ascending(atomic_patterns_extents, min_support=3)
+    iterator = ps.iter_patterns(min_support=3/9)
+    assert list(iterator) == list(iterator_tested)
+
+    iterator_tested = mec.iter_all_patterns_ascending(atomic_patterns_extents, min_support=3, controlled_iteration=True)
+    iterator = ps.iter_patterns(min_support=3 / 9, kind='ascending controlled')
+    next(iterator)
+    next(iterator_tested)
+    assert list(iterator) == list(iterator_tested)

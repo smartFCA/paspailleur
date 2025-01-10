@@ -302,5 +302,30 @@ class PatternStructure:
         ) for extent_ba in extents_order]
         return concepts
 
+    def iter_patterns(
+            self, kind: Literal['ascending', 'ascending controlled'] = 'ascending',
+            min_support: Union[int, float] = 0,
+            depth_first: bool = True
+    ) -> Union[Iterator[tuple[PatternType, bitarray]], Generator[tuple[PatternType, bitarray], bool, None]]:
+        assert self._atomic_patterns is not None,\
+            "Initialise the atomic patterns with PatternStructure.init_atomic_patterns() function " \
+            "to be able to iterate through the set of possible patterns"
+
+        min_support = to_absolute_number(min_support, len(self._object_names))
+
+        iterator = None
+        if kind.split()[0] == 'ascending':
+            is_controlled = len(kind.split()) >= 2 and kind.split()[1] == 'controlled'
+            iterator = mec.iter_all_patterns_ascending(self._atomic_patterns, min_support, depth_first,
+                                                       controlled_iteration=is_controlled)
+
+        if iterator is None:
+            raise ValueError(f'Do not know how to treat parameter {kind=} '
+                             f'in the PatternStructure.iter_patterns(...) function. '
+                             f'See the list of available `kind` values in the type hints of the function.')
+        return iterator
+
     def verbalise_extent(self, extent: Union[bitarray, set[str]]) -> set[str]:
-        return extent if not isinstance(extent, bitarray) else {self._object_names[g] for g in extent.search(True)}
+        if not isinstance(extent, bitarray):
+            return extent
+        return {self._object_names[g] for g in extent.search(True)}
