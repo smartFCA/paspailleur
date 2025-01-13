@@ -138,7 +138,7 @@ class AbstractPS:
         n_rows, n_cols = len(flags[0]), len(flags)
         itemsets_ba = [bazeros(n_cols) for _ in range(n_rows)]
         for j, flag in enumerate(flags):
-            for i in flag.itersearch(True):
+            for i in flag.search(True):
                 itemsets_ba[i][j] = True
         itemsets_ba = [fbarray(ba) for ba in itemsets_ba]
         return list(patterns), itemsets_ba
