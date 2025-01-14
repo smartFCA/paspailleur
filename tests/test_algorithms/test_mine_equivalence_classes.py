@@ -203,6 +203,34 @@ def test_list_stable_extents_via_gsofia():
     stable_extents = mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=2)
     assert stable_extents == set()
 
+    #########################################################################
+    # More elaborate but still toy-ish case with comparable atomic patterns #
+    #########################################################################
+    atomic_patterns_extents = OrderedDict([
+        ('hello', bitarray('111111111')),
+        ('world', bitarray('111111001')),
+        ('hello world', bitarray('001111001')),
+        ('!', bitarray('110111111'))
+    ])
+    atomic_patterns_extents = OrderedDict([(bip.NgramSetPattern([k]), fbarray(v)) for k, v in atomic_patterns_extents.items()])
+    ordering = [fbarray('0010'), fbarray('0010'), fbarray('0000'), fbarray('0000')]
+
+    extents_stabilities = {
+        fbarray('111111111'): 1,  # "hello"
+        fbarray('111111001'): 1,  # "hello", "world"
+        fbarray('110111111'): 2,  # "hello", "!"
+        fbarray('001111001'): 1,  # "hello world"
+        fbarray('110111001'): 2,  # "hello", "world", "!"
+        fbarray('000111001'): 4,  # "hello world", "!"
+    }
+
+    for delta_min in [1, 2, 3, 4, 5]:
+        stable_extents_true = {ext for ext, delta in extents_stabilities.items() if delta >= delta_min}
+
+        atomic_patterns_iterator = bfuncs.iter_patterns_ascending(atomic_patterns_extents, ordering, controlled_iteration=True)
+        stable_extents = set(mec.list_stable_extents_via_gsofia(atomic_patterns_iterator, min_delta_stability=delta_min))
+        assert stable_extents == stable_extents_true,  f"Problem with {delta_min=}"
+
 
 def test_iter_keys_of_pattern():
     # CopyPaste from tests from Caspailleur
