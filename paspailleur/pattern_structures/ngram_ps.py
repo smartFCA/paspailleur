@@ -184,7 +184,7 @@ class NgramPS(AbstractPS):
         def refine_extent(ext, ngram_verb, min_supp, ptrns):
             supp_delta = ext.count() - max(min_supp, 1)
             # the use of str `words` is important because of the way is_less_precise function works
-            for ptrn_i in ext.itersearch(True):
+            for ptrn_i in ext.search(True):
                 if self.is_less_precise({ngram_verb}, ptrns[ptrn_i]):
                     continue
                 # new_ngram is not contained in i-th pattern
