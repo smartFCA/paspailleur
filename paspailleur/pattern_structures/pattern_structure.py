@@ -207,6 +207,10 @@ class PatternStructure:
         return {atomic_patterns_list[idx]: {atomic_patterns_list[v] for v in vs.search(True)}
                 for idx, vs in enumerate(self._atomic_patterns_order)}
 
+    @property
+    def n_atomic_patterns(self) -> int:
+        return sum(1 for _ in self.iter_atomic_patterns(return_extents=False, return_bitarrays=False))
+
     def iter_premaximal_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
         Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
     ]:

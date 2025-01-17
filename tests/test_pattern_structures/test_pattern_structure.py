@@ -475,3 +475,17 @@ def test_iter_patterns():
     next(iterator)
     next(iterator_tested)
     assert list(iterator) == list(iterator_tested)
+
+
+def test_n_atomic_patterns():
+    atomic_patterns_true = OrderedDict([
+        ('hello', bitarray('111111111')),
+        ('world', bitarray('111111001')),
+        ('hello world', bitarray('001111001')),
+        ('!', bitarray('110111111'))
+    ])
+    atomic_patterns_true = OrderedDict([(bip.NgramSetPattern([k]), v) for k, v in atomic_patterns_true.items()])
+
+    ps = PatternStructure()
+    ps._atomic_patterns = atomic_patterns_true
+    assert ps.n_atomic_patterns == 4
