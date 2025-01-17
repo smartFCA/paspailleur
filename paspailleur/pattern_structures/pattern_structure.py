@@ -333,3 +333,6 @@ class PatternStructure:
         if not isinstance(extent, bitarray):
             return extent
         return {self._object_names[g] for g in extent.search(True)}
+
+    def iter_keys(self, pattern: PatternType) -> Iterator[PatternType]:
+        return mec.iter_keys_of_pattern(pattern, self._atomic_patterns)

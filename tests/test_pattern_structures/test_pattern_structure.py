@@ -489,3 +489,19 @@ def test_n_atomic_patterns():
     ps = PatternStructure()
     ps._atomic_patterns = atomic_patterns_true
     assert ps.n_atomic_patterns == 4
+
+
+def test_iter_keys():
+    patterns = [['hello world', 'who is there'], ['hello world'], ['world is there']]
+    patterns = [bip.NgramSetPattern(ngram) for ngram in patterns]
+    context = dict(zip('abc', patterns))
+    ps = PatternStructure()
+    ps.fit(context)
+
+    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True))
+
+    intents = [intent for extent, intent in ps.mine_concepts()]
+    for intent in intents:
+        iter_trusted = mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns)
+        iterator = ps.iter_keys(intent)
+        assert list(iterator) == list(iter_trusted), f"Problem with intent {intent}"
