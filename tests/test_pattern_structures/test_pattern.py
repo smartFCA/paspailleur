@@ -102,3 +102,38 @@ def test_repr():
 
     a = Pattern(fbarray('10011'))
     assert str(a) == "Pattern(frozenbitarray('10011'))"
+
+
+def test_joinable_meetable_atomisable_properties():
+    value = frozenset({1, 2, 3})
+    a = Pattern(value)
+    assert a.meetable
+    assert a.joinable
+    assert not a.atomisable
+    assert a.substractable
+
+    class APattern(Pattern):
+        @property
+        def atomic_patterns(self):
+            return [self.__class__(self.value)]
+    a = APattern(value)
+    assert a.atomisable
+
+    class NMPattern(Pattern):
+        def __and__(self, other):
+            raise NotImplementedError
+    a = NMPattern(value)
+    assert not a.meetable
+
+    class NJPatter(Pattern):
+        def __or__(self, other):
+            raise NotImplementedError
+    a = NJPatter(value)
+    assert not a.joinable
+
+    class NSPattern(Pattern):
+        def __sub__(self, other):
+            raise NotImplementedError
+    a = NSPattern(value)
+    assert not a.substractable
+

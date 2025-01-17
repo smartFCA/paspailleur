@@ -11,6 +11,38 @@ class Pattern:
     def value(self) -> PatternValueType:
         return self._value
 
+    @property
+    def meetable(self) -> bool:
+        try:
+            self.meet(self)
+        except NotImplementedError:
+            return False
+        return True
+
+    @property
+    def joinable(self) -> bool:
+        try:
+            self.join(self)
+        except NotImplementedError:
+            return False
+        return True
+
+    @property
+    def atomisable(self) -> bool:
+        try:
+            _ = self.atomic_patterns
+        except NotImplementedError:
+            return False
+        return True
+
+    @property
+    def substractable(self) -> bool:
+        try:
+            self.difference(self)
+        except NotImplementedError:
+            return False
+        return True
+
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
         if self.min_pattern is not None and other.min_pattern is not None:
