@@ -505,3 +505,13 @@ def test_iter_keys():
         iter_trusted = mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns)
         iterator = ps.iter_keys(intent)
         assert list(iterator) == list(iter_trusted), f"Problem with intent {intent}"
+
+    iter_trusted = mec.iter_keys_of_patterns(intents, atomic_patterns)
+    iter_trusted = [(ptrn, intents[intent_i]) for ptrn, intent_i in iter_trusted]
+
+    iterator = list(ps.iter_keys(intents))
+    assert iterator == iter_trusted
+
+    iterator = list(ps.iter_keys(intents[::-1]))
+    assert set(iterator) == set(iter_trusted)
+    assert iterator == iter_trusted

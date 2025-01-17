@@ -285,3 +285,59 @@ def test_iter_keys_of_patterns():
         patterns_keys[pattern].append(key)
 
     assert patterns_keys == patterns_keys_true
+
+    patterns = patterns[::-1]
+    patterns_keys = dict()
+    for key, pattern_i in mec.iter_keys_of_patterns(patterns, atomic_patterns):
+        pattern = patterns[pattern_i]
+        if pattern not in patterns_keys:
+            patterns_keys[pattern] = []
+        patterns_keys[pattern].append(key)
+
+    assert patterns_keys == patterns_keys_true
+
+    ########################
+    # NgramSetPattern case #
+    ########################
+    #patterns = [['hello world', 'who is there'], ['hello world'], ['world is there']]
+    #patterns = [bip.NgramSetPattern(ngram) for ngram in patterns]
+
+    atomic_patterns = OrderedDict([
+        (bip.NgramSetPattern({'world'}), fbarray('111')),
+        (bip.NgramSetPattern({'hello'}), fbarray('110')),
+        (bip.NgramSetPattern({'hello world'}), fbarray('110')),
+        (bip.NgramSetPattern({'is'}), fbarray('101')),
+        (bip.NgramSetPattern({'there'}), fbarray('101')),
+        (bip.NgramSetPattern({'is there'}), fbarray('101')),
+        (bip.NgramSetPattern({'who'}), fbarray('100')),
+        (bip.NgramSetPattern({'who is'}), fbarray('100')),
+        (bip.NgramSetPattern({'who is there'}), fbarray('100')),
+        (bip.NgramSetPattern({'world is'}), fbarray('001')),
+        (bip.NgramSetPattern({'world is there'}), fbarray('001'))
+    ])
+    patterns_keys_true = {
+        bip.NgramSetPattern(['world']): [bip.NgramSetPattern([])],
+        bip.NgramSetPattern(['hello world']): [bip.NgramSetPattern(['hello'])],
+        bip.NgramSetPattern(['is there', 'world']): [bip.NgramSetPattern(['is']),
+                                                     bip.NgramSetPattern(['there'])],
+        bip.NgramSetPattern(['who is there', 'hello world']): [bip.NgramSetPattern(['who']),
+                                                               bip.NgramSetPattern(['is', 'hello']),
+                                                               bip.NgramSetPattern(['hello', 'there'])
+                                                               ],
+        bip.NgramSetPattern(['world is there']): [bip.NgramSetPattern(['world is'])],
+        bip.NgramSetPattern(['who is there', 'world is there', 'hello world']): [
+            bip.NgramSetPattern(['hello', 'world is']),
+            bip.NgramSetPattern(['who', 'world is']),
+        ]
+    }
+    patterns = list(patterns_keys_true)
+
+    patterns_keys = dict()
+    for key, pattern_i in mec.iter_keys_of_patterns(patterns, atomic_patterns):
+        pattern = patterns[pattern_i]
+        if pattern not in patterns_keys:
+            patterns_keys[pattern] = []
+        patterns_keys[pattern].append(key)
+
+    assert patterns_keys == patterns_keys_true
+

@@ -334,5 +334,13 @@ class PatternStructure:
             return extent
         return {self._object_names[g] for g in extent.search(True)}
 
-    def iter_keys(self, pattern: PatternType) -> Iterator[PatternType]:
-        return mec.iter_keys_of_pattern(pattern, self._atomic_patterns)
+    def iter_keys(self, patterns: Union[PatternType, Collection[PatternType]]) -> Union[
+        Iterator[PatternType], Iterator[tuple[PatternType, PatternType]]
+    ]:
+        if isinstance(patterns, self.PatternType):
+            return mec.iter_keys_of_pattern(patterns, self._atomic_patterns)
+
+        # `patterns` is a collection of patterns
+        patterns = list(patterns)
+        iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns)
+        return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
