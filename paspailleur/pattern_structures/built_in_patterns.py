@@ -16,7 +16,7 @@ class ItemSetPattern(Pattern):
         return self._value
 
     def __repr__(self) -> str:
-        return f"ItemSetPattern({set(self.value)})"
+        return repr(set(self.value))
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
@@ -87,7 +87,7 @@ class IntervalPattern(Pattern):
             lbound_sign = '[' if self.is_lower_bound_closed else '('
             ubound_sign = ']' if self.is_upper_bound_closed else ')'
             str_descr = f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
-        return f"IntervalPattern({str_descr})"
+        return str_descr
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
@@ -232,9 +232,6 @@ class ClosedIntervalPattern(IntervalPattern):
     def is_upper_bound_closed(self) -> bool:
         return True
 
-    def __repr__(self) -> str:
-        return super().__repr__().replace('Interval', 'ClosedInterval')
-
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         if value != 'ø' and ',' in value:
@@ -266,7 +263,7 @@ class NgramSetPattern(Pattern):
         ngrams = sorted(self.value, key=lambda ngram: (-len(ngram), ngram))
         ngrams_verb = [' '.join(ngram) for ngram in ngrams]
         pattern_verb = "{'" + "', '".join(ngrams_verb) + "'}"
-        return f"NgramSetPattern({pattern_verb})"
+        return pattern_verb
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
@@ -371,7 +368,7 @@ class CartesianPattern(Pattern):
     PatternValueType = frozendict[str, Pattern]
 
     def __repr__(self) -> str:
-        return "CartesianPattern("+repr(dict(self.value))+")"
+        return repr(dict(self.value))
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:

@@ -101,10 +101,10 @@ def test_comparisons():
 
 def test_repr():
     a = Pattern(frozenset({1, 2, 3}))
-    assert str(a) == "Pattern(frozenset({1, 2, 3}))"
+    assert str(a) == "frozenset({1, 2, 3})"
 
     a = Pattern(fbarray('10011'))
-    assert str(a) == "Pattern(frozenbitarray('10011'))"
+    assert str(a) == "frozenbitarray('10011')"
 
 
 def test_joinable_meetable_atomisable_properties():

@@ -37,7 +37,7 @@ def test_ItemSetPattern():
     assert {bip.ItemSetPattern([2, 3])}  # test if hashable
 
     a = bip.ItemSetPattern(range(1, 5))
-    assert str(a) == "ItemSetPattern({1, 2, 3, 4})"
+    assert str(a) == "{1, 2, 3, 4}"
 
     a = bip.ItemSetPattern({1, 2, 3, 4})
     b = bip.ItemSetPattern({3, 4, 5, 6, 7})
@@ -92,7 +92,7 @@ def test_IntervalPattern():
     assert a & a.max_pattern == a
     assert a | a.max_pattern == a.max_pattern
 
-    assert str(a) == 'IntervalPattern([1.0, 10.0))'
+    assert str(a) == '[1.0, 10.0)'
 
     assert {a, b}  # Test if hashable
 
@@ -134,7 +134,7 @@ def test_ClosedIntervalPattern():
     assert a.max_pattern | a.min_pattern == a.max_pattern
     assert a.max_pattern & a.min_pattern == a.min_pattern
 
-    assert str(a) == 'ClosedIntervalPattern([1.0, 10.0])'
+    assert str(a) == '[1.0, 10.0]'
 
     assert {a, b}  # Test if hashable
 
@@ -162,7 +162,7 @@ def test_NgramSetPattern():
     assert a <= join
 
     a = bip.NgramSetPattern(['hello world', 'who is there'])
-    assert str(a) == "NgramSetPattern({'who is there', 'hello world'})"
+    assert str(a) == "{'who is there', 'hello world'}"
 
     assert {a, b, meet, join}  # Test if hashable
 
@@ -222,7 +222,7 @@ def test_CartesianPattern():
     assert a.value == value
 
     s = str(a)
-    s_true = "CartesianPattern({'age': ClosedIntervalPattern([11.0, 11.0]), 'name': NgramSetPattern({'Harry Potter'})})"
+    s_true = "{'age': [11.0, 11.0], 'name': {'Harry Potter'}}"
     assert s == s_true
 
     value = frozendict({

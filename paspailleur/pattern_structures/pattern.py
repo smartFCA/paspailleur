@@ -80,7 +80,7 @@ class Pattern:
 
     def __repr__(self) -> str:
         """String representation of the pattern"""
-        return f"Pattern({self.value})"
+        return str(self.value)
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
