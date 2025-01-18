@@ -467,11 +467,11 @@ def test_iter_patterns():
     ps._atomic_patterns = atomic_patterns_extents
 
     iterator_tested = mec.iter_all_patterns_ascending(atomic_patterns_extents, min_support=3)
-    iterator = ps.iter_patterns(min_support=3/9)
+    iterator = ps.iter_patterns(min_support=3/9, return_objects_as_bitarrays=True)
     assert list(iterator) == list(iterator_tested)
 
     iterator_tested = mec.iter_all_patterns_ascending(atomic_patterns_extents, min_support=3, controlled_iteration=True)
-    iterator = ps.iter_patterns(min_support=3 / 9, kind='ascending controlled')
+    iterator = ps.iter_patterns(min_support=3 / 9, kind='ascending controlled', return_objects_as_bitarrays=True)
     next(iterator)
     next(iterator_tested)
     assert list(iterator) == list(iterator_tested)

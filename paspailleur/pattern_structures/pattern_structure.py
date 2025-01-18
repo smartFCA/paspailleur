@@ -309,17 +309,18 @@ class PatternStructure:
     def iter_patterns(
             self, kind: Literal['ascending', 'ascending controlled'] = 'ascending',
             min_support: Union[int, float] = 0,
-            depth_first: bool = True
+            depth_first: bool = True,
+            return_objects_as_bitarrays: bool = False,
     ) -> Union[Iterator[tuple[PatternType, bitarray]], Generator[tuple[PatternType, bitarray], bool, None]]:
         assert self._atomic_patterns is not None,\
             "Initialise the atomic patterns with PatternStructure.init_atomic_patterns() function " \
             "to be able to iterate through the set of possible patterns"
 
         min_support = to_absolute_number(min_support, len(self._object_names))
+        is_controlled = kind.split()[-1] == 'controlled'
 
         iterator = None
         if kind.split()[0] == 'ascending':
-            is_controlled = len(kind.split()) >= 2 and kind.split()[1] == 'controlled'
             iterator = mec.iter_all_patterns_ascending(self._atomic_patterns, min_support, depth_first,
                                                        controlled_iteration=is_controlled)
 
@@ -327,7 +328,21 @@ class PatternStructure:
             raise ValueError(f'Do not know how to treat parameter {kind=} '
                              f'in the PatternStructure.iter_patterns(...) function. '
                              f'See the list of available `kind` values in the type hints of the function.')
-        return iterator
+
+        if not is_controlled:
+            for pattern, extent in iterator:
+                yield pattern, extent if return_objects_as_bitarrays else self.verbalise_extent(extent)
+
+        else:  # is_controlled = True
+            go_deeper = True
+            yield
+            next(iterator)
+            while True:
+                try:
+                    pattern, extent = iterator.send(go_deeper)
+                except StopIteration as e:
+                    break
+                go_deeper = yield pattern, extent if return_objects_as_bitarrays else self.verbalise_extent(extent)
 
     def verbalise_extent(self, extent: Union[bitarray, set[str]]) -> set[str]:
         if not isinstance(extent, bitarray):
