@@ -31,7 +31,7 @@ class ItemSetPattern(Pattern):
             return frozenset(parsed_value)
 
         is_bounded = value.startswith(('(', '[', '{')) and value.endswith((')', ']', '}'))
-        value_iterator = value[1:-1].split(',') if is_bounded else value.split(',') if ',' in value else list(value)
+        value_iterator = value[1:-1].split(',') if is_bounded else value.split(',')
         parsed_value = []
         for v in value_iterator:
             try:

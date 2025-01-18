@@ -19,8 +19,7 @@ def test_ItemSetPattern():
     assert b <= a
     assert not (a <= b)
 
-    assert z.value == frozenset({1, 2, 3})
-
+    assert z.value == frozenset({123})
 
     a = bip.ItemSetPattern(range(1, 5))
     b = bip.ItemSetPattern(range(3, 7))
@@ -56,7 +55,7 @@ def test_ItemSetPattern():
     assert a == pattern
 
     a = bip.ItemSetPattern('abc')
-    assert a == bip.ItemSetPattern(['a','b','c'])
+    assert a == bip.ItemSetPattern(['abc'])
 
 
 def test_IntervalPattern():
@@ -203,9 +202,9 @@ def test_parse_string_description():
     assert value_parsed == value
 
     value_parsed = bip.ItemSetPattern.parse_string_description('123')
-    assert value_parsed == value
+    assert value_parsed == {123}
 
-    value = {'a', 'b', 'c'}
+    value = {'abc'}
     value_parsed = bip.ItemSetPattern.parse_string_description('abc')
     assert value_parsed == value
 
