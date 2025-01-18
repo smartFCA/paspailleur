@@ -7,17 +7,45 @@ from .pattern import Pattern
 
 
 class ItemSetPattern(Pattern):
-    PatternValueType = set
-
-    def __init__(self, value):
-        super().__init__(frozenset(value))
+    PatternValueType = frozenset
 
     @property
     def value(self) -> PatternValueType:
-        return set(self._value)
+        return self._value
 
     def __repr__(self) -> str:
-        return f"ItemSetPattern({self.value})"
+        return f"ItemSetPattern({set(self.value)})"
+
+    @classmethod
+    def parse_string_description(cls, value: str) -> PatternValueType:
+        parsed_value = None
+
+        try:
+            parsed_value = eval(value)
+        except Exception as e:
+            pass
+
+        if parsed_value is not None and isinstance(parsed_value, Collection):
+            return frozenset(parsed_value)
+
+        is_bounded = value.startswith(('(', '[', '{')) and value.endswith((')', ']', '}'))
+        value_iterator = value[1:-1].split(',') if is_bounded else value.split(',') if ',' in value else list(value)
+        parsed_value = []
+        for v in value_iterator:
+            try:
+                new_v = eval(v)
+            except:
+                new_v = v
+            parsed_value.append(new_v)
+
+        if parsed_value is not None:
+            return frozenset(parsed_value)
+
+        raise ValueError(f'Value {value} cannot be parsed into {cls.__name__} object')
+
+    @classmethod
+    def preprocess_value(cls, value: Collection) -> PatternValueType:
+        return frozenset(value)
 
     @property
     def atomic_patterns(self) -> set[Self]:
@@ -28,9 +56,6 @@ class ItemSetPattern(Pattern):
     def min_pattern(self) -> Optional[Self]:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__(frozenset())
-
-    def __hash__(self):
-        return hash(self._value)
 
 
 class IntervalPattern(Pattern):

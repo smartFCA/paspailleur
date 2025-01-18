@@ -18,7 +18,8 @@ def test_ItemSetPattern():
     assert b <= a
     assert not (a <= b)
 
-    assert z.value == {'1', '2', '3'}
+    assert z.value == frozenset({1, 2, 3})
+
 
     a = bip.ItemSetPattern(range(1, 5))
     b = bip.ItemSetPattern(range(3, 7))
@@ -45,6 +46,16 @@ def test_ItemSetPattern():
 
     assert a.min_pattern == bip.ItemSetPattern(set())
     assert b.max_pattern is None
+
+    pattern = bip.ItemSetPattern([1, 2, 3])
+    a = bip.ItemSetPattern("[1, 2, 3]")
+    assert a == pattern
+
+    a = bip.ItemSetPattern("1,2,3")
+    assert a == pattern
+
+    a = bip.ItemSetPattern('abc')
+    assert a == bip.ItemSetPattern(['a','b','c'])
 
 
 def test_IntervalPattern():
@@ -156,3 +167,22 @@ def test_NgramSetPattern():
     atomic_patterns_true = {bip.NgramSetPattern({ngram}) for ngram in atomic_patterns_true}
     assert a.atomic_patterns == atomic_patterns_true
 
+
+def test_parse_string_description():
+    value = {1, 2, 3}
+    value_parsed = bip.ItemSetPattern.parse_string_description('[1,2,3]')
+    assert value_parsed == value
+
+    value_parsed = bip.ItemSetPattern.parse_string_description('1,2,3')
+    assert value_parsed == value
+
+    value_parsed = bip.ItemSetPattern.parse_string_description('123')
+    assert value_parsed == value
+
+    value = {'a', 'b', 'c'}
+    value_parsed = bip.ItemSetPattern.parse_string_description('abc')
+    assert value_parsed == value
+
+    value = {'abc'}
+    value_parsed = bip.ItemSetPattern.parse_string_description('[abc]')
+    assert value == value_parsed

@@ -179,9 +179,9 @@ def test_list_stable_extents_via_gsofia():
     # Simplest tests for simple cases #
     ###################################
     atomic_patterns = OrderedDict([
-        (bip.Pattern('a'), fbarray('110')),
-        (bip.Pattern('b'), fbarray('101')),
-        (bip.Pattern('c'), fbarray('011'))
+        (bip.Pattern('frozenset({1})'), fbarray('110')),
+        (bip.Pattern('frozenset({2})'), fbarray('101')),
+        (bip.Pattern('frozenset({3})'), fbarray('011'))
     ])
     ordering = [fbarray('000'), fbarray('000'), fbarray('000')]
     extents_true = {

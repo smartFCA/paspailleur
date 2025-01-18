@@ -12,7 +12,7 @@ class Pattern:
                 raise ValueError(f"The Pattern's value cannot be parsed from a string {value}. "
                                  f"The following exception is raised: {e}")
 
-        self._value = value
+        self._value = self.preprocess_value(value)
 
     @property
     def value(self) -> PatternValueType:
@@ -85,6 +85,10 @@ class Pattern:
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         return eval(value)
+
+    @classmethod
+    def preprocess_value(cls, value) -> PatternValueType:
+        return value
 
     def __eq__(self, other: Self) -> bool:
         """Return self==other"""
