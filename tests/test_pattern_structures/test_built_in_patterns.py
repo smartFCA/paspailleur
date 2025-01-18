@@ -167,6 +167,19 @@ def test_NgramSetPattern():
     atomic_patterns_true = {bip.NgramSetPattern({ngram}) for ngram in atomic_patterns_true}
     assert a.atomic_patterns == atomic_patterns_true
 
+    # Test Pattern initialisation via a string
+    a = bip.NgramSetPattern("{'hello', 'world'}")
+    a2 = bip.NgramSetPattern({'hello', 'world'})
+    assert a == a2
+
+    a = bip.NgramSetPattern('"hello", "world"')
+    a2 = bip.NgramSetPattern({'hello', 'world'})
+    assert a == a2
+
+    a = bip.NgramSetPattern("'hello world', 'world !'")
+    a2 = bip.NgramSetPattern({('hello', 'world'), ('world', '!')})
+    assert a == a2
+
 
 def test_parse_string_description():
     value = {1, 2, 3}

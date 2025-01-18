@@ -248,15 +248,29 @@ class ClosedIntervalPattern(IntervalPattern):
 class NgramSetPattern(Pattern):
     PatternValueType = frozenset[tuple[str, ...]]
 
-    def __init__(self, value: Union[PatternValueType, Collection[str]]):
-        value = [re.sub(r" +", " ", v).strip().split(' ') if isinstance(v, str) else v for v in value]
-        super().__init__(frozenset(map(tuple, value)))
-
     def __repr__(self) -> str:
         ngrams = sorted(self.value, key=lambda ngram: (-len(ngram), ngram))
         ngrams_verb = [' '.join(ngram) for ngram in ngrams]
         pattern_verb = "{'" + "', '".join(ngrams_verb) + "'}"
         return f"NgramSetPattern({pattern_verb})"
+
+    @classmethod
+    def parse_string_description(cls, value: str) -> PatternValueType:
+        try:
+            parsed_value = super().parse_string_description(value)
+        except Exception as e:
+            parsed_value = None
+
+        if parsed_value is not None and isinstance(parsed_value, Collection):
+            parsed_value = [v.strip().split(' ') for v in parsed_value]
+            return frozenset(map(tuple, parsed_value))
+
+        raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
+
+    @classmethod
+    def preprocess_value(cls, value) -> PatternValueType:
+        value = [re.sub(r" +", " ", v).strip().split(' ') if isinstance(v, str) else v for v in value]
+        return frozenset(map(tuple, value))
 
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
