@@ -11,6 +11,9 @@ def test_init():
     except TypeError as e:
         assert False, e
 
+    a2 = Pattern("frozenset({1, 2, 3})")
+    assert a2 == a
+
 
 def test_eq():
     a = Pattern(frozenset({1,2,3}))
@@ -137,3 +140,7 @@ def test_joinable_meetable_atomisable_properties():
     a = NSPattern(value)
     assert not a.substractable
 
+
+def test_parse_string_description():
+    value = frozenset([1, 2, 3])
+    assert Pattern.parse_string_description(str(value)) == value

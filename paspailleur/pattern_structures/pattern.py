@@ -5,6 +5,13 @@ class Pattern:
     PatternValueType = TypeVar('PatternValueType')
 
     def __init__(self, value: PatternValueType):
+        if isinstance(value, str):
+            try:
+                value = self.parse_string_description(value)
+            except Exception as e:
+                raise ValueError(f"The Pattern's value cannot be parsed from a string {value}. "
+                                 f"The following exception is raised: {e}")
+
         self._value = value
 
     @property
@@ -74,6 +81,10 @@ class Pattern:
     def __repr__(self) -> str:
         """String representation of the pattern"""
         return f"Pattern({self.value})"
+
+    @classmethod
+    def parse_string_description(cls, value: str) -> PatternValueType:
+        return eval(value)
 
     def __eq__(self, other: Self) -> bool:
         """Return self==other"""
