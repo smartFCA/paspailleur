@@ -94,12 +94,21 @@ class IntervalPattern(Pattern):
         if value == 'ø':
             return (0, False), (0, False)
 
+        if ',' not in value:
+            try:
+                return (float(value), True), (float(value), True)
+            except Exception as e:
+                pass
+
         lb, ub = map(str.strip, value[1:-1].replace('∞', 'inf').split(','))
         closed_lb, closed_ub = value[0] == '[', value[-1] == ']'
         return (float(lb), bool(closed_lb)), (float(ub), bool(closed_ub))
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        if isinstance(value, Number):
+            return (float(value), True), (float(value), True)
+
         lb, closed_lb = value[0]
         rb, closed_rb = value[1]
 
@@ -215,7 +224,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
-        if value != 'ø':
+        if value != 'ø' and ',' in value:
             assert value[0] == '[' and value[-1] == ']', \
                 'Only closed intervals are supported within ClosedIntervalPattern. ' \
                 f'Change the bounds of interval "{value}" to square brackets to make it close'

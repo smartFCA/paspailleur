@@ -99,6 +99,9 @@ def test_IntervalPattern():
     assert a.max_pattern == bip.IntervalPattern('ø')
     assert {a.max_pattern}  # Test if max pattern is hashable
 
+    assert bip.IntervalPattern('125') == bip.IntervalPattern('[125, 125]')
+    assert bip.IntervalPattern(125) == bip.IntervalPattern('[125, 125]')
+
 
 def test_ClosedIntervalPattern():
     a = bip.ClosedIntervalPattern((1, 10))
@@ -137,6 +140,9 @@ def test_ClosedIntervalPattern():
     assert a.min_pattern == bip.ClosedIntervalPattern('[-inf, +inf]')
     assert a.max_pattern == bip.ClosedIntervalPattern('ø')
     assert {a.max_pattern}  # Test if max pattern is hashable
+
+    assert bip.ClosedIntervalPattern('125') == bip.ClosedIntervalPattern([125, 125])
+    assert bip.ClosedIntervalPattern(125) == bip.ClosedIntervalPattern([125, 125])
 
 
 def test_NgramSetPattern():
