@@ -81,6 +81,7 @@ class PatternStructure:
     def init_atomic_patterns(self):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
         atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
+        atomic_patterns |= self.max_pattern.atomic_patterns
 
         # Step 1. Group patterns by their extents. For every extent, list patterns in topological sorting
         patterns_per_extent: dict[fbarray, deque[Pattern]] = dict()

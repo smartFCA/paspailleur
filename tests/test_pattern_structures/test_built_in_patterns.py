@@ -90,6 +90,8 @@ def test_IntervalPattern():
     assert a | c == a.max_pattern
     assert a.max_pattern | a.min_pattern == a.max_pattern
     assert a.max_pattern & a.min_pattern == a.min_pattern
+    assert a & a.max_pattern == a
+    assert a | a.max_pattern == a.max_pattern
 
     assert str(a) == 'IntervalPattern([1.0, 10.0))'
 

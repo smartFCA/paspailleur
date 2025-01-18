@@ -225,18 +225,20 @@ def test_builtin_atomic_patterns():
     atomic_patterns_true_verb = [
         ('[-inf, +inf]', 'abc'), ('[-inf, 11]', 'abc'), ('[0, +inf]', 'abc'),
         ('[-inf, 10]', 'ac'), ('[2, +inf]', 'bc'), ('(2, +inf]', 'bc'),
-        ('[5, +inf]', 'c')
+        ('[5, +inf]', 'c'),
+        ('ø', '')
     ]
     atomic_patterns_true_verb = OrderedDict([(bip.IntervalPattern(ptrn), set(ext))
                                              for ptrn, ext in atomic_patterns_true_verb])
     atomic_patterns_order_true = {
-        '[-inf, +inf]': {'[-inf, 11]', '[0, +inf]', '[-inf, 10]', '[2, +inf]', '(2, +inf]', '[5, +inf]'},
-        '[-inf, 11]': {'[-inf, 10]'},
-        '[0, +inf]': {'[2, +inf]', '(2, +inf]', '[5, +inf]'},
-        '[-inf, 10]': set(),
-        '[2, +inf]': {'(2, +inf]', '[5, +inf]'},
-        '(2, +inf]': {'[5, +inf]'},
-        '[5, +inf]': set(),
+        '[-inf, +inf]': {'[-inf, 11]', '[0, +inf]', '[-inf, 10]', '[2, +inf]', '(2, +inf]', '[5, +inf]', 'ø'},
+        '[-inf, 11]': {'[-inf, 10]', 'ø'},
+        '[0, +inf]': {'[2, +inf]', '(2, +inf]', '[5, +inf]', 'ø'},
+        '[-inf, 10]': {'ø'},
+        '[2, +inf]': {'(2, +inf]', '[5, +inf]', 'ø'},
+        '(2, +inf]': {'[5, +inf]', 'ø'},
+        '[5, +inf]': {'ø'},
+        'ø': set(),
     }
     atomic_patterns_order_true = {bip.IntervalPattern(k): {bip.IntervalPattern(v) for v in vs}
                                   for k, vs in atomic_patterns_order_true.items()}
@@ -502,9 +504,13 @@ def test_iter_keys():
 
     intents = [intent for extent, intent in ps.mine_concepts()]
     for intent in intents:
-        iter_trusted = mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns)
-        iterator = ps.iter_keys(intent)
-        assert list(iterator) == list(iter_trusted), f"Problem with intent {intent}"
+        iter_trusted = list(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
+        iterator = list(ps.iter_keys(intent))
+        assert iterator == iter_trusted, f"Problem with intent {intent}"
+
+        extent = ps.extent(intent)
+        for key in iterator:
+            assert ps.extent(key) == extent, f"Problem with the extent of intent {intent}"
 
     iter_trusted = mec.iter_keys_of_patterns(intents, atomic_patterns)
     iter_trusted = [(ptrn, intents[intent_i]) for ptrn, intent_i in iter_trusted]
@@ -515,3 +521,18 @@ def test_iter_keys():
     iterator = list(ps.iter_keys(intents[::-1]))
     assert set(iterator) == set(iter_trusted)
     assert iterator == iter_trusted
+
+    patterns = [bip.IntervalPattern(0), bip.IntervalPattern(1), bip.IntervalPattern(1)]
+    context = dict(zip('abc', patterns))
+    ps.fit(context)
+    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True))
+
+    intents = [intent for extent, intent in ps.mine_concepts()]
+    for intent in intents:
+        iter_trusted = list(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
+        iterator = list(ps.iter_keys(intent))
+        assert iterator == iter_trusted, f"Problem with intent {intent}"
+
+        extent = ps.extent(intent)
+        for key in iterator:
+            assert ps.extent(key) == extent, f"Problem with the extent of intent {intent}"

@@ -123,6 +123,11 @@ class IntervalPattern(Pattern):
         if self == self.min_pattern or other == self.min_pattern:
             return self.min_pattern
 
+        if self == self.max_pattern:
+            return other
+        if other == self.max_pattern:
+            return self
+
         if self.lower_bound < other.lower_bound:
             lbound, closed_lb = self.lower_bound, self.is_lower_bound_closed
         elif other.lower_bound < self.lower_bound:
@@ -146,6 +151,11 @@ class IntervalPattern(Pattern):
         """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
         if self == self.max_pattern or other == self.max_pattern:
             return self.max_pattern
+
+        if self == self.min_pattern:
+            return other
+        if other == self.min_pattern:
+            return self
 
         if self.lower_bound < other.lower_bound:
             lbound, closed_lb = other.lower_bound, other.is_lower_bound_closed
@@ -177,6 +187,9 @@ class IntervalPattern(Pattern):
     @property
     def atomic_patterns(self) -> set[Self]:
         """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        if self.value == self.max_pattern.value:
+            return {self.max_pattern}
+
         atoms = [
             ((-math.inf, True), (math.inf, True)),
             ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
@@ -244,16 +257,6 @@ class ClosedIntervalPattern(IntervalPattern):
             pass
 
         raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
-
-    @property
-    def atomic_patterns(self) -> set[Self]:
-        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
-        atoms = [
-            (-math.inf, math.inf),
-            (-math.inf, self.upper_bound),
-            (self.lower_bound, math.inf)
-        ]
-        return {self.__class__(v) for v in atoms}
 
 
 class NgramSetPattern(Pattern):
