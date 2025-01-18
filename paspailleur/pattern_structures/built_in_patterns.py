@@ -83,6 +83,8 @@ class IntervalPattern(Pattern):
     def __repr__(self) -> str:
         if self == self.max_pattern:
             str_descr = 'ø'
+        elif self.lower_bound == self.upper_bound:
+            str_descr = f"{self.lower_bound}"
         else:
             lbound_sign = '[' if self.is_lower_bound_closed else '('
             ubound_sign = ']' if self.is_upper_bound_closed else ')'

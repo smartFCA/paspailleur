@@ -222,7 +222,7 @@ def test_CartesianPattern():
     assert a.value == value
 
     s = str(a)
-    s_true = "{'age': [11.0, 11.0], 'name': {'Harry Potter'}}"
+    s_true = "{'age': 11.0, 'name': {'Harry Potter'}}"
     assert s == s_true
 
     value = frozendict({
