@@ -1,5 +1,5 @@
 import math
-from typing import Self, Union, Collection, Optional
+from typing import Self, Union, Collection, Optional, Sequence
 from numbers import Number
 import re
 
@@ -62,57 +62,71 @@ class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
 
-    def __init__(self, value: Union[PatternValueType, str]):
-        super().__init__(None)
-        if isinstance(value, str):
-            if value != 'ø':
-                lb, ub = map(str.strip, value[1:-1].replace('∞', 'inf').split(','))
-                closed_lb, closed_ub = value[0] == '[', value[-1] == ']'
-            else:
-                lb, ub = 0, 0
-                closed_lb, closed_ub = False, False
-        else:
-            lb, closed_lb = value[0]
-            ub, closed_ub = value[1]
-
-        self._lower_bound = float(lb)
-        self._upper_bound = float(ub)
-        self._is_closed_lower_bound = bool(closed_lb)
-        self._is_closed_upper_bound = bool(closed_ub)
+    @property
+    def lower_bound(self) -> float:
+        return self.value[0][0]
 
     @property
-    def value(self) -> PatternValueType:
-        return (self._lower_bound, self._is_closed_lower_bound), (self._upper_bound, self._is_closed_upper_bound)
+    def is_lower_bound_closed(self) -> bool:
+        return self.value[0][1]
+
+    @property
+    def upper_bound(self) -> float:
+        return self.value[1][0]
+
+    @property
+    def is_upper_bound_closed(self) -> bool:
+        return self.value[1][1]
 
     def __repr__(self) -> str:
         if self == self.max_pattern:
             str_descr = 'ø'
         else:
-            lbound_sign = '[' if self._is_closed_lower_bound else '('
-            ubound_sign = ']' if self._is_closed_upper_bound else ')'
-            str_descr = f"{lbound_sign}{self._lower_bound}, {self._upper_bound}{ubound_sign}"
+            lbound_sign = '[' if self.is_lower_bound_closed else '('
+            ubound_sign = ']' if self.is_upper_bound_closed else ')'
+            str_descr = f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
         return f"IntervalPattern({str_descr})"
+
+    @classmethod
+    def parse_string_description(cls, value: str) -> PatternValueType:
+        if value == 'ø':
+            return (0, False), (0, False)
+
+        lb, ub = map(str.strip, value[1:-1].replace('∞', 'inf').split(','))
+        closed_lb, closed_ub = value[0] == '[', value[-1] == ']'
+        return (float(lb), bool(closed_lb)), (float(ub), bool(closed_ub))
+
+    @classmethod
+    def preprocess_value(cls, value) -> PatternValueType:
+        lb, closed_lb = value[0]
+        rb, closed_rb = value[1]
+
+        is_contradictive = (rb < lb) or (lb == rb and not (closed_lb and closed_rb))
+        if is_contradictive:
+            lb, rb = 0, 0
+
+        return (float(lb), bool(closed_lb)), (float(rb), bool(closed_rb))
 
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
         if self == self.min_pattern or other == self.min_pattern:
             return self.min_pattern
 
-        if self._lower_bound < other._lower_bound:
-            lbound, closed_lb = self._lower_bound, self._is_closed_lower_bound
-        elif other._lower_bound < self._lower_bound:
-            lbound, closed_lb = other._lower_bound, other._is_closed_lower_bound
+        if self.lower_bound < other.lower_bound:
+            lbound, closed_lb = self.lower_bound, self.is_lower_bound_closed
+        elif other.lower_bound < self.lower_bound:
+            lbound, closed_lb = other.lower_bound, other.is_lower_bound_closed
         else:  # self._lower_bound == other._lower_bound
-            lbound = self._lower_bound
-            closed_lb = self._is_closed_lower_bound or other._is_closed_lower_bound
+            lbound = self.lower_bound
+            closed_lb = self.is_lower_bound_closed or other.is_lower_bound_closed
 
-        if self._upper_bound > other._upper_bound:
-            ubound, closed_ub = self._upper_bound, self._is_closed_upper_bound
-        elif other._upper_bound > self._upper_bound:
-            ubound, closed_ub = other._upper_bound, other._is_closed_upper_bound
+        if self.upper_bound > other.upper_bound:
+            ubound, closed_ub = self.upper_bound, self.is_upper_bound_closed
+        elif other.upper_bound > self.upper_bound:
+            ubound, closed_ub = other.upper_bound, other.is_upper_bound_closed
         else:  # self._upper_bound == other._upper_bound
-            ubound = self._upper_bound
-            closed_ub = self._is_closed_upper_bound or other._is_closed_upper_bound
+            ubound = self.upper_bound
+            closed_ub = self.is_upper_bound_closed or other.is_upper_bound_closed
 
         new_value = (lbound, closed_lb), (ubound, closed_ub)
         return self.__class__(new_value)
@@ -122,21 +136,21 @@ class IntervalPattern(Pattern):
         if self == self.max_pattern or other == self.max_pattern:
             return self.max_pattern
 
-        if self._lower_bound < other._lower_bound:
-            lbound, closed_lb = other._lower_bound, other._is_closed_lower_bound
-        elif other._lower_bound < self._lower_bound:
-            lbound, closed_lb = self._lower_bound, self._is_closed_lower_bound
+        if self.lower_bound < other.lower_bound:
+            lbound, closed_lb = other.lower_bound, other.is_lower_bound_closed
+        elif other.lower_bound < self.lower_bound:
+            lbound, closed_lb = self.lower_bound, self.is_lower_bound_closed
         else:  # self._lower_bound == other._lower_bound
-            lbound = self._lower_bound
-            closed_lb = self._is_closed_lower_bound and other._is_closed_lower_bound
+            lbound = self.lower_bound
+            closed_lb = self.is_lower_bound_closed and other.is_lower_bound_closed
 
-        if self._upper_bound > other._upper_bound:
-            ubound, closed_ub = other._upper_bound, other._is_closed_upper_bound
-        elif other._upper_bound > self._upper_bound:
-            ubound, closed_ub = self._upper_bound, self._is_closed_upper_bound
+        if self.upper_bound > other.upper_bound:
+            ubound, closed_ub = other.upper_bound, other.is_upper_bound_closed
+        elif other.upper_bound > self.upper_bound:
+            ubound, closed_ub = self.upper_bound, self.is_upper_bound_closed
         else:  # self._upper_bound == other._upper_bound
-            ubound = self._upper_bound
-            closed_ub = self._is_closed_upper_bound and other._is_closed_upper_bound
+            ubound = self.upper_bound
+            closed_ub = self.is_upper_bound_closed and other.is_upper_bound_closed
 
         new_value = (lbound, closed_lb), (ubound, closed_ub)
         if (lbound > ubound) \
@@ -154,13 +168,13 @@ class IntervalPattern(Pattern):
         """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
         atoms = [
             ((-math.inf, True), (math.inf, True)),
-            ((-math.inf, True), (self._upper_bound, self._is_closed_upper_bound)),
-            ((self._lower_bound, self._is_closed_lower_bound), (math.inf, True))
+            ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
+            ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True))
         ]
-        if not self._is_closed_upper_bound:
-            atoms.append(tuple([(-math.inf, True), (self._upper_bound, True)]))
-        if not self._is_closed_lower_bound:
-            atoms.append(tuple([(self._lower_bound, True), (math.inf, True)]))
+        if not self.is_upper_bound_closed:
+            atoms.append(tuple([(-math.inf, True), (self.upper_bound, True)]))
+        if not self.is_lower_bound_closed:
+            atoms.append(tuple([(self.lower_bound, True), (math.inf, True)]))
 
         return {self.__class__(v) for v in atoms}
 
@@ -178,32 +192,55 @@ class IntervalPattern(Pattern):
 class ClosedIntervalPattern(IntervalPattern):
     PatternValueType = tuple[float, float]
 
-    def __init__(self, value: Union[PatternValueType, str]):
-        if isinstance(value, str):
-            if value != 'ø':
-                assert value[0] == '[' and value[-1] == ']', \
-                    'Only closed intervals are supported within ClosedIntervalPattern. ' \
-                    'Change the bounds of interval {value} to square brackets to make it close'
-        else:
-            # Use this to accomodate the functions of the parent class
-            value = [(v, True) if isinstance(v, Number) else v for v in value]
-
-        super().__init__(value)
+    @property
+    def lower_bound(self) -> float:
+        return self._value[0]
 
     @property
-    def value(self) -> PatternValueType:
-        return self._lower_bound, self._upper_bound
+    def upper_bound(self) -> float:
+        return self._value[1]
+
+    @property
+    def is_lower_bound_closed(self) -> bool:
+        return True
+
+    @property
+    def is_upper_bound_closed(self) -> bool:
+        return True
 
     def __repr__(self) -> str:
         return super().__repr__().replace('Interval', 'ClosedInterval')
+
+    @classmethod
+    def parse_string_description(cls, value: str) -> PatternValueType:
+        if value != 'ø':
+            assert value[0] == '[' and value[-1] == ']', \
+                'Only closed intervals are supported within ClosedIntervalPattern. ' \
+                f'Change the bounds of interval "{value}" to square brackets to make it close'
+
+        parsed_value = super(ClosedIntervalPattern, cls).parse_string_description(value)
+        return parsed_value[0][0], parsed_value[1][0]
+
+    @classmethod
+    def preprocess_value(cls, value) -> PatternValueType:
+        if isinstance(value, Sequence) and len(value) == 2 and all(isinstance(v, Number) for v in value):
+            return float(value[0]), float(value[1])
+
+        try:
+            processed_value = super(ClosedIntervalPattern, cls).preprocess_value(value)
+            return processed_value[0][0], processed_value[1][0]
+        except Exception as e:
+            pass
+
+        raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
 
     @property
     def atomic_patterns(self) -> set[Self]:
         """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
         atoms = [
             (-math.inf, math.inf),
-            (-math.inf, self._upper_bound),
-            (self._lower_bound, math.inf)
+            (-math.inf, self.upper_bound),
+            (self.lower_bound, math.inf)
         ]
         return {self.__class__(v) for v in atoms}
 

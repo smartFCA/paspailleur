@@ -65,8 +65,8 @@ def test_IntervalPattern():
     assert a == a2
 
     a = bip.IntervalPattern('[-inf, ∞)')
-    assert a._lower_bound == -math.inf
-    assert a._upper_bound == math.inf
+    assert a.lower_bound == -math.inf
+    assert a.upper_bound == math.inf
 
     a = bip.IntervalPattern('[1, 10]')
     b = bip.IntervalPattern('[1, 20]')
@@ -105,14 +105,14 @@ def test_ClosedIntervalPattern():
     assert a.value == (1, 10)
     assert a == a2
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         bip.ClosedIntervalPattern('(10, 25)')
         bip.ClosedIntervalPattern('(10, 25]')
         bip.ClosedIntervalPattern('[10, 25)')
 
     a = bip.ClosedIntervalPattern('[-inf, ∞]')
-    assert a._lower_bound == -math.inf
-    assert a._upper_bound == math.inf
+    assert a.lower_bound == -math.inf
+    assert a.upper_bound == math.inf
 
     a = bip.ClosedIntervalPattern('[1, 10]')
     b = bip.ClosedIntervalPattern('[1, 20]')
