@@ -19,7 +19,7 @@ classifiers = [
 ]
 keywords = ["python", "fca", "itemset-mining"]
 dependencies = [
-    'caspailleur>=0.2.1', 'bitarray>=3', 'tqdm', 'deprecation'
+    'caspailleur>=0.2.1', 'bitarray>=3', 'tqdm', 'deprecation', 'frozendict'
 ]
 requires-python = ">=3.8"
 

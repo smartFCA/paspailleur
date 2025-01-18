@@ -1,7 +1,9 @@
 import math
 from typing import Self, Union, Collection, Optional, Sequence
 from numbers import Number
+from frozendict import frozendict
 import re
+
 
 from .pattern import Pattern
 
@@ -348,3 +350,50 @@ class NgramSetPattern(Pattern):
     def min_pattern(self) -> Optional[Self]:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__([])
+
+
+class CartesianPattern(Pattern):
+    PatternValueType = frozendict[str, Pattern]
+
+    def __repr__(self) -> str:
+        return "CartesianPattern("+repr(dict(self.value))+")"
+
+    @classmethod
+    def preprocess_value(cls, value) -> PatternValueType:
+        value = dict(value)
+        for k in list(value):
+            if value[k].min_pattern is not None and value[k] == value[k].min_pattern:
+                del value[k]
+        keys_order = sorted(value)
+        return frozendict({k: value[k] for k in keys_order})
+
+    def __and__(self, other: Self) -> Self:
+        return self.__class__({k: self.value[k] & other.value[k] for k in set(self.value) & set(other.value)})
+
+    def __or__(self, other: Self) -> Self:
+        keys_a, keys_b = set(self.value), set(other.value)
+        left_keys, common_keys, right_keys = keys_a-keys_b, keys_a & keys_b, keys_b - keys_a
+        join = {k: self.value[k] | other.value[k] for k in common_keys}
+        join |= {k: self.value[k] for k in left_keys} | {k: other.value[k] for k in right_keys}
+        return self.__class__(join)
+
+    def __sub__(self, other):
+        raise NotImplementedError
+
+    @property
+    def atomic_patterns(self) -> set[Self]:
+        return {self.__class__({k: atom}) for k, pattern in self.value.items() for atom in pattern.atomic_patterns}
+
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        if any(p.min_pattern is None for p in self.value.values()):
+            return None
+
+        return self.__class__({k: pattern.min_pattern for k, pattern in self.value.items()})
+
+    @property
+    def max_pattern(self) -> Optional[Self]:
+        if any(p.max_pattern is None for p in self.value.values()):
+            return None
+
+        return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})

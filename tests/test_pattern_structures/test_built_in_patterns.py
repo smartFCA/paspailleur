@@ -1,6 +1,7 @@
 import math
 
 import pytest
+from frozendict import frozendict
 
 from paspailleur.pattern_structures import built_in_patterns as bip
 
@@ -199,3 +200,58 @@ def test_parse_string_description():
     value = {'abc'}
     value_parsed = bip.ItemSetPattern.parse_string_description('[abc]')
     assert value == value_parsed
+
+
+def test_CartesianPattern():
+    value = frozendict({
+        'age': bip.ClosedIntervalPattern([11, 11]),
+        'name': bip.NgramSetPattern(["Harry Potter"])
+    })
+    a = bip.CartesianPattern(value)
+    assert a.value == value
+
+    s = str(a)
+    s_true = "CartesianPattern({'age': ClosedIntervalPattern([11.0, 11.0]), 'name': NgramSetPattern({'Harry Potter'})})"
+    assert s == s_true
+
+    value = frozendict({
+        'age': bip.ClosedIntervalPattern([-math.inf, math.inf]),
+        'name': bip.NgramSetPattern(['somebody'])
+    })
+    a = bip.CartesianPattern(value)
+    b = bip.CartesianPattern(frozendict({'name': value['name']}))
+    assert a == b
+
+    a = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, 10]'), 'name': bip.NgramSetPattern(['Harry'])})
+    b = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[5, 20]'), 'house': bip.ItemSetPattern(['Gryffindor'])})
+    meet_true = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, 20]')})
+    meet = a & b
+    assert meet == meet_true
+
+    join_true = bip.CartesianPattern({
+        'age': bip.ClosedIntervalPattern('[5, 10]'),
+        'name': bip.NgramSetPattern(['Harry']), 'house': bip.ItemSetPattern(['Gryffindor'])
+    })
+    join = a | b
+    assert join == join_true
+
+    atoms_true = {
+        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, inf]')}),
+        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, 10]')}),
+        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, inf]')}),
+        bip.CartesianPattern({'name': bip.NgramSetPattern([])}),
+        bip.CartesianPattern({'name': bip.NgramSetPattern(['Harry'])})
+    }
+    atoms = a.atomic_patterns
+    assert atoms == atoms_true
+
+    min_true = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, inf]'), 'name': bip.NgramSetPattern([])})
+    min_ = a.min_pattern
+    assert min_ == min_true
+
+    assert a.max_pattern is None
+
+    x = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, 10]')})
+    max_true = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('ø')})
+    max_ = x.max_pattern
+    assert max_ == max_true
