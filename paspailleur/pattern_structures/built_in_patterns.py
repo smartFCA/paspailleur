@@ -275,6 +275,9 @@ class NgramSetPattern(Pattern):
         except Exception as e:
             parsed_value = None
 
+        if parsed_value is None and isinstance(value, str):
+            parsed_value = [value]
+
         if parsed_value is not None and isinstance(parsed_value, Collection):
             parsed_value = [v.strip().split(' ') for v in parsed_value]
             return frozenset(map(tuple, parsed_value))

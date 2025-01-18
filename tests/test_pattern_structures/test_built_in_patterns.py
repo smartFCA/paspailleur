@@ -189,6 +189,10 @@ def test_NgramSetPattern():
     a2 = bip.NgramSetPattern({('hello', 'world'), ('world', '!')})
     assert a == a2
 
+    a = bip.NgramSetPattern('hello world')
+    a2 = bip.NgramSetPattern({('hello', 'world')})
+    assert a == a2
+
 
 def test_parse_string_description():
     value = {1, 2, 3}
