@@ -1,5 +1,5 @@
 import math
-from typing import Self, Union, Collection, Optional, Sequence
+from typing import Self, Collection, Optional, Sequence, Type
 from numbers import Number
 from frozendict import frozendict
 import re
@@ -366,6 +366,12 @@ class NgramSetPattern(Pattern):
 
 class CartesianPattern(Pattern):
     PatternValueType = frozendict[str, Pattern]
+
+    def __init__(self, value: PatternValueType, attribute_types: dict[str, Type[Pattern]] = None):
+        if attribute_types is not None:
+            value = {k: attribute_types[k](v) for k, v in value.items()}
+            
+        super().__init__(value)
 
     def __repr__(self) -> str:
         return repr(dict(self.value))
