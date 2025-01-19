@@ -60,6 +60,29 @@ class ItemSetPattern(Pattern):
         return self.__class__(frozenset())
 
 
+class CategorySetPattern(ItemSetPattern):
+    PatternValueType = frozenset
+
+    def __and__(self, other):
+        return self.__class__(self.value | other.value)
+
+    def __or__(self, other):
+        return self.__class__(self.value & other.value)
+
+    def __sub__(self, other):
+        raise NotImplementedError
+
+    @property
+    def min_pattern(self) -> Optional[Self]:
+        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return None
+
+    @property
+    def max_pattern(self) -> Optional[Self]:
+        """Maximal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        return self.__class__(frozenset())
+
+
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
