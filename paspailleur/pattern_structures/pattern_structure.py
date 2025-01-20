@@ -360,3 +360,53 @@ class PatternStructure:
         patterns = list(patterns)
         iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns)
         return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+
+    def next_patterns(
+            self, pattern: PatternType,
+            return_extents: bool = False, return_objects_as_bitarrays: bool = False,
+    ) -> Union[set[PatternType], dict[PatternType, set[str]], dict[PatternType, fbarray]]:
+        atom_iterator = self.iter_atomic_patterns(return_extents=True, return_bitarrays=True, kind='ascending controlled')
+        extent = self.extent(pattern, return_bitarray=True)
+        next(atom_iterator)  # initialise iterator
+
+        next_patterns = dict()
+        go_deeper = True
+        while True:
+            try:
+                atom, atom_extent = atom_iterator.send(go_deeper)
+            except StopIteration:
+                break
+
+            if atom <= pattern:
+                go_deeper = True
+                continue
+
+            # atom >= pattern, or atom and pattern are incomparable
+            next_patterns[pattern | atom] = extent & atom_extent
+            go_deeper = False
+
+        minimal_next_patterns = [p for p in next_patterns
+                                 if not any(other <= p for other in next_patterns if other != p)]
+
+        next_patterns = {p: next_patterns[p] for p in minimal_next_patterns}
+        if not return_extents:
+            return set(next_patterns)
+        if return_objects_as_bitarrays:
+            return next_patterns
+        return {p: self.verbalise_extent(extent) for p, extent in next_patterns.items()}
+
+    ########################
+    # Measures of patterns #
+    ########################
+    def measure_support(self, pattern: Pattern) -> int:
+        return self.extent(pattern, return_bitarray=True).count()
+
+    def measure_frequency(self, pattern: Pattern) -> float:
+        extent = self.extent(pattern, return_bitarray=True)
+        return extent.count()/len(extent)
+
+    def measure_delta_stability(self, pattern: Pattern) -> int:
+        extent = self.extent(pattern, return_bitarray=True)
+
+        subextents = self.next_patterns(pattern, return_extents=True, return_objects_as_bitarrays=True).values()
+        return extent.count() - max((subext.count() for subext in subextents), default=0)
