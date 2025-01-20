@@ -478,6 +478,16 @@ class CartesianPattern(Pattern):
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        if cls.DimensionTypes is not None:
+            value = {k: v if isinstance(v, cls.DimensionTypes[k]) else cls.DimensionTypes[k](v)
+                     for k, v in value.items()}
+        else:  # cls.DimensionTypes are not defined
+            non_processed_dimensions = {k for k, v in value.items() if not isinstance(v, Pattern)}
+            assert not non_processed_dimensions, \
+                f"Cannot preprocess dimensions {non_processed_dimensions} of CartesianPattern given by {value}. " \
+                f"Either convert these dimensional descriptions to Pattern classes " \
+                f"or define `CartesianPattern.DimensionTypes` class variable."
+
         value = dict(value)
         for k in list(value):
             if value[k].min_pattern is not None and value[k] == value[k].min_pattern:
