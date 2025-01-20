@@ -2,7 +2,7 @@ import warnings
 from collections import deque, OrderedDict
 from functools import reduce
 from operator import itemgetter
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 
@@ -351,21 +351,24 @@ class PatternStructure:
             return extent
         return {self._object_names[g] for g in extent.search(True)}
 
-    def iter_keys(self, patterns: Union[PatternType, Collection[PatternType]]) -> Union[
-        Iterator[PatternType], Iterator[tuple[PatternType, PatternType]]
-    ]:
+    def iter_keys(
+            self,
+            patterns: Union[PatternType, Iterable[PatternType]],
+            max_length: Optional[int] = None
+    ) -> Union[Iterator[PatternType], Iterator[tuple[PatternType, PatternType]]]:
         if isinstance(patterns, self.PatternType):
-            return mec.iter_keys_of_pattern(patterns, self._atomic_patterns)
+            return mec.iter_keys_of_pattern(patterns, self._atomic_patterns, max_length=max_length)
 
         # `patterns` is a collection of patterns
         patterns = list(patterns)
-        iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns)
+        iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns, max_length=max_length)
         return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
 
     def mine_implications(
             self,
             basis_name: Literal["Canonical", "Canonical Direct"] = "Canonical Direct",
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
+            max_key_length: Optional[int] = None,
             algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
             use_tqdm: bool = False,
     ) -> dict[PatternType, PatternType]:
@@ -375,37 +378,15 @@ class PatternStructure:
         )
         intents = map(itemgetter(1), concepts)
 
-        direct_basis = OrderedDict()
-        for key, intent in self.iter_keys(intents):
-            key_saturated = key
-            for premise, conclusion in direct_basis.items():
-                if premise <= key_saturated:
-                    key_saturated = key_saturated | conclusion
-                if key_saturated == intent:
-                    break
-            else:  # key_saturated != intent
-                direct_basis[key] = intent
+        PType = PatternStructure.PatternType
+        keys: Iterator[PType] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
 
-        if basis_name == 'Canonical Direct':
-            return direct_basis
-
-        # basis_name = 'Canonical'
-        canonical_basis = dict()
-        for premise, intent in direct_basis.items():
-            pseudo_intent = premise
-            for other_premise, other_intent in direct_basis.items():
-                if pseudo_intent == intent:
-                    break
-                if other_premise < pseudo_intent:
-                    pseudo_intent = pseudo_intent | other_intent
-
-            if pseudo_intent != intent:
-                canonical_basis[pseudo_intent] = intent
-        return canonical_basis
+        pseudo_close_premises = basis_name == 'Canonical'
+        return self.mine_implications_from_premises(keys, pseudo_close_premises=pseudo_close_premises, use_tqdm=use_tqdm)
 
     def mine_implications_from_premises(
             self,
-            premises: list[PatternType], pseudo_close_premises: bool = False, use_tqdm: bool = False
+            premises: Iterable[PatternType], pseudo_close_premises: bool = False, use_tqdm: bool = False
     ) -> Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]:
         # construct implication basis at the first try
         implication_basis = OrderedDict()

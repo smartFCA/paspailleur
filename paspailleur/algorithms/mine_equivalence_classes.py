@@ -281,7 +281,11 @@ def list_stable_extents_via_gsofia(
     return set(stable_extents)
 
 
-def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern, fbarray]) -> Iterator[Pattern]:
+def iter_keys_of_pattern(
+        pattern: Pattern,
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        max_length: Optional[int] = None
+) -> Iterator[Pattern]:
     # second condition implies the first one. But the first one is easier to test
     atoms_to_iterate = [atom for atom in atomic_patterns if atom <= pattern]
     if not atoms_to_iterate:
@@ -307,9 +311,11 @@ def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern,
             go_more_precise = False
             continue
 
+        appropriate_length = True if max_length is None else len(key_candidate) < max_length
+
         # extent is a subset of candidate_extent
         if candidate_extent != extent:
-            go_more_precise = True
+            go_more_precise = appropriate_length
             continue
 
         # candidate_extent == extent
@@ -319,9 +325,14 @@ def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern,
             go_more_precise = False
             found_keys.append(key_candidate)
 
+        go_more_precise &= appropriate_length
 
-def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[Pattern, fbarray])\
-        -> Iterator[tuple[Pattern, int]]:
+
+def iter_keys_of_patterns(
+        patterns: list[Pattern],
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        max_length: Optional[int] = None
+) -> Iterator[tuple[Pattern, int]]:
     """
 
     Important: atomic_patterns should be sorted in topological order.
@@ -377,9 +388,11 @@ def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[
             go_more_precise = False
             continue
 
+        appropriate_length = True if max_length is None else len(key_candidate) < max_length
+
         if candidate_extent not in patterns_per_extents:
             # not a key of any specified pattern, but some greater pattern might be a key
-            go_more_precise = True
+            go_more_precise = appropriate_length
             continue
 
         # candidate_extent in patterns_per_extents, so key_candidate might be a key of some specified pattern
@@ -391,3 +404,5 @@ def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[
                     keys_per_pattern[pattern_i].append(key_candidate)
         go_more_precise = any(basubset(extent, candidate_extent) and extent != candidate_extent
                               for extent in patterns_per_extents)
+
+        go_more_precise &= appropriate_length
