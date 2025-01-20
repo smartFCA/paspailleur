@@ -131,7 +131,6 @@ class CategorySetPattern(ItemSetPattern):
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
-    Universe: PatternValueType = ((-math.inf, True), (math.inf, True))
 
     @property
     def lower_bound(self) -> float:
@@ -151,14 +150,19 @@ class IntervalPattern(Pattern):
 
     def __repr__(self) -> str:
         if self == self.max_pattern:
-            str_descr = 'ø'
-        elif self.lower_bound == self.upper_bound:
-            str_descr = f"{self.lower_bound}"
-        else:
-            lbound_sign = '[' if self.is_lower_bound_closed else '('
-            ubound_sign = ']' if self.is_upper_bound_closed else ')'
-            str_descr = f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
-        return str_descr
+            return 'ø'
+
+        if self.lower_bound == self.upper_bound:
+            return f"{self.lower_bound}"
+
+        if self.lower_bound == -math.inf and self.is_lower_bound_closed and self.upper_bound < math.inf:
+            return '<'+('=' if self.is_upper_bound_closed else '')+f' {self.upper_bound}'
+        if self.upper_bound == math.inf and self.is_upper_bound_closed and self.lower_bound > -math.inf:
+            return '>'+('=' if self.is_lower_bound_closed else '')+f' {self.lower_bound}'
+
+        lbound_sign = '[' if self.is_lower_bound_closed else '('
+        ubound_sign = ']' if self.is_upper_bound_closed else ')'
+        return f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
 
     def __len__(self) -> int:
         """Minimal number of atomic patterns required to generate the pattern
@@ -169,8 +173,19 @@ class IntervalPattern(Pattern):
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
+        value = value.strip()
         if value == 'ø':
             return (0, False), (0, False)
+
+        if value.startswith('>'):
+            if value.startswith('>='):
+                return (eval(value[2:]), True), (math.inf, True)
+            return (eval(value[1:]), False), (math.inf, True)
+
+        if value.startswith('<'):
+            if value.startswith('<='):
+                return (-math.inf, True), (eval(value[2:]), True)
+            return (-math.inf, True), (eval(value[1:]), False)
 
         if ',' not in value:
             try:
@@ -299,7 +314,7 @@ class IntervalPattern(Pattern):
     @property
     def min_pattern(self) -> Self:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
-        return self.__class__(self.Universe)
+        return self.__class__(((-math.inf, True), (math.inf, True)))
 
     @property
     def max_pattern(self) -> Self:
