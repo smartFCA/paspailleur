@@ -25,6 +25,12 @@ class ItemSetPattern(Pattern):
         """
         return len(self.value)
 
+    def __sub__(self, other: Self) -> Self:
+        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self
+
+         (if it's not posssible, return self)"""
+        return self.__class__(self.value - other.value)
+
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         parsed_value = None
@@ -77,7 +83,9 @@ class CategorySetPattern(ItemSetPattern):
         return self.__class__(self.value & other.value)
 
     def __sub__(self, other):
-        raise NotImplementedError
+        if self.min_pattern is not None and self == other:
+            return self.min_pattern
+        return self.__class__(self.value)
 
     @property
     def atomic_patterns(self) -> set[Self]:
@@ -239,8 +247,21 @@ class IntervalPattern(Pattern):
 
     def __sub__(self, other: Self) -> Self:
         """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
-        # TODO: Find out how to implement this. And should it be implemented
-        raise NotImplementedError
+        if self == other:
+            return self.min_pattern
+
+        same_lower_bound = self.lower_bound == other.lower_bound and self.is_lower_bound_closed == other.is_lower_bound_closed
+        smaller_upper_bound = (self.upper_bound < other.upper_bound) or (self.upper_bound == other.upper_bound and not self.is_upper_bound_closed and other.is_upper_bound_closed)
+        if same_lower_bound and smaller_upper_bound:
+            return self.__class__((self.min_pattern.value[0], (self.upper_bound, self.is_upper_bound_closed)))
+
+        same_upper_bound = self.upper_bound == other.upper_bound and self.is_upper_bound_closed == other.is_upper_bound_closed
+        greater_lower_bound = (other.lower_bound < self.lower_bound) or (self.lower_bound == other.lower_bound and self.is_lower_bound_closed and not other.is_lower_bound_closed)
+        if same_upper_bound and greater_lower_bound:
+            return self.__class__(((self.lower_bound, self.is_lower_bound_closed), self.min_pattern.value[1]))
+
+        # subtraction is impossible
+        return self.__class__(self.value)
 
     @property
     def atomic_patterns(self) -> set[Self]:
@@ -395,6 +416,13 @@ class NgramSetPattern(Pattern):
         """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
         return self.__class__(self.filter_max_ngrams(self.value | other.value))
 
+    def __sub__(self, other: Self) -> Self:
+        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
+        if self == other:
+            return self.min_pattern
+
+        return self.__class__(self.filter_max_ngrams(self.value - other.value))
+
     @staticmethod
     def _issubngram(ngram_a: tuple[str], ngram_b: tuple[str]):
         if len(ngram_a) > len(ngram_b):
@@ -432,7 +460,7 @@ class NgramSetPattern(Pattern):
 class CartesianPattern(Pattern):
     PatternValueType = frozendict[str, Pattern]
 
-    def __init__(self, value: PatternValueType, attribute_types: dict[str, Type[Pattern]] = None):
+    def __init__(self, value: PatternValueType, attribute_types: Optional[dict[str, Type[Pattern]]] = None):
         if attribute_types is not None:
             value = {k: attribute_types[k](v) for k, v in value.items()}
             
@@ -460,8 +488,12 @@ class CartesianPattern(Pattern):
         join |= {k: self.value[k] for k in left_keys} | {k: other.value[k] for k in right_keys}
         return self.__class__(join)
 
-    def __sub__(self, other):
-        raise NotImplementedError
+    def __sub__(self, other: Self) -> Self:
+        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
+        if self == other:
+            return self.min_pattern
+
+        return self.__class__({k: (v - other.value[k]) if k in other.value else v for k, v in self.value.items()})
 
     @property
     def atomic_patterns(self) -> set[Self]:

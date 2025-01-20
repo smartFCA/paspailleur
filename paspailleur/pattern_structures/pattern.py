@@ -75,8 +75,12 @@ class Pattern:
         return self.__class__(self.value | other.value)
 
     def __sub__(self, other: Self) -> Self:
-        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
-        return self.__class__(self.value - other.value)
+        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self
+
+         (if it's not posssible, return self)"""
+        if self.min_pattern is not None and self == other:
+            return self.min_pattern
+        return self.__class__(self.value)
 
     def __repr__(self) -> str:
         """String representation of the pattern"""
