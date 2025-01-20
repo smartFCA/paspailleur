@@ -237,9 +237,7 @@ def list_stable_extents_via_gsofia(
             atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
         except StopIteration:
             if use_tqdm:
-                idx = atomic_patterns_iterator.n
-                atomic_patterns_iterator.reset(idx)
-                atomic_patterns_iterator.update(idx)
+                atomic_patterns_iterator.total = atomic_patterns_iterator.n
                 atomic_patterns_iterator.close()
             break
 

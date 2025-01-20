@@ -2,12 +2,14 @@ import warnings
 from collections import deque, OrderedDict
 from functools import reduce
 from operator import itemgetter
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 
 from caspailleur.io import to_absolute_number
 from caspailleur.order import sort_intents_inclusion, inverse_order
+from tqdm.auto import tqdm
+
 from .pattern import Pattern
 
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec
@@ -383,6 +385,7 @@ class PatternStructure:
 
         PType = PatternStructure.PatternType
         keys: Iterator[PType] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
+        keys = list(tqdm(keys, desc="Mine premise candidates", disable=not use_tqdm))
 
         pseudo_close_premises = basis_name == 'Canonical'
         return self.mine_implications_from_premises(
@@ -397,6 +400,11 @@ class PatternStructure:
             use_tqdm: bool = False
     ) -> Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]:
         # construct implication basis at the first try
+
+        premises = tqdm(
+            premises, desc="Construct implications",
+            disable=not use_tqdm, total=len(premises) if isinstance(premises, Sized) else None
+        )
         implication_basis = OrderedDict()
         for premise in premises:
             intent = self.intent(self.extent(premise, return_bitarray=True))
@@ -412,8 +420,12 @@ class PatternStructure:
         if not pseudo_close_premises:
             return implication_basis
 
+        iterator = tqdm(
+            implication_basis.items(), desc='Closing Premises',
+            disable=not use_tqdm, total=len(implication_basis)
+        )
         pseudo_closed_basis = dict()
-        for premise, conclusion in implication_basis.items():
+        for premise, conclusion in iterator:
             premise_saturated = premise
             for p, c in implication_basis.items():
                 if p < premise_saturated:
