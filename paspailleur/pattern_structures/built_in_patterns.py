@@ -18,6 +18,13 @@ class ItemSetPattern(Pattern):
     def __repr__(self) -> str:
         return repr(set(self.value))
 
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern
+
+        For ItemSetPattern, the length of the pattern is the length of its pattern.value
+        """
+        return len(self.value)
+
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         parsed_value = None
@@ -92,6 +99,15 @@ class CategorySetPattern(ItemSetPattern):
         """Maximal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__(frozenset())
 
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern
+
+        For CategorySetPattern, the length of a pattern is the categories the pattern.value does _not_ include
+        """
+        assert self.min_pattern is not None, f"Length of pattern of {self.__class__} " \
+                                             f"class cannot be computed without the predefined min_pattern value."
+        return len(self.min_pattern.value) - len(self.value)
+
 
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
@@ -123,6 +139,13 @@ class IntervalPattern(Pattern):
             ubound_sign = ']' if self.is_upper_bound_closed else ')'
             str_descr = f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
         return str_descr
+
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern
+
+        For IntervalPattern, the length of a pattern is the number of non-infinite bounds
+        """
+        return int(self.lower_bound != -math.inf) + int(self.upper_bound != math.inf)
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
@@ -321,6 +344,13 @@ class NgramSetPattern(Pattern):
         value = [re.sub(r" +", " ", v).strip().split(' ') if isinstance(v, str) else v for v in value]
         return frozenset(map(tuple, value))
 
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern
+
+        For NgramSetPattern, the length of a pattern is the number of ngram it contains
+        """
+        return len(self.value)
+
     def __and__(self, other: Self) -> Self:
         """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
         common_ngrams: list[tuple[str, ...]] = []
@@ -437,6 +467,13 @@ class CartesianPattern(Pattern):
     def atomic_patterns(self) -> set[Self]:
         return {self.__class__({k: atom}) for k, pattern in self.value.items() for atom in pattern.atomic_patterns}
 
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern
+
+        For CartesianPattern, the length of a pattern is the sum of lengths of all 'dimensional' subpatterns
+        """
+        return sum(len(subpattern) for subpattern in self.value.values())
+
     @property
     def min_pattern(self) -> Optional[Self]:
         if any(p.min_pattern is None for p in self.value.values()):
@@ -450,3 +487,6 @@ class CartesianPattern(Pattern):
             return None
 
         return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})
+
+    def __getitem__(self, item):
+        return self.value[item]

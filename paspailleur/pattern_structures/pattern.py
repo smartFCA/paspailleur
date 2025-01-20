@@ -82,6 +82,15 @@ class Pattern:
         """String representation of the pattern"""
         return str(self.value)
 
+    def __len__(self) -> int:
+        """Minimal number of atomic patterns required to generate the pattern"""
+        if self.min_pattern is not None and self == self.min_pattern:
+            return 0
+
+        atoms = self.atomic_patterns
+        atoms = {atom for atom in self.atomic_patterns if not any(other > atom for other in atoms - {atom})}
+        return len(atoms)
+
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         return eval(value)
