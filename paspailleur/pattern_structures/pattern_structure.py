@@ -1,6 +1,7 @@
 import warnings
 from collections import deque, OrderedDict
 from functools import reduce
+from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
@@ -360,6 +361,79 @@ class PatternStructure:
         patterns = list(patterns)
         iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns)
         return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+
+    def mine_implications(
+            self,
+            basis_name: Literal["Canonical", "Canonical Direct"] = "Canonical Direct",
+            min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            use_tqdm: bool = False,
+    ) -> dict[PatternType, PatternType]:
+        concepts = self.mine_concepts(
+            min_support=min_support, min_delta_stability=min_delta_stability,
+            algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
+        )
+        intents = map(itemgetter(1), concepts)
+
+        direct_basis = OrderedDict()
+        for key, intent in self.iter_keys(intents):
+            key_saturated = key
+            for premise, conclusion in direct_basis.items():
+                if premise <= key_saturated:
+                    key_saturated = key_saturated | conclusion
+                if key_saturated == intent:
+                    break
+            else:  # key_saturated != intent
+                direct_basis[key] = intent
+
+        if basis_name == 'Canonical Direct':
+            return direct_basis
+
+        # basis_name = 'Canonical'
+        canonical_basis = dict()
+        for premise, intent in direct_basis.items():
+            pseudo_intent = premise
+            for other_premise, other_intent in direct_basis.items():
+                if pseudo_intent == intent:
+                    break
+                if other_premise < pseudo_intent:
+                    pseudo_intent = pseudo_intent | other_intent
+
+            if pseudo_intent != intent:
+                canonical_basis[pseudo_intent] = intent
+        return canonical_basis
+
+    def mine_implications_from_premises(
+            self,
+            premises: list[PatternType], pseudo_close_premises: bool = False, use_tqdm: bool = False
+    ) -> Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]:
+        # construct implication basis at the first try
+        implication_basis = OrderedDict()
+        for premise in premises:
+            intent = self.intent(self.extent(premise, return_bitarray=True))
+            premise_saturated = premise
+            for p, c in implication_basis.items():
+                if p <= premise_saturated:
+                    premise_saturated = premise_saturated | c
+                if premise_saturated == intent:
+                    break
+            else:  # if key_saturated != intent
+                implication_basis[premise] = intent
+
+        if not pseudo_close_premises:
+            return implication_basis
+
+        pseudo_closed_basis = dict()
+        for premise, conclusion in implication_basis.items():
+            premise_saturated = premise
+            for p, c in implication_basis.items():
+                if p < premise_saturated:
+                    premise_saturated = premise_saturated | c
+                if premise_saturated == conclusion:
+                    break
+            else:  # if key_saturated != intent
+                pseudo_closed_basis[premise_saturated] = conclusion
+        return pseudo_closed_basis
 
     def next_patterns(
             self, pattern: PatternType,
