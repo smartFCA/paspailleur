@@ -28,7 +28,7 @@ class ItemSetPattern(Pattern):
     def __sub__(self, other: Self) -> Self:
         """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self
 
-         (if it's not posssible, return self)"""
+         (if it's not possible, return self)"""
         return self.__class__(self.value - other.value)
 
     @classmethod
@@ -68,7 +68,7 @@ class ItemSetPattern(Pattern):
         return {self.__class__({v}) for v in self.value}
 
     @property
-    def min_pattern(self) -> Optional[Self]:
+    def min_pattern(self) -> Self:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__(frozenset())
 
@@ -114,7 +114,7 @@ class CategorySetPattern(ItemSetPattern):
         return self.__class__(self.Universe)
 
     @property
-    def max_pattern(self) -> Optional[Self]:
+    def max_pattern(self) -> Self:
         """Maximal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__(frozenset())
 
@@ -131,6 +131,7 @@ class CategorySetPattern(ItemSetPattern):
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
+    Universe: PatternValueType = ((-math.inf, True), (math.inf, True))
 
     @property
     def lower_bound(self) -> float:
@@ -293,12 +294,12 @@ class IntervalPattern(Pattern):
         return {self.__class__(v) for v in atoms}
 
     @property
-    def min_pattern(self) -> Optional[Self]:
+    def min_pattern(self) -> Self:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
-        return self.__class__("[-inf, +inf]")
+        return self.__class__(self.Universe)
 
     @property
-    def max_pattern(self) -> Optional[Self]:
+    def max_pattern(self) -> Self:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__("ø")
 
@@ -470,12 +471,7 @@ class NgramSetPattern(Pattern):
 
 class CartesianPattern(Pattern):
     PatternValueType = frozendict[str, Pattern]
-
-    def __init__(self, value: PatternValueType, attribute_types: Optional[dict[str, Type[Pattern]]] = None):
-        if attribute_types is not None:
-            value = {k: attribute_types[k](v) for k, v in value.items()}
-            
-        super().__init__(value)
+    DimensionTypes: dict[str, Type[Pattern]] = None  # required for parsing stings of dimensional patterns
 
     def __repr__(self) -> str:
         return repr(dict(self.value))
@@ -531,5 +527,5 @@ class CartesianPattern(Pattern):
 
         return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Pattern:
         return self.value[item]

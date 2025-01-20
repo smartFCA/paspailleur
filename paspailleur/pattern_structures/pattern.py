@@ -12,7 +12,7 @@ class Pattern:
                 raise ValueError(f"The Pattern's value cannot be parsed from a string {value}. "
                                  f"The following exception is raised: {e}")
 
-        self._value = self.preprocess_value(value)
+        self._value = self.preprocess_value(value)  # if not isinstance(value, self.__class__) else value.value
 
     @property
     def value(self) -> PatternValueType:
