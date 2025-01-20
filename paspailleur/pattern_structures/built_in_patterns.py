@@ -187,6 +187,9 @@ class IntervalPattern(Pattern):
         if isinstance(value, Number):
             return (float(value), True), (float(value), True)
 
+        if len(value) == 2 and all(isinstance(v, Number) for v in value):
+            return (float(value[0]), True), (float(value[1]), True)
+
         lb, closed_lb = value[0]
         rb, closed_rb = value[1]
 
