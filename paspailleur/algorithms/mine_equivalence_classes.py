@@ -275,8 +275,7 @@ def list_stable_extents_via_gsofia(
 
 def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern, fbarray]) -> Iterator[Pattern]:
     # second condition implies the first one. But the first one is easier to test
-    atoms_to_iterate = (atom for atom in atomic_patterns if atom <= pattern)
-    atoms_to_iterate = sorted(atoms_to_iterate, key=lambda atom: atomic_patterns[atom].count())
+    atoms_to_iterate = [atom for atom in atomic_patterns if atom <= pattern]
     if not atoms_to_iterate:
         yield pattern.min_pattern if pattern.min_pattern is not None else pattern
         return
@@ -289,15 +288,28 @@ def iter_keys_of_pattern(pattern: Pattern, atomic_patterns: OrderedDict[Pattern,
     next(pattern_iterator)  # initialise the iterator
 
     go_more_precise = True
+    found_keys = []
     while True:
         try:
             key_candidate, candidate_extent = pattern_iterator.send(go_more_precise)
         except StopIteration:
             break
 
-        go_more_precise = extent != candidate_extent
-        if not go_more_precise:
+        if not basubset(extent, candidate_extent):
+            go_more_precise = False
+            continue
+
+        # extent is a subset of candidate_extent
+        if candidate_extent != extent:
+            go_more_precise = True
+            continue
+
+        # candidate_extent == extent
+        more_precise_than_found_key = any(found_key <= key_candidate for found_key in found_keys)
+        if not more_precise_than_found_key:
             yield key_candidate
+            go_more_precise = False
+            found_keys.append(key_candidate)
 
 
 def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[Pattern, fbarray])\
