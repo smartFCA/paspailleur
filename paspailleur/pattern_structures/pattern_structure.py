@@ -370,23 +370,31 @@ class PatternStructure:
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
             max_key_length: Optional[int] = None,
             algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            reduce_conclusions: bool = False,
             use_tqdm: bool = False,
     ) -> dict[PatternType, PatternType]:
-        concepts = self.mine_concepts(
+        concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
             min_support=min_support, min_delta_stability=min_delta_stability,
             algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
         )
         intents = map(itemgetter(1), concepts)
+        if not concepts[0][0].all():
+            intents = [self.intent(concepts[0][0]|~concepts[0][0])] + list(intents)
 
         PType = PatternStructure.PatternType
         keys: Iterator[PType] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
 
         pseudo_close_premises = basis_name == 'Canonical'
-        return self.mine_implications_from_premises(keys, pseudo_close_premises=pseudo_close_premises, use_tqdm=use_tqdm)
+        return self.mine_implications_from_premises(
+            keys,
+            pseudo_close_premises=pseudo_close_premises, use_tqdm=use_tqdm, reduce_conclusions=reduce_conclusions
+        )
 
     def mine_implications_from_premises(
             self,
-            premises: Iterable[PatternType], pseudo_close_premises: bool = False, use_tqdm: bool = False
+            premises: Iterable[PatternType],
+            pseudo_close_premises: bool = False, reduce_conclusions: bool = False,
+            use_tqdm: bool = False
     ) -> Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]:
         # construct implication basis at the first try
         implication_basis = OrderedDict()
@@ -399,7 +407,7 @@ class PatternStructure:
                 if premise_saturated == intent:
                     break
             else:  # if key_saturated != intent
-                implication_basis[premise] = intent
+                implication_basis[premise] = intent if not reduce_conclusions else intent - premise_saturated
 
         if not pseudo_close_premises:
             return implication_basis
@@ -413,7 +421,7 @@ class PatternStructure:
                 if premise_saturated == conclusion:
                     break
             else:  # if key_saturated != intent
-                pseudo_closed_basis[premise_saturated] = conclusion
+                pseudo_closed_basis[premise_saturated] = conclusion if not reduce_conclusions else conclusion - premise_saturated
         return pseudo_closed_basis
 
     def next_patterns(
