@@ -73,6 +73,16 @@ class CategorySetPattern(ItemSetPattern):
         raise NotImplementedError
 
     @property
+    def atomic_patterns(self) -> set[Self]:
+        assert self.min_pattern is not None,\
+            f"Atomic patterns of {self.__class__} class cannot be computed without predefined min_pattern value. " \
+            f"The proposed solution is to inherit a new class from the current class and " \
+            f"explicitly specify the value of min_pattern."
+
+        leftout_vals = self.min_pattern.value - self.value
+        return {self.__class__(self.min_pattern.value-{v}) for v in leftout_vals}
+
+    @property
     def min_pattern(self) -> Optional[Self]:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return None
