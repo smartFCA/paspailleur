@@ -75,12 +75,21 @@ class ItemSetPattern(Pattern):
 
 class CategorySetPattern(ItemSetPattern):
     PatternValueType = frozenset
+    Universe: Optional[frozenset] = None  # The set of all possible categories
 
     def __and__(self, other):
         return self.__class__(self.value | other.value)
 
     def __or__(self, other):
         return self.__class__(self.value & other.value)
+
+    def __repr__(self) -> str:
+        repr_negative = self.Universe is not None and len(self.value) > len(self.Universe) / 2
+        s = set(self.Universe) - self.value if repr_negative else self.value
+        s = repr(set(s))
+        if repr_negative:
+            s = f"NOT({s})"
+        return s
 
     def __sub__(self, other):
         if self.min_pattern is not None and self == other:
@@ -100,7 +109,9 @@ class CategorySetPattern(ItemSetPattern):
     @property
     def min_pattern(self) -> Optional[Self]:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
-        return None
+        if self.Universe is None:
+            return None
+        return self.__class__(self.Universe)
 
     @property
     def max_pattern(self) -> Optional[Self]:
