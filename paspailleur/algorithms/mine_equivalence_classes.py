@@ -219,7 +219,7 @@ def list_stable_extents_via_gsofia(
 
     if not atomic_patterns_iterator.gi_suspended:
         next(atomic_patterns_iterator)
-    atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns, disable=not use_tqdm)
+    atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns, disable=not use_tqdm, desc='gSofia algorithm')
 
     # dict: extent => (delta_index, children_extents)
     stable_extents: dict[fbarray, tuple[int, set[fbarray]]] = dict()
@@ -236,6 +236,11 @@ def list_stable_extents_via_gsofia(
         try:
             atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
         except StopIteration:
+            if use_tqdm:
+                idx = atomic_patterns_iterator.n
+                atomic_patterns_iterator.reset(idx)
+                atomic_patterns_iterator.update(idx)
+                atomic_patterns_iterator.close()
             break
 
         old_stable_extents, stable_extents = dict(stable_extents), dict()
@@ -269,6 +274,9 @@ def list_stable_extents_via_gsofia(
         # after generating all new stable extents
         if n_stable_extents is not None and len(stable_extents) > n_stable_extents:
             stable_extents = dict(n_most_stable_extents(stable_extents.items(), n_stable_extents))
+
+        if use_tqdm:
+            atomic_patterns_iterator.update()
 
     return set(stable_extents)
 
