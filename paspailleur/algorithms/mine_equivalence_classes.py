@@ -364,17 +364,22 @@ def iter_keys_of_patterns(patterns: list[Pattern], atomic_patterns: OrderedDict[
             break
         candidate_extent = fbarray(candidate_extent)
 
-        go_more_precise = any(basubset(extent, candidate_extent) and extent != candidate_extent
-                              for extent in patterns_per_extents)
-
-        if candidate_extent not in patterns_per_extents:
+        if not any(basubset(extent, candidate_extent) for extent in patterns_per_extents):
+            # not a key of any specified pattern, and no greater pattern is a key of any given pattern
+            go_more_precise = False
             continue
 
-        # candidate_extent in atoms_per_extent
-        target_patterns = patterns_per_extents[candidate_extent]
-        target_patterns = filter(lambda i: key_candidate <= patterns[i], target_patterns)
-        target_patterns = filter(lambda i: not any(k <= key_candidate for k in keys_per_pattern[i]), target_patterns)
+        if candidate_extent not in patterns_per_extents:
+            # not a key of any specified pattern, but some greater pattern might be a key
+            go_more_precise = True
+            continue
 
-        for pattern_i in target_patterns:
-            yield key_candidate, pattern_i
-            keys_per_pattern[pattern_i].append(key_candidate)
+        # candidate_extent in patterns_per_extents, so key_candidate might be a key of some specified pattern
+        for pattern_i in patterns_per_extents[candidate_extent]:
+            pattern = patterns[pattern_i]
+            if key_candidate <= pattern:
+                if not any(found_key <= key_candidate for found_key in keys_per_pattern[pattern_i]):
+                    yield key_candidate, pattern_i
+                    keys_per_pattern[pattern_i].append(key_candidate)
+        go_more_precise = any(basubset(extent, candidate_extent) and extent != candidate_extent
+                              for extent in patterns_per_extents)
