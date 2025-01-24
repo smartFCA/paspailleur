@@ -21,7 +21,9 @@ deprecation==2.1.0
     #   caspailleur
     #   paspailleur (pyproject.toml)
 fonttools==4.55.3
-    # via matplotlib
+    # via
+    #   caspailleur
+    #   paspailleur (pyproject.toml)
 graphviz==0.20.3
     # via scikit-mine
 joblib==1.4.2
