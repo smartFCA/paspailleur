@@ -50,7 +50,12 @@ class PatternStructure:
 
         return bfuncs.intention(objects_ba, self._object_irreducibles)
 
-    def fit(self, object_descriptions: dict[str, PatternType], compute_atomic_patterns: bool = None):
+    def fit(
+            self,
+            object_descriptions: dict[str, PatternType],
+            compute_atomic_patterns: bool = None, min_atom_support: Union[int, float] = 0,
+            use_tqdm: bool = True
+    ):
         object_names, objects_patterns = zip(*object_descriptions.items())
         object_irreducibles = bfuncs.group_objects_by_patterns(objects_patterns)
 
@@ -66,7 +71,7 @@ class PatternStructure:
             except NotImplementedError:
                 compute_atomic_patterns = False
         if compute_atomic_patterns:
-            self.init_atomic_patterns()
+            self.init_atomic_patterns(use_tqdm=use_tqdm, min_support=min_atom_support)
 
     @property
     def min_pattern(self) -> PatternType:
@@ -81,15 +86,30 @@ class PatternStructure:
 
         return bfuncs.maximal_pattern(self._object_irreducibles)
 
-    def init_atomic_patterns(self):
+    @property
+    def max_atoms(self) -> set[PatternType]:
+        some_pattern = next(p for p in self._object_irreducibles)
+        max_atoms = some_pattern.maximal_atoms
+        if max_atoms is None:
+            return set()
+        return max_atoms
+
+    def init_atomic_patterns(self, min_support: Union[int, float] = 0, use_tqdm: bool = False):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
+        min_support = to_absolute_number(min_support, len(self._object_names))
+
         atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
-        atomic_patterns |= self.max_pattern.atomic_patterns
+        atomic_patterns |= self.max_atoms
 
         # Step 1. Group patterns by their extents. For every extent, list patterns in topological sorting
         patterns_per_extent: dict[fbarray, deque[Pattern]] = dict()
-        for atomic_pattern in atomic_patterns:
+        patterns_iterator = tqdm(atomic_patterns, disable=not use_tqdm, desc='Compute atomic extents',
+                                 total=len(atomic_patterns))
+        for atomic_pattern in patterns_iterator:
             extent: fbarray = self.extent(atomic_pattern, return_bitarray=True)
+            if extent.count() < min_support:
+                continue
+
             if extent not in patterns_per_extent:
                 patterns_per_extent[extent] = deque([atomic_pattern])
                 continue
@@ -126,7 +146,9 @@ class PatternStructure:
 
         # patterns pointing to the bitarray of indices of next greater patterns
         patterns_order: list[bitarray] = [None for _ in range(n_patterns)]
-        for pattern in reversed(atomic_patterns):
+        patterns_iterator = tqdm(reversed(atomic_patterns), disable=not use_tqdm, desc='Compute order of atoms',
+                                 total=len(atomic_patterns))
+        for pattern in patterns_iterator:
             idx = pattern_to_idx_map[pattern]
             extent = atomic_extents[idx]
             extent_idx = extents_to_idx_map[extent]
@@ -270,11 +292,7 @@ class PatternStructure:
         min_support = to_absolute_number(min_support, n_objects)
         min_delta_stability = to_absolute_number(min_delta_stability, n_objects)
 
-        if algorithm is None:
-            if min_delta_stability > 0 or min_support > 0:
-                algorithm = 'gSofia'
-            else:
-                algorithm = 'CloseByOne object-wise'
+        algorithm = algorithm if algorithm is not None else 'gSofia'
 
         if algorithm == 'CloseByOne object-wise':
             unused_parameters = []
@@ -301,7 +319,9 @@ class PatternStructure:
                 use_tqdm=use_tqdm,
                 n_atomic_patterns=len(self._atomic_patterns)
             )
-            extents_intents_dict: dict[fbarray, Pattern] = {fbarray(extent): self.intent(extent) for extent in extents_ba}
+            extents_intents_dict: dict[fbarray, Pattern] = dict()
+            for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
+                extents_intents_dict[fbarray(extent)] = self.intent(extent)
 
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
         concepts = [(

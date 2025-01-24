@@ -163,3 +163,7 @@ class Pattern:
     def max_pattern(self) -> Optional[Self]:
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return None
+
+    @property
+    def maximal_atoms(self) -> Optional[set[Self]]:
+        return None
