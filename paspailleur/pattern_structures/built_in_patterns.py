@@ -131,6 +131,7 @@ class CategorySetPattern(ItemSetPattern):
 class IntervalPattern(Pattern):
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
+    BoundsUniverse: list[float] = None
 
     @property
     def lower_bound(self) -> float:
@@ -200,10 +201,10 @@ class IntervalPattern(Pattern):
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
         if isinstance(value, Number):
-            return (float(value), True), (float(value), True)
+            value = (value, value)
 
         if len(value) == 2 and all(isinstance(v, Number) for v in value):
-            return (float(value[0]), True), (float(value[1]), True)
+            value = (float(value[0]), True), (float(value[1]), True)
 
         lb, closed_lb = value[0]
         rb, closed_rb = value[1]
@@ -211,6 +212,10 @@ class IntervalPattern(Pattern):
         is_contradictive = (rb < lb) or (lb == rb and not (closed_lb and closed_rb))
         if is_contradictive:
             lb, rb = 0, 0
+
+        if cls.BoundsUniverse is not None:
+            lb = max(b for b in cls.BoundsUniverse if b <= lb) if lb > -math.inf else lb
+            rb = min(b for b in cls.BoundsUniverse if rb <= b) if rb < math.inf else rb
 
         return (float(lb), bool(closed_lb)), (float(rb), bool(closed_rb))
 
@@ -321,6 +326,10 @@ class IntervalPattern(Pattern):
         """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
         return self.__class__("ø")
 
+    @property
+    def maximal_atoms(self) -> Optional[set[Self]]:
+        return {self.max_pattern}
+
 
 class ClosedIntervalPattern(IntervalPattern):
     PatternValueType = tuple[float, float]
@@ -367,6 +376,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
 class NgramSetPattern(Pattern):
     PatternValueType = frozenset[tuple[str, ...]]
+    StopWords: set[str] = frozenset()
 
     def __repr__(self) -> str:
         ngrams = sorted(self.value, key=lambda ngram: (-len(ngram), ngram))
@@ -393,6 +403,7 @@ class NgramSetPattern(Pattern):
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
         value = [re.sub(r" +", " ", v).strip().split(' ') if isinstance(v, str) else v for v in value]
+        value = [ngram for ngram in value if not set(ngram) <= cls.StopWords]
         return frozenset(map(tuple, value))
 
     def __len__(self) -> int:
@@ -554,6 +565,15 @@ class CartesianPattern(Pattern):
             return None
 
         return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})
+
+    @property
+    def maximal_atoms(self) -> Optional[set[Self]]:
+        max_atoms = set()
+        for k, pattern in self.value.items():
+            if pattern.maximal_atoms is None:
+                continue
+            max_atoms |= {self.__class__({k: atom}) for atom in pattern.maximal_atoms}
+        return max_atoms
 
     def __getitem__(self, item: str) -> Pattern:
         return self.value[item]
