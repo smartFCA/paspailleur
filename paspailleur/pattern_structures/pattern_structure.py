@@ -28,6 +28,9 @@ class PatternStructure:
         # list of indices of greater atomic patterns per every atomic pattern
         self._atomic_patterns_order: Optional[list[fbarray]] = None
 
+    #################################
+    # Basic operations on a context #
+    #################################
     def extent(self, pattern: PatternType, return_bitarray: bool = False) -> Union[set[str], fbarray]:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
@@ -50,6 +53,9 @@ class PatternStructure:
 
         return bfuncs.intention(objects_ba, self._object_irreducibles)
 
+    ###########################################
+    # Initialisation of the Pattern Structure #
+    ###########################################
     def fit(
             self,
             object_descriptions: dict[str, PatternType],
@@ -72,27 +78,6 @@ class PatternStructure:
                 compute_atomic_patterns = False
         if compute_atomic_patterns:
             self.init_atomic_patterns(use_tqdm=use_tqdm, min_support=min_atom_support)
-
-    @property
-    def min_pattern(self) -> PatternType:
-        if not self._object_irreducibles:
-            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
-        return bfuncs.minimal_pattern(self._object_irreducibles)
-
-    @property
-    def max_pattern(self) -> PatternType:
-        if not self._object_irreducibles:
-            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
-
-        return bfuncs.maximal_pattern(self._object_irreducibles)
-
-    @property
-    def max_atoms(self) -> set[PatternType]:
-        some_pattern = next(p for p in self._object_irreducibles)
-        max_atoms = some_pattern.maximal_atoms
-        if max_atoms is None:
-            return set()
-        return max_atoms
 
     def init_atomic_patterns(self, min_support: Union[int, float] = 0, use_tqdm: bool = False):
         """Compute the set of all patterns that cannot be obtained by intersection of other patterns"""
@@ -180,6 +165,54 @@ class PatternStructure:
         self._atomic_patterns = atomic_patterns
         self._atomic_patterns_order = [fbarray(ba) for ba in patterns_order]
 
+    #######################################
+    # Properties that are easy to compute #
+    #######################################
+    @property
+    def min_pattern(self) -> PatternType:
+        if not self._object_irreducibles:
+            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
+        return bfuncs.minimal_pattern(self._object_irreducibles)
+
+    @property
+    def max_pattern(self) -> PatternType:
+        if not self._object_irreducibles:
+            raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
+
+        return bfuncs.maximal_pattern(self._object_irreducibles)
+
+    @property
+    def max_atoms(self) -> set[PatternType]:
+        some_pattern = next(p for p in self._object_irreducibles)
+        max_atoms = some_pattern.maximal_atoms
+        if max_atoms is None:
+            return set()
+        return max_atoms
+
+    @property
+    def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
+        return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
+
+    @property
+    def n_atomic_patterns(self) -> int:
+        return sum(1 for _ in self.iter_atomic_patterns(return_extents=False, return_bitarrays=False))
+
+    @property
+    def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
+        if self._atomic_patterns_order is None:
+            return None
+        atomic_patterns_list = list(self._atomic_patterns)
+        return {atomic_patterns_list[idx]: {atomic_patterns_list[v] for v in vs.search(True)}
+                for idx, vs in enumerate(self._atomic_patterns_order)}
+
+    @property
+    def premaximal_patterns(self) -> dict[PatternType, set[str]]:
+        """Maximal patterns that describe fewest objects (and their extents)"""
+        return dict(self.iter_premaximal_patterns(return_extents=True, return_bitarrays=False))
+
+    #####################
+    # Pattern Iterators #
+    #####################
     def iter_atomic_patterns(
         self,
         return_extents: bool = True, return_bitarrays: bool = False,
@@ -221,22 +254,6 @@ class PatternStructure:
                     break
                 go_more_precise = yield form_yielded_value(pattern, extent)
 
-    @property
-    def atomic_patterns(self) -> OrderedDict[PatternType, set[str]]:
-        return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
-
-    @property
-    def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
-        if self._atomic_patterns_order is None:
-            return None
-        atomic_patterns_list = list(self._atomic_patterns)
-        return {atomic_patterns_list[idx]: {atomic_patterns_list[v] for v in vs.search(True)}
-                for idx, vs in enumerate(self._atomic_patterns_order)}
-
-    @property
-    def n_atomic_patterns(self) -> int:
-        return sum(1 for _ in self.iter_atomic_patterns(return_extents=False, return_bitarrays=False))
-
     def iter_premaximal_patterns(self, return_extents: bool = True, return_bitarrays: bool = False) -> Union[
         Iterator[PatternType], Iterator[tuple[PatternType, set[str]]], Iterator[tuple[PatternType, fbarray]]
     ]:
@@ -269,66 +286,6 @@ class PatternStructure:
                     yield pattern, extent
                 else:
                     yield pattern, {self._object_names[g] for g in extent.search(True)}
-
-    @property
-    def premaximal_patterns(self) -> dict[PatternType, set[str]]:
-        """Maximal patterns that describe fewest objects (and their extents)"""
-        return dict(self.iter_premaximal_patterns(return_extents=True, return_bitarrays=False))
-
-    def mine_concepts(
-            self,
-            min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
-            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
-            return_objects_as_bitarrays: bool = False,
-            use_tqdm: bool = False
-    ) -> Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]:
-        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia'}
-        assert algorithm is None or algorithm in SUPPORTED_ALGOS,\
-            f"Only the following algorithms are supported: {SUPPORTED_ALGOS}. " \
-            f"Either choose of the supported algorithm or set algorithm=None " \
-            f"to automatically choose the best algorithm based on the other hyperparameters"
-
-        n_objects = len(self._object_names)
-        min_support = to_absolute_number(min_support, n_objects)
-        min_delta_stability = to_absolute_number(min_delta_stability, n_objects)
-
-        algorithm = algorithm if algorithm is not None else 'gSofia'
-
-        if algorithm == 'CloseByOne object-wise':
-            unused_parameters = []
-            if min_support > 0:
-                unused_parameters.append(f"{min_support=}")
-            if min_delta_stability > 0:
-                unused_parameters.append(f"{min_delta_stability}")
-            if unused_parameters:
-                warnings.warn(UserWarning(
-                    f'The following parameters {", ".join(unused_parameters)} do not affect algorithm {algorithm}'))
-
-            objects_patterns = [next(p for p, objs in self._object_irreducibles.items() if objs[g]) for g in range(n_objects)]
-            concepts_generator = mec.iter_intents_via_ocbo(objects_patterns)
-            extents_intents_dict: dict[fbarray, Pattern] = {fbarray(extent): intent for intent, extent in concepts_generator}
-
-        if algorithm == 'gSofia':
-            atomic_patterns_iterator = self.iter_atomic_patterns(
-                return_extents=True, return_bitarrays=True, kind='ascending controlled'
-            )
-            extents_ba = mec.list_stable_extents_via_gsofia(
-                atomic_patterns_iterator,
-                min_delta_stability=min_delta_stability,
-                min_supp=min_support,
-                use_tqdm=use_tqdm,
-                n_atomic_patterns=len(self._atomic_patterns)
-            )
-            extents_intents_dict: dict[fbarray, Pattern] = dict()
-            for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
-                extents_intents_dict[fbarray(extent)] = self.intent(extent)
-
-        extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
-        concepts = [(
-            extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
-            extents_intents_dict[extent_ba]
-        ) for extent_ba in extents_order]
-        return concepts
 
     def iter_patterns(
             self, kind: Literal['ascending', 'ascending controlled'] = 'ascending',
@@ -368,11 +325,6 @@ class PatternStructure:
                     break
                 go_deeper = yield pattern, extent if return_objects_as_bitarrays else self.verbalise_extent(extent)
 
-    def verbalise_extent(self, extent: Union[bitarray, set[str]]) -> set[str]:
-        if not isinstance(extent, bitarray):
-            return extent
-        return {self._object_names[g] for g in extent.search(True)}
-
     def iter_keys(
             self,
             patterns: Union[PatternType, Iterable[PatternType]],
@@ -385,6 +337,66 @@ class PatternStructure:
         patterns = list(patterns)
         iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns, max_length=max_length)
         return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+
+    ######################
+    # High-level FCA API #
+    ######################
+    def mine_concepts(
+            self,
+            min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            return_objects_as_bitarrays: bool = False,
+            use_tqdm: bool = False
+    ) -> Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]:
+        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia'}
+        assert algorithm is None or algorithm in SUPPORTED_ALGOS, \
+            f"Only the following algorithms are supported: {SUPPORTED_ALGOS}. " \
+            f"Either choose of the supported algorithm or set algorithm=None " \
+            f"to automatically choose the best algorithm based on the other hyperparameters"
+
+        n_objects = len(self._object_names)
+        min_support = to_absolute_number(min_support, n_objects)
+        min_delta_stability = to_absolute_number(min_delta_stability, n_objects)
+
+        algorithm = algorithm if algorithm is not None else 'gSofia'
+
+        if algorithm == 'CloseByOne object-wise':
+            unused_parameters = []
+            if min_support > 0:
+                unused_parameters.append(f"{min_support=}")
+            if min_delta_stability > 0:
+                unused_parameters.append(f"{min_delta_stability}")
+            if unused_parameters:
+                warnings.warn(UserWarning(
+                    f'The following parameters {", ".join(unused_parameters)} do not affect algorithm {algorithm}'))
+
+            objects_patterns = [next(p for p, objs in self._object_irreducibles.items() if objs[g]) for g in
+                                range(n_objects)]
+            concepts_generator = mec.iter_intents_via_ocbo(objects_patterns)
+            extents_intents_dict: dict[fbarray, Pattern] = {fbarray(extent): intent for intent, extent in
+                                                            concepts_generator}
+
+        if algorithm == 'gSofia':
+            atomic_patterns_iterator = self.iter_atomic_patterns(
+                return_extents=True, return_bitarrays=True, kind='ascending controlled'
+            )
+            extents_ba = mec.list_stable_extents_via_gsofia(
+                atomic_patterns_iterator,
+                min_delta_stability=min_delta_stability,
+                min_supp=min_support,
+                use_tqdm=use_tqdm,
+                n_atomic_patterns=len(self._atomic_patterns)
+            )
+            extents_intents_dict: dict[fbarray, Pattern] = dict()
+            for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
+                extents_intents_dict[fbarray(extent)] = self.intent(extent)
+
+        extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
+        concepts = [(
+            extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
+            extents_intents_dict[extent_ba]
+        ) for extent_ba in extents_order]
+        return concepts
 
     def mine_implications(
             self,
@@ -505,3 +517,11 @@ class PatternStructure:
 
         subextents = self.next_patterns(pattern, return_extents=True, return_objects_as_bitarrays=True).values()
         return extent.count() - max((subext.count() for subext in subextents), default=0)
+
+    #####################
+    # Helping functions #
+    #####################
+    def verbalise_extent(self, extent: Union[bitarray, set[str]]) -> set[str]:
+        if not isinstance(extent, bitarray):
+            return extent
+        return {self._object_names[g] for g in extent.search(True)}
