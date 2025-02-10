@@ -244,8 +244,13 @@ def test_builtin_atomic_patterns():
                                   for k, vs in atomic_patterns_order_true.items()}
 
     ps.fit(context)
-    assert ps.atomic_patterns == atomic_patterns_true_verb
-    assert ps.atomic_patterns_order == atomic_patterns_order_true
+    assert set(ps.atomic_patterns) == set(atomic_patterns_true_verb)
+    assert all([ps.atomic_patterns[k] == atomic_patterns_true_verb[k] for k in atomic_patterns_true_verb])
+    assert all([ps.atomic_patterns_order[k] == atomic_patterns_order_true[k] for k in atomic_patterns_true_verb])
+    assert all([
+        len(ps.atomic_patterns[a]) >= len(ps.atomic_patterns[b])
+        for a, b in zip(list(ps.atomic_patterns), list(ps.atomic_patterns)[1:])
+    ])
 
 
     patterns = [['hello world', 'who is there'], ['hello world'], ['world is there']]

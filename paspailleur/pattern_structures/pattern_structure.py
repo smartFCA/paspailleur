@@ -1,5 +1,5 @@
 import warnings
-from collections import deque, OrderedDict
+from collections import OrderedDict
 from functools import reduce
 from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
@@ -7,7 +7,6 @@ from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
 
 from caspailleur.io import to_absolute_number
-from caspailleur.order import sort_intents_inclusion, inverse_order
 from tqdm.auto import tqdm
 
 from .pattern import Pattern
@@ -86,84 +85,32 @@ class PatternStructure:
         atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
         atomic_patterns |= self.max_atoms
 
-        # Step 1. Group patterns by their extents. For every extent, list patterns in topological sorting
-        patterns_per_extent: dict[fbarray, deque[Pattern]] = dict()
-        patterns_iterator = tqdm(atomic_patterns, disable=not use_tqdm, desc='Compute atomic extents',
-                                 total=len(atomic_patterns))
-        for atomic_pattern in patterns_iterator:
-            extent: fbarray = self.extent(atomic_pattern, return_bitarray=True)
+        atoms_iterator = atomic_patterns
+        if use_tqdm:
+            atoms_iterator = tqdm(atoms_iterator, total=len(atomic_patterns), desc='Compute atomic extents')
+
+        atoms_extents: list[tuple[Pattern, fbarray]] = []
+        for atom in atoms_iterator:
+            extent = self.extent(atom, return_bitarray=True)
             if extent.count() < min_support:
                 continue
+            atoms_extents.append((atom, extent))
 
-            if extent not in patterns_per_extent:
-                patterns_per_extent[extent] = deque([atomic_pattern])
-                continue
-            # extent in patterns_per_extent, i.e. there are already some known patterns per extent
-            equiv_patterns = patterns_per_extent[extent]
-            greater_patterns = (i for i, other in enumerate(equiv_patterns) if atomic_pattern <= other)
-            first_greater_pattern = next(greater_patterns, len(equiv_patterns))
-            patterns_per_extent[extent].insert(first_greater_pattern, atomic_pattern)
+        atoms_order = bfuncs.order_patterns_via_extents(atoms_extents, use_tqdm=use_tqdm)
+        assert all(not ba[i] for i, ba in enumerate(atoms_order)), 'Something went wrong during the run of the programm. Ask the developer'
 
-        # Step 2. Find order on atomic patterns.
-        def sort_extents_subsumption(extents):
-            empty_extent = extents[0] & ~extents[0]
-            if not extents[0].all():
-                extents.insert(0, ~empty_extent)
-            if extents[-1].any():
-                extents.append(empty_extent)
-            inversed_extents_subsumption_order = inverse_order(sort_intents_inclusion(extents[::-1], use_tqdm=False, return_transitive_order=True)[1])
-            extents_subsumption_order = [ba[::-1] for ba in inversed_extents_subsumption_order[::-1]]
-            if ~empty_extent not in patterns_per_extent:
-                extents.pop(0)
-                extents_subsumption_order = [ba[1:] for ba in extents_subsumption_order[1:]]
-            if empty_extent not in patterns_per_extent:
-                extents.pop(-1)
-                extents_subsumption_order = [ba[:-1] for ba in extents_subsumption_order[:-1]]
-            return extents_subsumption_order
+        def topological_key(atom_idx):
+            extent: fbarray = atoms_extents[atom_idx][1]
+            superatoms = atoms_order[atom_idx]
 
-        sorted_extents = sorted(patterns_per_extent, key=lambda ext: (-ext.count(), tuple(ext.search(True))))
-        extents_order = sort_extents_subsumption(sorted_extents)
-        extents_to_idx_map = {extent: idx for idx, extent in enumerate(sorted_extents)}
+            return -extent.count(), tuple(extent.search(True)), -superatoms.count(), tuple(superatoms.search(True))
+        topologic_indices = sorted(range(len(atoms_extents)), key=topological_key)
+        atoms_order = bfuncs.rearrange_indices(atoms_order, atoms_extents, [atoms_extents[i] for i in topologic_indices])
+        atoms_extents = [atoms_extents[i] for i in topologic_indices]
 
-        atomic_patterns, atomic_extents = zip(*[(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
-        pattern_to_idx_map = {pattern: idx for idx, pattern in enumerate(atomic_patterns)}
-        n_patterns = len(atomic_patterns)
-
-        # patterns pointing to the bitarray of indices of next greater patterns
-        patterns_order: list[bitarray] = [None for _ in range(n_patterns)]
-        patterns_iterator = tqdm(reversed(atomic_patterns), disable=not use_tqdm, desc='Compute order of atoms',
-                                 total=len(atomic_patterns))
-        for pattern in patterns_iterator:
-            idx = pattern_to_idx_map[pattern]
-            extent = atomic_extents[idx]
-            extent_idx = extents_to_idx_map[extent]
-
-            # select patterns that might be greater than the current one
-            patterns_to_test = bazeros(n_patterns)
-            n_greater_patterns_same_extent = len(patterns_per_extent[extent]) - patterns_per_extent[extent].index(pattern)-1
-            patterns_to_test[idx+1:idx+n_greater_patterns_same_extent+1] = True
-            for smaller_extent_idx in extents_order[extent_idx].search(True):
-                other_extent = sorted_extents[smaller_extent_idx]
-                first_other_pattern_idx = pattern_to_idx_map[patterns_per_extent[other_extent][0]]
-                n_patterns_other_extent = len(patterns_per_extent[other_extent])
-                patterns_to_test[first_other_pattern_idx:first_other_pattern_idx+n_patterns_other_extent] = True
-
-            # find patterns that are greater than the current one
-            super_patterns = bazeros(n_patterns)
-            while patterns_to_test.any():
-                other_idx = patterns_to_test.find(True)
-                patterns_to_test[other_idx] = False
-
-                other = atomic_patterns[other_idx]
-                if pattern < other:
-                    super_patterns[other_idx] = True
-                    super_patterns |= patterns_order[other_idx]
-                    patterns_to_test &= ~patterns_order[other_idx]
-            patterns_order[idx] = super_patterns
-
-        atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+        atomic_patterns = OrderedDict(atoms_extents)
         self._atomic_patterns = atomic_patterns
-        self._atomic_patterns_order = [fbarray(ba) for ba in patterns_order]
+        self._atomic_patterns_order = [fbarray(ba) for ba in atoms_order]
 
     #######################################
     # Properties that are easy to compute #
