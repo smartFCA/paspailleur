@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 
 from .pattern import Pattern
 
-from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec
+from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 
 
 class PatternStructure:
@@ -337,6 +337,37 @@ class PatternStructure:
         patterns = list(patterns)
         iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns, max_length=max_length)
         return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+
+    def iter_subgroups(
+            self,
+            goal_objects: Union[set[str], bitarray],
+            quality_measure: Literal['Accuracy', 'Precision', 'Recall', 'Jaccard', 'F1', 'WRAcc'],
+            quality_threshold: float,
+            kind: Literal["bruteforce"] = 'bruteforce',
+            max_length: Optional[int] = None,
+            return_objects_as_bitarrays: bool = False
+    ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
+        if not isinstance(goal_objects, bitarray):
+            goal_objects = set(goal_objects)
+            goal_objects = bitarray([obj_name in goal_objects for obj_name in self._object_names])
+
+        quality_func, tp_min, fp_max = msubg.setup_quality_measure_function(
+            quality_measure, quality_threshold, goal_objects.count(), len(goal_objects)
+        )
+
+        subgroups_iterator: Optional[Iterator[tuple[Pattern, bitarray, float]]] = None
+        if kind == 'bruteforce':
+            subgroups_iterator = msubg.iter_subgroups_bruteforce(
+                self, goal_objects, quality_threshold, quality_func, tp_min, fp_max, max_length)
+
+        if subgroups_iterator is None:
+            raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
+                             f'The only supported type for the moment is "bruteforce"')
+
+        if return_objects_as_bitarrays:
+            return subgroups_iterator
+        return ((pattern, self.verbalise_extent(extent_ba), quality)
+                for pattern, extent_ba, quality in subgroups_iterator)
 
     ######################
     # High-level FCA API #
