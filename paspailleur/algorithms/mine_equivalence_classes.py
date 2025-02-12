@@ -9,13 +9,16 @@ from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
 from paspailleur.algorithms import base_functions as bfuncs
-from paspailleur.pattern_structures import AbstractPS
 from paspailleur.pattern_structures.pattern import Pattern
 
 
-def list_intents_via_Lindig_complex(data: list, pattern_structure: AbstractPS) -> list['PatternDescription']:
+# TODO: Rewrite Lindig algorithm with the new Pattern Structure architecture
+def list_intents_via_Lindig_complex(data: list, pattern_structure) -> list['PatternDescription']:
     """Get the list of intents of pattern concepts from `data` described by `pattern_structure` running Lindig algorithm
     from "Fast Concept Analysis" by Christian Lindig, Harvard University, Division of Engineering and Applied Sciences
+
+    WARNING: The function does not work at the moment as
+    it was written for the outdated version of PatternStructure code architecture.
 
     Parameters
     ----------

@@ -5,6 +5,9 @@ from typing import Optional, Generator, Union, Any
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
+from tqdm.auto import tqdm
+
+from caspailleur.order import sort_intents_inclusion, inverse_order
 from paspailleur.pattern_structures.pattern import Pattern
 
 
@@ -89,3 +92,128 @@ def iter_patterns_ascending(
         go_more_precise = yield yielded_value
         if controlled_iteration and not go_more_precise:
             patterns_to_pass &= ~greater_patterns_ordering[i]
+
+
+def rearrange_indices(order_before: list[bitarray], elements_before: list, elements_after: list) -> list[bitarray]:
+    els_before_idx_map = {element_before: idx for idx, element_before in enumerate(elements_before)}
+    after_before_mapping = [els_before_idx_map[element_after] for element_after in elements_after]
+    before_after_mapping = {before_idx: after_idx for after_idx, before_idx in enumerate(after_before_mapping)}
+
+    order_after = []
+    for after_idx, before_idx in enumerate(after_before_mapping):
+        ba_before = order_before[before_idx]
+
+        ba_after = ba_before & ~ba_before
+        for idx in ba_before.search(True):
+            ba_after[before_after_mapping[idx]] = True
+
+        order_after.append(ba_after)
+
+    return order_after
+
+
+def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], use_tqdm: bool = False) -> list[bitarray]:
+    def group_patterns_by_extents(patterns_extent_idx: list[tuple[Pattern, int]]) -> list[list[Pattern]]:
+        n_extents = max(ext_i for _, ext_i in patterns_extent_idx) + 1
+        patterns_per_extents_: list[list[Pattern]] = [list() for _ in range(n_extents)]
+        for pattern, extent_i in patterns_extent_idx:
+            if not patterns_per_extents_[extent_i]:
+                patterns_per_extents_[extent_i].append(pattern)
+                continue
+
+            # extent in patterns_per_extent, i.e. there are already some known patterns per extent
+            equiv_patterns = patterns_per_extents_[extent_i]
+            greater_patterns = (i for i, other in enumerate(equiv_patterns) if pattern <= other)
+            first_greater_pattern = next(greater_patterns, len(equiv_patterns))
+            patterns_per_extents_[extent_i].insert(first_greater_pattern, pattern)
+        return patterns_per_extents_
+
+    def sort_extents_subsumption(extents):
+        extents = sorted(extents, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
+        extents_to_idx_map = {extent: idx for idx, extent in enumerate(extents)}
+
+        empty_extent = extents[0] & ~extents[0]
+        added_top, added_bottom = False, False
+        if not extents[0].all():
+            extents.insert(0, ~empty_extent)
+            added_top = True
+        if extents[-1].any():
+            extents.append(empty_extent)
+            added_bottom = True
+        inversed_extents_subsumption_order = inverse_order(
+            sort_intents_inclusion(extents[::-1], use_tqdm=False, return_transitive_order=True)[1])
+        extents_subsumption_order = [ba[::-1] for ba in inversed_extents_subsumption_order[::-1]]
+
+        if added_top:
+            extents.pop(0)
+            extents_subsumption_order = [ba[1:] for ba in extents_subsumption_order[1:]]
+        if added_bottom:
+            extents.pop(-1)
+            extents_subsumption_order = [ba[:-1] for ba in extents_subsumption_order[:-1]]
+        return extents, extents_to_idx_map, extents_subsumption_order
+
+    def select_greater_patterns_candidates(
+            pattern: Pattern, extent_i: int, pattern_idx_map: dict[Pattern, int],
+            subextents_order: list[bitarray],
+            ptrns_per_exts: list[list[Pattern]]
+    ):
+        greater_candidates = bazeros(len(pattern_idx_map))
+
+        patterns_same_extent = ptrns_per_exts[extent_i]
+        n_greater_patterns_same_extent = len(patterns_same_extent) - patterns_same_extent.index(pattern) - 1
+        greater_candidates[pattern_idx+1: pattern_idx+n_greater_patterns_same_extent+1] = True
+
+        for smaller_extent_idx in subextents_order[extent_i].search(True):
+            patterns_smaller_extent = ptrns_per_exts[smaller_extent_idx]
+            first_smaller_pattern_idx = pattern_idx_map[patterns_smaller_extent[0]]
+            n_patterns_smaller_extent = len(patterns_smaller_extent)
+            greater_candidates[first_smaller_pattern_idx:first_smaller_pattern_idx+n_patterns_smaller_extent] = True
+        return greater_candidates
+
+    def select_greater_patterns(
+            pattern: Pattern, candidates_ba: bitarray,
+            patterns_list: list[tuple[Pattern, int]], superpatterns_order: list[bitarray]
+    ):
+        greater_patterns = candidates_ba & ~candidates_ba
+
+        candidates_ba = bitarray(candidates_ba)
+        while candidates_ba.any():
+            other_idx = candidates_ba.find(True)
+            candidates_ba[other_idx] = False
+
+            other = patterns_list[other_idx][0]
+            if pattern < other:
+                greater_patterns[other_idx] = True
+                greater_patterns |= superpatterns_order[other_idx]
+                candidates_ba &= ~superpatterns_order[other_idx]
+        return greater_patterns
+
+    extents_list, extents_idx_map, extents_order = sort_extents_subsumption({ext for _, ext in patterns_extents})
+    patterns_extents: list[tuple[Pattern, int]] = [(pattern, extents_idx_map[extent]) for pattern, extent in patterns_extents]
+
+    patterns_per_extents: list[list[Pattern]] = group_patterns_by_extents(patterns_extents)
+    patterns_list: list[tuple[Pattern, int]] = [
+        (pattern, extent_i)
+        for extent_i, patterns_same_extent, in enumerate(patterns_per_extents)
+        for pattern in patterns_same_extent
+    ]
+    patterns_idx_map: dict[Pattern, int] = {pattern: i for i, (pattern, _) in enumerate(patterns_list)}
+
+    patterns_order: list[bitarray] = [None for _ in patterns_extents]
+    patterns_iterator = reversed(range(len(patterns_list)))
+    if use_tqdm:
+        patterns_iterator = tqdm(patterns_iterator, total=len(patterns_list),
+                                 disable=not use_tqdm, desc='Compute order of patterns')
+    for pattern_idx in patterns_iterator:
+        pattern, extent_idx = patterns_list[pattern_idx]
+
+        # select patterns that might be greater than the current one
+        patterns_to_test = select_greater_patterns_candidates(pattern, extent_idx,
+                                                              patterns_idx_map, extents_order, patterns_per_extents)
+
+        # find patterns that are greater than the current one
+        super_patterns = select_greater_patterns(pattern, patterns_to_test, patterns_list, patterns_order)
+        patterns_order[pattern_idx] = super_patterns
+
+    patterns_order = rearrange_indices(patterns_order, [p for p, _ in patterns_list], [p for p, _ in patterns_extents])
+    return patterns_order
