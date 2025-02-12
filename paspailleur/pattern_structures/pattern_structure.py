@@ -108,41 +108,9 @@ class PatternStructure:
         atoms_order = bfuncs.rearrange_indices(atoms_order, atoms_extents, [atoms_extents[i] for i in topologic_indices])
         atoms_extents = [atoms_extents[i] for i in topologic_indices]
 
-        # patterns pointing to the bitarray of indices of next greater patterns
-        patterns_order: list[bitarray] = [None for _ in range(n_patterns)]
-        patterns_iterator = tqdm(reversed(atomic_patterns), disable=not use_tqdm, desc='Compute order of atoms',
-                                 total=len(atomic_patterns))
-        for pattern in patterns_iterator:
-            idx = pattern_to_idx_map[pattern]
-            extent = atomic_extents[idx]
-            extent_idx = extents_to_idx_map[extent]
-
-            # select patterns that might be greater than the current one
-            patterns_to_test = bazeros(n_patterns)
-            n_greater_patterns_same_extent = len(patterns_per_extent[extent]) - patterns_per_extent[extent].index(pattern)-1
-            patterns_to_test[idx+1:idx+n_greater_patterns_same_extent+1] = True
-            for smaller_extent_idx in extents_order[extent_idx].search(True):
-                other_extent = sorted_extents[smaller_extent_idx]
-                first_other_pattern_idx = pattern_to_idx_map[patterns_per_extent[other_extent][0]]
-                n_patterns_other_extent = len(patterns_per_extent[other_extent])
-                patterns_to_test[first_other_pattern_idx:first_other_pattern_idx+n_patterns_other_extent] = True
-
-            # find patterns that are greater than the current one
-            super_patterns = bazeros(n_patterns)
-            while patterns_to_test.any():
-                other_idx = patterns_to_test.find(True)
-                patterns_to_test[other_idx] = False
-
-                other = atomic_patterns[other_idx]
-                if pattern < other:
-                    super_patterns[other_idx] = True
-                    super_patterns |= patterns_order[other_idx]
-                    patterns_to_test &= ~patterns_order[other_idx]
-            patterns_order[idx] = super_patterns
-
-        atomic_patterns = OrderedDict([(ptrn, ext) for ext in sorted_extents for ptrn in patterns_per_extent[ext]])
+        atomic_patterns = OrderedDict(atoms_extents)
         self._atomic_patterns = atomic_patterns
-        self._atomic_patterns_order = [fbarray(ba) for ba in patterns_order]
+        self._atomic_patterns_order = [fbarray(ba) for ba in atoms_order]
 
     #######################################
     # Properties that are easy to compute #
