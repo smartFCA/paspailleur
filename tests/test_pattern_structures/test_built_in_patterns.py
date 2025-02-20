@@ -103,6 +103,15 @@ def test_IntervalPattern():
     assert bip.IntervalPattern('125') == bip.IntervalPattern('[125, 125]')
     assert bip.IntervalPattern(125) == bip.IntervalPattern('[125, 125]')
 
+    class BoundedIntervalPattern(bip.IntervalPattern):
+        BoundsUniverse = (0, 10, 50)
+
+    assert BoundedIntervalPattern(15).value == ((10, True), (50, True))
+    assert BoundedIntervalPattern('[0, 10]').value == ((0, True), (10, True))
+    assert BoundedIntervalPattern('[0, 10]') == BoundedIntervalPattern('[0, 10]')
+    assert BoundedIntervalPattern('[0, 30]') == BoundedIntervalPattern('[0, 50]')
+    assert BoundedIntervalPattern('ø').value == ((0, False), (0, False))
+
 
 def test_ClosedIntervalPattern():
     a = bip.ClosedIntervalPattern((1, 10))
