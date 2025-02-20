@@ -213,7 +213,7 @@ class IntervalPattern(Pattern):
         if is_contradictive:
             lb, rb = 0, 0
 
-        if cls.BoundsUniverse is not None:
+        if cls.BoundsUniverse is not None and not is_contradictive:
             lb = max(b for b in cls.BoundsUniverse if b <= lb) if lb > -math.inf else lb
             rb = min(b for b in cls.BoundsUniverse if rb <= b) if rb < math.inf else rb
 
