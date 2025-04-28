@@ -153,7 +153,7 @@ class Pattern:
     @property
     def substractable(self) -> bool:
         """
-        Check if the pattern can be subtracted.
+        Check if subtract (difference) operation is defined for this Pattern class.
 
         Returns
         -------
