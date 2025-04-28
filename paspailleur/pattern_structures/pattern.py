@@ -3,7 +3,8 @@ from typing import TypeVar, Self, Optional
 
 class Pattern:
     """
-    A class representing a pattern with various operations for pattern manipulation.
+    A class representing a pattern with various operations for pattern manipulation. 
+    It is the entry point of every other pattern class/subclass in Paspailleur project
 
     This class allows for the creation and manipulation of patterns, including operations
     such as intersection, union, and difference. It also provides properties to check
@@ -13,14 +14,38 @@ class Pattern:
     ----------
     PatternValueType: 
         A type variable representing the type of the pattern's value.
+    
+    Private Attributes
+    ------------------
     _value: 
         The processed value of the pattern.
+    
+    properties
+    ----------
+    value
+        Return the value of the pattern.
+    meetable
+        Check if meet (intersection) operation is defined for this Pattern class.
+    joinable
+        Check if join (union) operation is defined for this Pattern class.
+    atomisable
+        Check if the pattern can be atomized.
+    substractable
+        Check if subtract (difference) operation is defined for this Pattern class.
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern, the sole one per Pattern class.
+    max_pattern
+        Return the maximal possible pattern, the sole one per Pattern class.
+    maximal_atoms
+        Return the maximal atomic patterns.
     """
     PatternValueType = TypeVar('PatternValueType')
 
     def __init__(self, value: PatternValueType):
         """
-        Initializes a Pattern instance with a given value.
+        Initialize a Pattern instance with a given value.
 
         Parameters
         ----------
@@ -44,7 +69,7 @@ class Pattern:
     @property
     def value(self) -> PatternValueType:
         """
-        Returns the value of the pattern.
+        Return the value of the pattern.
 
         Returns
         -------
@@ -62,8 +87,8 @@ class Pattern:
     @property
     def meetable(self) -> bool:
         """
-        Checks if the pattern can be met.
-
+        Check if meet (intersection) operation is defined for this Pattern class.
+        
         Returns
         -------
         bool
@@ -84,7 +109,7 @@ class Pattern:
     @property
     def joinable(self) -> bool:
         """
-        Checks if the pattern can be joined.
+        Check if join (union) operation is defined for this Pattern class.
 
         Returns
         -------
@@ -106,7 +131,7 @@ class Pattern:
     @property
     def atomisable(self) -> bool:
         """
-        Checks if the pattern can be atomized.
+        Check if the pattern can be atomized.
 
         Returns
         -------
@@ -128,7 +153,7 @@ class Pattern:
     @property
     def substractable(self) -> bool:
         """
-        Checks if the pattern can be subtracted.
+        Check if the pattern can be subtracted.
 
         Returns
         -------
@@ -149,7 +174,7 @@ class Pattern:
 
     def __and__(self, other: Self) -> Self:
         """
-        Returns the most precise pattern that is less precise than both self and other.
+        Return the most precise pattern that is less precise than both self and other.
 
         Parameters
         ----------
@@ -181,7 +206,7 @@ class Pattern:
 
     def __or__(self, other: Self) -> Self:
         """
-        Returns the least precise pattern that is more precise than both self and other.
+        Return the least precise pattern that is more precise than both self and other.
 
         Parameters
         ----------
@@ -213,7 +238,7 @@ class Pattern:
 
     def __sub__(self, other: Self) -> Self:
         """
-        Returns the difference between self and another pattern.
+        Return the difference between self and another pattern.
 
         Parameters
         ----------
@@ -226,6 +251,10 @@ class Pattern:
             The least precise pattern such that (self - other) | other == self.
             If it's not possible, returns self.
         
+        Notes
+        -----
+        this function should only be used to simplify the way the patterns are printed. and not with trust-requiring algorithms.
+
         Examples
         --------
         >>> p1 = Pattern("A")
@@ -240,7 +269,7 @@ class Pattern:
 
     def __repr__(self) -> str:
         """
-        Returns a string representation of the pattern
+        Return a string representation of the pattern
         
         Examples
         --------
@@ -252,7 +281,7 @@ class Pattern:
 
     def __len__(self) -> int:
         """
-        Returns the minimal number of atomic patterns required to generate the pattern.
+        Return the minimal number of atomic patterns required to generate the pattern.
 
         Returns
         -------
@@ -275,7 +304,7 @@ class Pattern:
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
         """
-        Parses a string description into a pattern value.
+        Parse a string description into a pattern value.
 
         Parameters
         ----------
@@ -297,7 +326,7 @@ class Pattern:
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
         """
-        Preprocesses the value before storing it in the pattern.
+        Preprocess the value before storing it in the pattern.
 
         Parameters
         ----------
@@ -318,7 +347,7 @@ class Pattern:
 
     def __eq__(self, other: Self) -> bool:
         """
-        Checks if self is equal to another pattern.
+        Check if self is equal to another pattern.
 
         Parameters
         ----------
@@ -346,7 +375,7 @@ class Pattern:
 
     def __le__(self, other: Self) -> bool:
         """
-        Checks if self is less precise or equal to another pattern.
+        Check if self is less precise or equal to another pattern.
 
         Parameters
         ----------
@@ -372,7 +401,7 @@ class Pattern:
 
     def __lt__(self, other: Self) -> bool:
         """
-        Checks if self is less precise than another pattern.
+        Check if self is less precise than another pattern.
 
         Parameters
         ----------
@@ -400,7 +429,7 @@ class Pattern:
 
     def intersection(self, other: Self) -> Self:
         """
-        Returns the intersection of self and another pattern.
+        Return the intersection of self and another pattern.
 
         Parameters
         ----------
@@ -424,7 +453,7 @@ class Pattern:
 
     def union(self, other: Self) -> Self:
         """
-        Returns the union of self and another pattern.
+        Return the union of self and another pattern.
 
         Parameters
         ----------
@@ -448,7 +477,7 @@ class Pattern:
 
     def meet(self, other: Self) -> Self:
         """
-        Returns the meeting of self and another pattern.
+        Returns the meeting (intersection) of self and another pattern.
 
         Parameters
         ----------
@@ -472,7 +501,7 @@ class Pattern:
 
     def join(self, other: Self) -> Self:
         """
-        Returns the joining of self and another pattern.
+        Return the joining (union) of self and another pattern.
 
         Parameters
         ----------
@@ -496,7 +525,7 @@ class Pattern:
 
     def difference(self, other: Self) -> Self:
         """
-        Returns the difference between self and another pattern.
+        Return the difference between self and another pattern.
 
         Parameters
         ----------
@@ -508,6 +537,10 @@ class Pattern:
         Self
             The least precise pattern such that (self - other) | other == self.
         
+        Notes
+        -----
+        this function should only be used to simplify the way the patterns are printed. and not with trust-requiring algorithms.
+
         Examples
         --------
         >>> p1 = Pattern("A | B")
@@ -518,10 +551,9 @@ class Pattern:
         """
         return self - other
 
-    def issubpattern(self, other: Self) -> Self:
-        # shouldn't the -> to boolean instead of self?
+    def issubpattern(self, other: Self) -> bool:
         """
-        Checks if self is less precise or equal to another pattern.
+        Check if self is less precise or equal to another pattern.
 
         Parameters
         ----------
@@ -542,10 +574,9 @@ class Pattern:
         """
         return self <= other
 
-    def issuperpattern(self, other: Self) -> Self:
-        # same question as the issubpattern function just above
+    def issuperpattern(self, other: Self) -> bool:
         """
-        Checks if self is more precise or equal to another pattern.
+        Check if self is more precise or equal to another pattern.
 
         Parameters
         ----------
@@ -568,7 +599,7 @@ class Pattern:
 
     def __hash__(self):
         """
-        Returns the hash of the pattern based on its value.
+        Return the hash of the pattern based on its value.
 
         Returns
         -------
@@ -586,7 +617,7 @@ class Pattern:
     @property
     def atomic_patterns(self) -> set[Self]:
         """
-        Returns the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
 
         Raises
         ------
@@ -604,7 +635,7 @@ class Pattern:
     @property
     def min_pattern(self) -> Optional[Self]:
         """
-        Returns the minimal possible pattern, the sole one per Pattern class.
+        Return the minimal possible pattern, the sole one per Pattern class.
 
         Returns
         -------
@@ -622,7 +653,7 @@ class Pattern:
     @property
     def max_pattern(self) -> Optional[Self]:
         """
-        Returns the maximal possible pattern, the sole one per Pattern class.
+        Return the maximal possible pattern, the sole one per Pattern class.
 
         Returns
         -------
@@ -640,7 +671,7 @@ class Pattern:
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
         """
-        Returns the maximal atomic patterns.
+        Return the maximal atomic patterns.
 
         Returns
         -------
