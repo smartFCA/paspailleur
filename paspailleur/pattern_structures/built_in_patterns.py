@@ -1538,7 +1538,7 @@ class CartesianPattern(Pattern):
 
     @property
     def atomic_patterns(self) -> set[Self]:
-         """
+        """
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
 
         Returns
