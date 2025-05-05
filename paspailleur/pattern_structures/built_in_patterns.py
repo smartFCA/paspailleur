@@ -717,7 +717,7 @@ class IntervalPattern(Pattern):
         >>> p1 = IntervalPattern( "[1, 5)" )
         >>> p2 = IntervalPattern( "[3, 6)" )
         >>> p1 & p2
-        (1.0, 6.0) 
+        [1.0, 6.0) 
         """
         if self == self.min_pattern or other == self.min_pattern:
             return self.min_pattern
@@ -765,7 +765,7 @@ class IntervalPattern(Pattern):
         >>> p1 = IntervalPattern( "[1, 5)" )
         >>> p2 = IntervalPattern( "[3, 6]" )
         >>> p1 | p2
-        (1.0, 6.0)
+        [1.0, 5.0)
         """
         if self == self.max_pattern or other == self.max_pattern:
             return self.max_pattern
@@ -799,6 +799,7 @@ class IntervalPattern(Pattern):
 
     def __sub__(self, other: Self) -> Self:
         """
+
         Return the IntervalPattern that contains the items that can be found in self but not in other.
 
         Parameters
@@ -1654,6 +1655,7 @@ class CartesianPattern(Pattern):
     def atomic_patterns(self) -> set[Self]:
         """
         Return the set of atomic patterns of a CartesianPattern which is the union of sets of atomic patterns per its every dimension
+
         Returns
         -------
         set[Self]
