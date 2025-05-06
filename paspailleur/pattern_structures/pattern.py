@@ -73,7 +73,7 @@ class Pattern:
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The value of the pattern.
         
         Examples
@@ -91,7 +91,7 @@ class Pattern:
         
         Returns
         -------
-        bool
+        flag: bool
             True if the pattern can be met, False otherwise.
         
         Examples
@@ -113,7 +113,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        flag: bool
             True if the pattern can be joined, False otherwise.
         
         Examples
@@ -135,7 +135,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        flag: bool
             True if the pattern can be atomized, False otherwise.
         
         Examples
@@ -157,7 +157,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        flag: bool
             True if the pattern can be subtracted, False otherwise.
         
         Examples
@@ -178,7 +178,7 @@ class Pattern:
 
         Parameters
         ----------
-        other : Self
+        other: Self
             The other pattern to intersect with.
 
         Returns
@@ -210,7 +210,7 @@ class Pattern:
 
         Parameters
         ----------
-        other : Self
+        other: Self
             The other pattern to union with.
 
         Returns
@@ -271,6 +271,11 @@ class Pattern:
         """
         Return a string representation of the pattern
         
+        Returns
+        -------
+        representation: str
+            A representation of the pattern.
+
         Examples
         --------
         >>> p = Pattern("text")
@@ -285,7 +290,7 @@ class Pattern:
 
         Returns
         -------
-        int
+        count: int
             The number of atomic patterns.
         
         Examples
@@ -313,7 +318,7 @@ class Pattern:
 
         Returns
         -------
-        PatternValueType
+        parsed: PatternValueType
             The parsed pattern value.
 
         Examples
@@ -335,7 +340,7 @@ class Pattern:
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The preprocessed value.
         
         Examples
@@ -356,7 +361,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        comparison: bool
             True if self is equal to other, False otherwise.
         
         Examples
@@ -365,7 +370,6 @@ class Pattern:
         >>> p2 = Pattern("A")
         >>> p1 == p2
         True
-
         >>> p1= Pattern("A")
         >>> p2= Pattern("B")
         p1 == p2
@@ -384,7 +388,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        comparison: bool
             True if self is less precise or equal to other, False otherwise.
         
         Examples
@@ -410,7 +414,7 @@ class Pattern:
 
         Returns
         -------
-        bool
+        comparison: bool
             True if self is less precise than other, False otherwise.
         
         Examples
@@ -419,7 +423,6 @@ class Pattern:
         >>> p2 = Pattern("A | B")
         >>> p1 < p2
         True
-
         >>> p1 = Pattern("A")
         >>> p2 = Pattern("A")
         >>> p1 < p2
@@ -562,7 +565,7 @@ class Pattern:
 
         Returns
         -------
-        Self
+        sub: Self
             True if self is less precise or equal to other.
         
         Examples
@@ -585,7 +588,7 @@ class Pattern:
 
         Returns
         -------
-        Self
+        super: Self
             True if self is more precise or equal to other.
         
         Examples
@@ -603,7 +606,7 @@ class Pattern:
 
         Returns
         -------
-        int
+        hash_code: int
             The hash value of the pattern.
         
         Examples
@@ -618,6 +621,11 @@ class Pattern:
     def atomic_patterns(self) -> set[Self]:
         """
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic patterns.
 
         Raises
         ------
@@ -639,7 +647,7 @@ class Pattern:
 
         Returns
         -------
-        Optional[Self]
+        min: Optional[Self]
             The minimal pattern or None if undefined.
         
         Examples
@@ -657,7 +665,7 @@ class Pattern:
 
         Returns
         -------
-        Optional[Self]
+        max: Optional[Self]
             The maximal pattern or None if undefined.
         
         Examples
@@ -675,7 +683,7 @@ class Pattern:
 
         Returns
         -------
-        Optional[set[Self]]
+        max_atoms: Optional[set[Self]]
             The set of maximal atomic patterns or None if undefined.
         
         Examples
