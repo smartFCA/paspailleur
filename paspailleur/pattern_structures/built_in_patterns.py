@@ -17,11 +17,11 @@ class ItemSetPattern(Pattern):
 
     References
     ----------
-    [1]: Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules in large databases.
+    Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules in large databases.
 
     Attributes
     ----------
-    PatternValueType :
+    PatternValueType:
         The type of the pattern's value, which is a frozenset.
 
     Properties
@@ -59,7 +59,7 @@ class ItemSetPattern(Pattern):
 
         Returns
         -------
-        str
+        representation: str
             The string representation of the item set pattern.
 
         Examples
@@ -93,7 +93,7 @@ class ItemSetPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another item set pattern to subtract from self.
 
         Returns
@@ -119,12 +119,12 @@ class ItemSetPattern(Pattern):
 
         Parameters
         ----------
-        value : str
+        value: str
             The string description of the item set pattern.
 
         Returns
         -------
-        PatternValueType
+        parsed: PatternValueType
             The parsed item set pattern value.
 
         Raises
@@ -169,12 +169,12 @@ class ItemSetPattern(Pattern):
 
         Parameters
         ----------
-        value : Collection
+        value: Collection
             The value to preprocess.
 
         Returns
         -------
-        PatternValueType
+        value: frozenset
             The preprocessed value as a frozenset.
 
         Examples
@@ -191,7 +191,7 @@ class ItemSetPattern(Pattern):
 
         Returns
         -------
-        set[Self]
+        atoms: set[Self]
             A set of atomic patterns, each containing a single item from the item set pattern.
 
         Examples
@@ -231,9 +231,9 @@ class CategorySetPattern(ItemSetPattern):
     
     Attributes
     ----------
-    PatternValueType :
+    PatternValueType:
         The type of the pattern's value, which is a frozenset.
-    Universe : Optional[frozenset]
+    Universe: Optional[frozenset]
         The set of all possible categories.
     
     Properties
@@ -255,7 +255,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another category set pattern to intersect with.
 
         Returns
@@ -278,7 +278,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another category set pattern to intersect with.
 
         Returns
@@ -301,7 +301,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Returns
         -------
-        str
+        representation: str
             The string representation of the category set pattern.
 
         Examples
@@ -322,7 +322,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another category set pattern to subtract from self.
 
         Returns
@@ -349,7 +349,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Returns
         -------
-        set[Self]
+        atoms: set[Self]
             A set of atomic patterns derived from the universe of categories.
 
         Raises
@@ -378,7 +378,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Returns
         -------
-        Optional[Self]
+        min: Optional[Self]
             The minimal category set pattern or None if undefined.
 
         Examples
@@ -399,7 +399,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Returns
         -------
-        Self
+        max: Self
             The maximal category set pattern, which is an empty frozenset.
 
         Examples
@@ -416,7 +416,7 @@ class CategorySetPattern(ItemSetPattern):
 
         Returns
         -------
-        int
+        length: int
             The number of categories not included in the category set pattern.
             The length of a pattern is the categories the pattern.value does _not_ include
 
@@ -446,9 +446,9 @@ class IntervalPattern(Pattern):
 
     Attributes
     ----------
-    PatternValueType :
+    PatternValueType:
         The type of the pattern's value, which is a tuple of bounds.
-    BoundsUniverse : list[float]
+    BoundsUniverse: list[float]
         A list representing the universe of bounds for the interval.
     
     Properties
@@ -504,7 +504,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        float
+        bound: float
             The lower bound of the interval.
 
         Examples
@@ -521,7 +521,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        bool
+        closed: bool
             True if the lower bound is closed, False otherwise.
 
         Examples
@@ -538,7 +538,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        float
+        bound: float
             The upper bound of the interval.
 
         Examples
@@ -555,7 +555,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        bool
+        closed: bool
             True if the upper bound is closed, False otherwise.
 
         Examples
@@ -571,7 +571,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        str
+        representation: str
             The string representation of the interval pattern.
 
         Examples
@@ -600,7 +600,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        int
+        count: int
             The number of non-infinite bounds in the interval.
 
         Examples
@@ -617,12 +617,12 @@ class IntervalPattern(Pattern):
 
         Parameters
         ----------
-        value : str
+        value: str
             The string description of the interval pattern.
 
         Returns
         -------
-        PatternValueType
+        parsed: PatternValueType
             The parsed interval pattern value.
 
         Examples
@@ -661,12 +661,12 @@ class IntervalPattern(Pattern):
 
         Parameters
         ----------
-        value :
+        value:
             The value to preprocess.
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The preprocessed value as a tuple of bounds.
 
         Examples
@@ -699,7 +699,7 @@ class IntervalPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another interval pattern to union with.
 
         Returns
@@ -752,7 +752,7 @@ class IntervalPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another interval pattern to union with.
 
         Returns
@@ -803,7 +803,7 @@ class IntervalPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another interval pattern to subtract from self.
 
         Returns
@@ -873,7 +873,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        set[Self]
+        atoms: set[Self]
             A set of atomic patterns derived from the interval.
 
         Examples
@@ -903,7 +903,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        Self
+        min: Self
             The minimal interval pattern, which is defined as (-inf, inf).
             `None` if undefined
 
@@ -921,7 +921,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        Self
+        max: Self
             The maximal interval pattern, which is represented as 'ø'.
 
         Examples
@@ -938,7 +938,7 @@ class IntervalPattern(Pattern):
 
         Returns
         -------
-        Optional[set[Self]]
+        max_atoms: Optional[set[Self]]
             A set of maximal atomic patterns or None if undefined.
 
         Examples
@@ -980,7 +980,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Returns
         -------
-        float
+        bound: float
             The lower bound of the closed interval.
 
         Examples
@@ -997,7 +997,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Returns
         -------
-        float
+        bound: float
             The upper bound of the closed interval.
 
         Examples
@@ -1014,7 +1014,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Returns
         -------
-        bool
+        closed: bool
             True, indicating that the lower bound is always closed.
 
         Examples
@@ -1031,7 +1031,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Returns
         -------
-        bool
+        closed: bool
             True, indicating that the upper bound is always closed.
 
         Examples
@@ -1048,12 +1048,12 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Parameters
         ----------
-        value : str
+        value: str
             The string description of the closed interval pattern.
 
         Returns
         -------
-        PatternValueType
+        parsed: PatternValueType
             The parsed closed interval pattern value.
 
         Raises
@@ -1081,12 +1081,12 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Parameters
         ----------
-        value :
+        value:
             The value to preprocess.
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The preprocessed value as a tuple of two floats.
 
         Raises
@@ -1117,9 +1117,9 @@ class NgramSetPattern(Pattern):
 
     Attributes
     ----------
-    PatternValueType :
+    PatternValueType:
         The type of the pattern's value, which is a frozenset of tuples.
-    StopWords : set[str]
+    StopWords: set[str]
         A set of exclusively stop words to be excluded from the n-grams.
         But if a set has both stop words and non stop words it is kept in the analysis
 
@@ -1150,7 +1150,7 @@ class NgramSetPattern(Pattern):
 
         Returns
         -------
-        str
+        representation: str
             The string representation of the n-gram set pattern.
 
         Examples
@@ -1171,12 +1171,12 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        value : str
+        value: str
             The string description of the n-gram set pattern.
 
         Returns
         -------
-        PatternValueType
+        parsed: PatternValueType
             The parsed n-gram set pattern value.
 
         Raises
@@ -1210,12 +1210,12 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        value :
+        value:
             The value to preprocess.
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The preprocessed value as a frozenset of tuples.
 
         Examples
@@ -1233,7 +1233,7 @@ class NgramSetPattern(Pattern):
 
         Returns
         -------
-        int
+        count: int
             The number of n-grams.
 
         Examples
@@ -1257,7 +1257,7 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another n-gram set pattern to intersect with.
 
         Returns
@@ -1317,7 +1317,7 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another n-gram set pattern to union with.
 
         Returns
@@ -1341,7 +1341,7 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another n-gram set pattern to subtract from self.
 
         Returns
@@ -1368,14 +1368,14 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        ngram_a : tuple[str]
+        ngram_a: tuple[str]
             The n-gram to check if it is a sub-ngram.
-        ngram_b : tuple[str]
+        ngram_b: tuple[str]
             The n-gram to check against.
 
         Returns
         -------
-        bool
+        is_sub: bool
             True if ngram_a is a sub-ngram of ngram_b, False otherwise.
 
         Examples
@@ -1394,12 +1394,12 @@ class NgramSetPattern(Pattern):
 
         Parameters
         ----------
-        ngrams : PatternValueType
+        ngrams: PatternValueType
             The set of n-grams to filter.
 
         Returns
         -------
-        PatternValueType
+        maximal_ngrams: PatternValueType
             The filtered set of maximal n-grams, excluding the rest.
 
         Examples
@@ -1423,7 +1423,7 @@ class NgramSetPattern(Pattern):
 
         Returns
         -------
-        set[Self]
+        atoms: set[Self]
             A set of atomic patterns derived from the n-grams.
 
         Examples
@@ -1450,7 +1450,7 @@ class NgramSetPattern(Pattern):
 
         Returns
         -------
-        Optional[Self]
+        min: Optional[Self]
             The minimal n-gram set pattern, which is an empty frozenset.
             `None` if undefined
         
@@ -1468,9 +1468,9 @@ class CartesianPattern(Pattern):
 
     Attributes
     ----------
-    PatternValueType :
+    PatternValueType:
         The type of the pattern's value, which is a frozendict mapping dimension names to Pattern instances.
-    DimensionTypes : dict[str, Type[Pattern]]
+    DimensionTypes: dict[str, Type[Pattern]]
         Optional mapping from dimension names to specific Pattern types for parsing.
     
     Properties
@@ -1493,7 +1493,7 @@ class CartesianPattern(Pattern):
 
         Returns
         -------
-        str
+        representation: str
             A string representing the dictionary form of the Cartesian pattern.
 
         Examples
@@ -1510,12 +1510,12 @@ class CartesianPattern(Pattern):
 
         Parameters
         ----------
-        value : dict
+        value: dict
             A dictionary mapping dimension names to pattern descriptions or Pattern instances.
 
         Returns
         -------
-        PatternValueType
+        value: PatternValueType
             The preprocessed frozendict of dimension names to Pattern instances.
 
         Raises
@@ -1565,7 +1565,7 @@ class CartesianPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another Cartesian pattern to intersect with.
 
         Returns
@@ -1593,7 +1593,7 @@ class CartesianPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another Cartesian pattern to union with.
 
         Returns
@@ -1625,7 +1625,7 @@ class CartesianPattern(Pattern):
 
         Parameters
         ----------
-        other : Self
+        other: Self
             Another Cartesian pattern to subtract from self.
 
         Returns
@@ -1656,7 +1656,7 @@ class CartesianPattern(Pattern):
         Return the set of atomic patterns of a CartesianPattern which is the union of sets of atomic patterns per its every dimension
         Returns
         -------
-        set[Self]
+        atoms: set[Self]
             A set of atomic Cartesian patterns.
 
         Examples
@@ -1686,7 +1686,7 @@ class CartesianPattern(Pattern):
 
         Returns
         -------
-        int
+        count: int
             The total number of atomic subpatterns across all dimensions.
 
         Examples
@@ -1709,7 +1709,7 @@ class CartesianPattern(Pattern):
 
         Returns
         -------
-        Optional[Self]
+        min: Optional[Self]
             The minimal Cartesian pattern or None if any subpattern has no minimum.
 
         Examples
@@ -1735,7 +1735,7 @@ class CartesianPattern(Pattern):
 
         Returns
         -------
-        Optional[Self]
+        max: Optional[Self]
             The maximal Cartesian pattern or None if any subpattern has no maximum.
 
         Examples
@@ -1761,7 +1761,7 @@ class CartesianPattern(Pattern):
 
         Returns
         -------
-        Optional[set[Self]]
+        max_atoms: Optional[set[Self]]
             A set of maximal atomic Cartesian patterns.
 
         Examples
@@ -1794,12 +1794,12 @@ class CartesianPattern(Pattern):
 
         Parameters
         ----------
-        item : str
+        item: str
             The dimension name.
 
         Returns
         -------
-        Pattern
+        pattern: Pattern
             The Pattern instance corresponding to the dimension.
 
         Examples
