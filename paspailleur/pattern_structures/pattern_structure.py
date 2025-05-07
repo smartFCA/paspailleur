@@ -14,7 +14,6 @@ from .pattern import Pattern
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 
 
-
 class PatternStructure:
     """
     A class to represent a structure for managing patterns in a formal context.
