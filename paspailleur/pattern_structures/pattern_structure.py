@@ -16,8 +16,14 @@ from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_cl
 
 class PatternStructure:
     """
-    A class to represent a structure for managing patterns in a formal context.
+    A class to process complex datasets where every row (called object) is described by one pattern.
 
+    All patterns should be of the same class defined by PatternType attribute.
+
+    References
+    ----------
+    Ganter, B., & Kuznetsov, S. O. (2001, July). Pattern structures and their projections. In International conference on conceptual structures (pp. 129-142). Berlin, Heidelberg: Springer Berlin Heidelberg.
+    
     Attributes
     ----------
     PatternType: TypeVar
@@ -32,7 +38,11 @@ class PatternStructure:
     _atomic_patterns: Optional[OrderedDict[PatternType, fbarray]]
         Smallest nontrivial patterns.
     _atomic_patterns_order: Optional[list[fbarray]]
-        Order of atomic patterns.
+        Partial order on atomic patterns meaning that some atomic patterns can be incomparable.
+        _atomic_patterns_order[i][j] == True would mean that i-th atomic pattern is less precise than j-th atomic pattern.
+        _atomic_patterns_order[i][j] == False can mean both that j-th atomic pattern is less precise than i-th atomic pattern and that i-th and j-th atomic patterns can not be compared.
+
+
 
     Properties
     ----------
@@ -203,7 +213,7 @@ class PatternStructure:
 
     def init_atomic_patterns(self, min_support: Union[int, float] = 0, use_tqdm: bool = False):
         """
-        Compute the set of all patterns that cannot be obtained by intersection of other patterns
+        Compute the set of all patterns that cannot be obtained by join of other patterns
 
         Parameters
         ----------
@@ -381,7 +391,7 @@ class PatternStructure:
     @property
     def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
         """
-        Return the partial order of atomic patterns by extent inclusion.
+        Return the partial order of atomic patterns, i.e. for every atomic pattern show all its atomic super-patterns.
 
         Each pattern maps to the set of patterns that strictly subsume it.
 
@@ -635,7 +645,13 @@ class PatternStructure:
             Iterator[PatternType], 
             Iterator[tuple[PatternType, PatternType]]]:
         """
-        Iterate over the atomic pattern combinations (keys) that describe given patterns.
+        Iterate over the keys that describe given patterns.
+
+        Keys (also known as minimal generators) of a pattern are the least precise subpatterns that describe the very same objects as the pattern.
+
+        Reference
+        ---------
+        Buzmakov, A., Dudyrev, E., Kuznetsov, S. O., Makhalova, T., & Napoli, A. (2024). Data complexity: An FCA-based approach. International Journal of Approximate Reasoning, 165, 109084.
 
         Parameters
         ----------
@@ -673,6 +689,13 @@ class PatternStructure:
         ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
         """
         Iterate over subgroups that satisfy a quality threshold.
+
+        A subgroup is a pattern whose extent is very similar to the set of goal_objects.
+        The similarity is measured by quality_measure and is lower-bounded by qulity_threshold.
+
+        References
+        ----------
+        Atzmueller, M. (2015). Subgroup discovery. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery, 5(1), 35-49.
 
         Parameters
         ----------
@@ -734,7 +757,7 @@ class PatternStructure:
             list[tuple[set[str], PatternType]], 
             list[tuple[fbarray, PatternType]]]:
         """
-        Mine formal concepts (extent-intent pairs) from the pattern structure.
+        Mine pattern concepts (extent-intent pairs) from the pattern structure.
 
         Parameters
         ----------
@@ -945,6 +968,8 @@ class PatternStructure:
             dict[PatternType, fbarray]]:
         """
         Compute the immediate successor patterns of a given pattern.
+
+        The immediate successor patternsare the next more precise patterns.
 
         Parameters
         ----------

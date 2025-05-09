@@ -189,6 +189,8 @@ class ItemSetPattern(Pattern):
         """
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
 
+        For an ItemSetPattern an atomic pattern is a pattern containing one itme.
+
         Returns
         -------
         atoms: set[Self]
@@ -346,6 +348,8 @@ class CategorySetPattern(ItemSetPattern):
     def atomic_patterns(self) -> set[Self]:
         """
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        For a CategorySetPattern an atomic pattern is a set containing all-but-one categories.
 
         Returns
         -------
@@ -709,8 +713,8 @@ class IntervalPattern(Pattern):
 
         Notes
         -----
-        instead of having a normal intersection of intervals, we have an intersection of the restrictions meaning a union.
-        because the union is the only way to get the most presice interval pattern that is less precise than both self and other
+        Instead of having a normal intersection of intervals, we have an intersection of the restrictions meaning a union.
+        Because the union is the only way to get the most presice interval pattern that is less precise than both self and other
 
         Examples
         --------
@@ -799,7 +803,6 @@ class IntervalPattern(Pattern):
 
     def __sub__(self, other: Self) -> Self:
         """
-
         Return the IntervalPattern that contains the items that can be found in self but not in other.
 
         Parameters
@@ -850,6 +853,10 @@ class IntervalPattern(Pattern):
         >>> p2 = IntervalPattern( "[1, 5]" )
         >>> p1 - p2
         [-inf, inf]
+        
+        Warning
+        -------
+        The behavior of the function will be changing soon
         """
         if self == other:
             return self.min_pattern
@@ -871,6 +878,8 @@ class IntervalPattern(Pattern):
     def atomic_patterns(self) -> set[Self]:
         """
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        For an IntervalPattern an atomic pattern is a half-bounded interval.
 
         Returns
         -------
@@ -1421,6 +1430,8 @@ class NgramSetPattern(Pattern):
     def atomic_patterns(self) -> set[Self]:
         """
         Return the set of every individual sub-ngram for each ngram from the given pattern.
+
+        For an NgramSetPattern an atomic pattern is a set containing just one ngram.
 
         Returns
         -------
