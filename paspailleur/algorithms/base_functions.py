@@ -26,6 +26,25 @@ def extension(pattern: Pattern, objects_per_pattern: dict[Pattern, bitarray]) ->
     -------
     extent: bitarray
         A bitarray representing the extent of the input pattern.
+    
+    Examples
+    --------
+    >>> from paspailleur.pattern_structures.patterns import ItemSetPattern
+    >>> objects_names = ['Stewart Island', 'Fjordland NP', 'Te Anau', 'Queenstown']
+    >>> objects_patterns = [
+        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
+        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights', 'Jet Boating'}),
+        ItemSetPattern({'Hiking', 'Sightseeing Flights', 'Jet Boating', 'Wildwater Rafting', 'Bungee Jumping'}),
+    ]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
+    >>> bfuncs.extension(p, obj_to_patterns)
+    bitarray('1111')
+    
+    Notes
+    -----
+    The "objects_per_pattern" dictionary can be created from objects' descriptions using "group_objects_by_patterns" function defined below.
     """
     n_objects = len(list(objects_per_pattern.values())[0])
     empty_extent = bazeros(n_objects)
@@ -49,6 +68,14 @@ def intention(objects: bitarray, objects_per_pattern: dict[Pattern, bitarray]) -
     -------
     intent: Optional[Pattern]
         The most specific pattern shared by all objects, if any.
+
+    Examples
+    --------
+    >>> from bitarray.util import zeros
+    >>> obj_ba = zeros(len(objects_names))
+    >>> obj_ba[0] = obj_ba[1] = 1
+    >>> bfuncs.intention(obj_ba, obj_to_patterns)
+    ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'})
     """
     super_patterns = [ptrn for ptrn, irr_ext in objects_per_pattern.items()
                       if basubset(objects, irr_ext)] #if basubset(irr_ext, objects)]
@@ -76,6 +103,11 @@ def minimal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
     -------
     minimal: Pattern
         The minimal pattern.
+
+    Examples
+    --------
+    >>> bfuncs.minimal_pattern(obj_to_patterns)
+    ItemSetPattern({'Hiking'})
     """
     some_pattern = next(pattern for pattern in objects_per_pattern)
     if some_pattern.min_pattern is not None:
@@ -97,6 +129,11 @@ def maximal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
     -------
     maximal: Pattern
         The maximal pattern.
+
+    Examples
+    --------
+    >>> bfuncs.maximal_pattern(obj_to_patterns)
+    ItemSetPattern({'Hiking', 'Sightseeing Flights', 'Jet Boating', 'Wildwater Rafting', 'Bungee Jumping'})
     """
     some_pattern = next(pattern for pattern in objects_per_pattern)
     if some_pattern.max_pattern is not None:
@@ -118,6 +155,11 @@ def group_objects_by_patterns(objects_patterns: list[Pattern]) -> dict[Pattern, 
     -------
     objects_by_patterns: dict[Pattern, bitarray]
         Dictionary mapping patterns to bitarrays indicating which objects correspond to them.
+
+    Examples
+    --------
+    >>> bfuncs.group_objects_by_patterns(objects_patterns)
+    {ItemSetPattern({...}): bitarray(...), ...}
     """
     empty_extent = bazeros(len(objects_patterns))
 
@@ -153,6 +195,12 @@ def iter_patterns_ascending(
     ------
     Generator[Union[Pattern, tuple[Pattern, Any]], bool, None]
         Each pattern or pattern-value pair, controlled by input from send().
+
+    Examples
+    --------
+    >>> pattern_order = order_patterns_via_extents(list(obj_to_patterns.items()))
+    >>> for pattern in bfuncs.iter_patterns_ascending(list(obj_to_patterns), pattern_order):
+    print(pattern)
     """
     assert all(not greater_ptrns[:i].any() for i, greater_ptrns in enumerate(greater_patterns_ordering)), \
         'The list of `patterns` from the smaller to the greater patterns. ' \
@@ -192,6 +240,14 @@ def rearrange_indices(order_before: list[bitarray], elements_before: list, eleme
     -------
     order_after: list[bitarray]
         Reordered list of bitarrays.
+
+    Examples
+    --------
+    >>> before = [bitarray('010'), bitarray('001'), bitarray('000')]
+    >>> elems_before = ['A', 'B', 'C']
+    >>> elems_after = ['C', 'A', 'B']
+    >>> bfuncs.rearrange_indices(before, elems_before, elems_after)
+    [bitarray('001'), bitarray('100'), bitarray('000')]
     """
     els_before_idx_map = {element_before: idx for idx, element_before in enumerate(elements_before)}
     after_before_mapping = [els_before_idx_map[element_after] for element_after in elements_after]
@@ -212,9 +268,9 @@ def rearrange_indices(order_before: list[bitarray], elements_before: list, eleme
 
 def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], use_tqdm: bool = False) -> list[bitarray]:
     """
-    Generate a partial order of patterns based on their extents.
+    Generate the partial order of patterns based on their extents.
 
-    This function ranks patterns according to how their extents (object sets) relate.
+    This function generates the partial order of patterns using extents for optimising the algorithm.
     It returns for each pattern a bitarray indicating which other patterns are more general.
 
     Parameters
@@ -231,8 +287,10 @@ def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], 
 
     Examples
     --------
-    >>> order_patterns_via_extents([(Pattern("A"), bitarray("110")), (Pattern("B"), bitarray("100"))])
-    [bitarray('01'), bitarray('00')]
+    >>> pattern_extents = list(obj_to_patterns.items())
+    >>> order = bfuncs.order_patterns_via_extents(pattern_extents)
+    >>> order[0]
+    bitarray('010')
     """
     def group_patterns_by_extents(patterns_extent_idx: list[tuple[Pattern, int]]) -> list[list[Pattern]]:
         """
