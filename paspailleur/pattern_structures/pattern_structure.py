@@ -18,23 +18,33 @@ from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_cl
 """
 class PatternStructure:
     """
-    A class to represent a structure for managing patterns in a formal context.
+    A class to process complex datasets where every row (called object) is described by one pattern.
 
+    All patterns should be of the same class defined by PatternType attribute.
+
+    References
+    ----------
+    Ganter, B., & Kuznetsov, S. O. (2001, July). Pattern structures and their projections. In International conference on conceptual structures (pp. 129-142). Berlin, Heidelberg: Springer Berlin Heidelberg.
+    
     Attributes
     ----------
-    PatternType : TypeVar
+    PatternType: TypeVar
         A type variable bound to the Pattern class.
     
     Private Attributes
     ------------------
-    _object_irreducibles : Optional[dict[PatternType, fbarray]]
+    _object_irreducibles: Optional[dict[PatternType, fbarray]]
         Patterns introduced by objects.
-    _object_names : Optional[list[str]]
+    _object_names: Optional[list[str]]
         Names of the objects.
-    _atomic_patterns : Optional[OrderedDict[PatternType, fbarray]]
+    _atomic_patterns: Optional[OrderedDict[PatternType, fbarray]]
         Smallest nontrivial patterns.
-    _atomic_patterns_order : Optional[list[fbarray]]
-        Order of atomic patterns.
+    _atomic_patterns_order: Optional[list[fbarray]]
+        Partial order on atomic patterns meaning that some atomic patterns can be incomparable.
+        _atomic_patterns_order[i][j] == True would mean that i-th atomic pattern is less precise than j-th atomic pattern.
+        _atomic_patterns_order[i][j] == False can mean both that j-th atomic pattern is less precise than i-th atomic pattern and that i-th and j-th atomic patterns can not be compared.
+
+
 
     Properties
     ----------
@@ -61,7 +71,7 @@ class PatternStructure:
 
         Parameters
         ----------
-        pattern_type : Type[Pattern], optional
+        pattern_type: Type[Pattern], optional
             The type of Pattern to use (default is Pattern).
         """
         self.PatternType = pattern_type
@@ -82,14 +92,14 @@ class PatternStructure:
 
         Parameters
         ----------
-        pattern : PatternType
+        pattern: PatternType
             The pattern for which to compute the extent.
-        return_bitarray : bool, optional
+        return_bitarray: bool, optional
             If True, returns the extent as a bitarray (default is False).
 
         Returns
         -------
-        Union[set[str], fbarray]
+        extent: Union[set[str], fbarray]
             The extent of the pattern, either as a set of object names or a bitarray.
 
         Raises
@@ -120,12 +130,12 @@ class PatternStructure:
 
         Parameters
         ----------
-        objects : Union[Collection[str], fbarray]
+        objects: Union[Collection[str], fbarray]
             The objects for which to compute the intent.
 
         Returns
         -------
-        PatternType
+        intent: PatternType
             The intent of the given objects.
 
         Raises
@@ -165,14 +175,14 @@ class PatternStructure:
 
         Parameters
         ----------
-        object_descriptions : dict[str, PatternType]
+        object_descriptions: dict[str, PatternType]
             A dictionary mapping object names to their corresponding patterns.
-        compute_atomic_patterns : bool, optional
+        compute_atomic_patterns: bool, optional
             If True, computes atomic patterns. If None, tries to infer whether computation is possible (default is None).
-        min_atom_support : Union[int, float], optional
+        min_atom_support: Union[int, float], optional
             Minimum support threshold for an atomic pattern to be retained (default is 0).
             If a float between 0 and 1, it is interpreted as a proportion of total objects.
-        use_tqdm : bool, optional
+        use_tqdm: bool, optional
             If True, displays a progress bar when computing atomic patterns (default is True).
 
         Examples
@@ -205,13 +215,13 @@ class PatternStructure:
 
     def init_atomic_patterns(self, min_support: Union[int, float] = 0, use_tqdm: bool = False):
         """
-        Compute the set of all patterns that cannot be obtained by intersection of other patterns
+        Compute the set of all patterns that cannot be obtained by join of other patterns
 
         Parameters
         ----------
-        min_support : Union[int, float], optional
+        min_support: Union[int, float], optional
             Minimum number or proportion of objects a pattern must describe to be considered atomic (default is 0).
-        use_tqdm : bool, optional
+        use_tqdm: bool, optional
             If True, displays a progress bar during computation (default is False).
 
         Raises
@@ -273,7 +283,7 @@ class PatternStructure:
 
         Returns
         -------
-        PatternType
+        min: PatternType
             The minimal pattern found in the structure.
 
         Raises
@@ -301,7 +311,7 @@ class PatternStructure:
 
         Returns
         -------
-        PatternType
+        max: PatternType
             The maximal pattern found in the structure.
 
         Raises
@@ -330,7 +340,7 @@ class PatternStructure:
 
         Returns
         -------
-        set[PatternType]
+        max_atoms: set[PatternType]
             A set of maximal atomic patterns.
 
         Examples
@@ -353,7 +363,7 @@ class PatternStructure:
 
         Returns
         -------
-        OrderedDict[PatternType, set[str]]
+        atoms: OrderedDict[PatternType, set[str]]
             An ordered dictionary mapping atomic patterns to their extents (object names).
 
         Examples
@@ -370,7 +380,7 @@ class PatternStructure:
 
         Returns
         -------
-        int
+        count: int
             The number of atomic patterns.
 
         Examples
@@ -383,13 +393,13 @@ class PatternStructure:
     @property
     def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
         """
-        Return the partial order of atomic patterns by extent inclusion.
+        Return the partial order of atomic patterns, i.e. for every atomic pattern show all its atomic super-patterns.
 
         Each pattern maps to the set of patterns that strictly subsume it.
 
         Returns
         -------
-        dict[PatternType, set[PatternType]]
+        order: dict[PatternType, set[PatternType]]
             A dictionary representing the ordering of atomic patterns.
             Keys are atomic patterns, values are sets of greater atomic patterns.
 
@@ -416,7 +426,7 @@ class PatternStructure:
 
         Returns
         -------
-        dict[PatternType, set[str]]
+        premaximals: dict[PatternType, set[str]]
             A dictionary mapping premaximal patterns to their extents.
 
         Examples
@@ -445,16 +455,16 @@ class PatternStructure:
 
         Parameters
         ----------
-        return_extents : bool, optional
+        return_extents: bool, optional
             If True, returns extents along with patterns (default is True).
-        return_bitarrays : bool, optional
+        return_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
-        kind : Literal, optional
+        kind: Literal, optional
             Iteration strategy: 'bruteforce', 'ascending', or 'ascending controlled' (default is 'bruteforce').
 
         Yields
         ------
-        Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
+        pattern_data: Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
             Patterns optionally paired with their extent as a set of object names or bitarray.
 
         Examples
@@ -520,14 +530,14 @@ class PatternStructure:
 
         Parameters
         ----------
-        return_extents : bool, optional
+        return_extents: bool, optional
             If True, returns extents along with patterns (default is True).
-        return_bitarrays : bool, optional
+        return_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
 
         Yields
         ------
-        Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
+        premaximal_data: Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
             Premaximal patterns with optional extent representations.
 
         Examples
@@ -578,18 +588,18 @@ class PatternStructure:
 
         Parameters
         ----------
-        kind : Literal, optional
+        kind: Literal, optional
             Strategy for traversal: 'ascending' or 'ascending controlled' (default is 'ascending').
-        min_support : Union[int, float], optional
+        min_support: Union[int, float], optional
             Minimum support required for a pattern to be yielded (default is 0).
-        depth_first : bool, optional
+        depth_first: bool, optional
             If True, performs a depth-first traversal (default is True).
-        return_objects_as_bitarrays : bool, optional
+        return_objects_as_bitarrays: bool, optional
             If True, extents are returned as bitarrays; otherwise as sets (default is False).
 
         Yields
         ------
-        Iterator or Generator
+        pattern_info: Iterator or Generator
             Yields patterns and their extents.
 
         Examples
@@ -637,18 +647,24 @@ class PatternStructure:
             Iterator[PatternType], 
             Iterator[tuple[PatternType, PatternType]]]:
         """
-        Iterate over the atomic pattern combinations (keys) that describe given patterns.
+        Iterate over the keys that describe given patterns.
+
+        Keys (also known as minimal generators) of a pattern are the least precise subpatterns that describe the very same objects as the pattern.
+
+        Reference
+        ---------
+        Buzmakov, A., Dudyrev, E., Kuznetsov, S. O., Makhalova, T., & Napoli, A. (2024). Data complexity: An FCA-based approach. International Journal of Approximate Reasoning, 165, 109084.
 
         Parameters
         ----------
-        patterns : Union[PatternType, Iterable[PatternType]]
+        patterns: Union[PatternType, Iterable[PatternType]]
             A pattern or list of patterns to decompose into atomic keys.
-        max_length : Optional[int], optional
+        max_length: Optional[int], optional
             Maximum length of key combinations (default is None).
 
         Yields
         ------
-        Union[PatternType, tuple[PatternType, PatternType]]
+        keys: Union[PatternType, tuple[PatternType, PatternType]]
             Keys of the input patterns or (key, original pattern) pairs.
 
         Examples
@@ -676,24 +692,31 @@ class PatternStructure:
         """
         Iterate over subgroups that satisfy a quality threshold.
 
+        A subgroup is a pattern whose extent is very similar to the set of goal_objects.
+        The similarity is measured by quality_measure and is lower-bounded by qulity_threshold.
+
+        References
+        ----------
+        Atzmueller, M. (2015). Subgroup discovery. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery, 5(1), 35-49.
+
         Parameters
         ----------
-        goal_objects : Union[set[str], bitarray]
+        goal_objects: Union[set[str], bitarray]
             Set or bitarray of target objects.
-        quality_measure : Literal
+        quality_measure: Literal
             Metric to evaluate subgroups (e.g., 'Accuracy', 'F1', 'WRAcc').
-        quality_threshold : float
+        quality_threshold: float
             Minimum value for the selected quality measure.
-        kind : Literal, optional
+        kind: Literal, optional
             Subgroup mining strategy (currently only 'bruteforce' supported).
-        max_length : Optional[int], optional
+        max_length: Optional[int], optional
             Maximum length of subgroups (default is None).
-        return_objects_as_bitarrays : bool, optional
+        return_objects_as_bitarrays: bool, optional
             If True, extents are returned as bitarrays (default is False).
 
         Yields
         ------
-        Iterator[tuple[Pattern, Union[set[str], bitarray], float]]
+        subs: Iterator[tuple[Pattern, Union[set[str], bitarray], float]]
             Tuples of (pattern, extent, quality).
 
         Examples
@@ -736,24 +759,24 @@ class PatternStructure:
             list[tuple[set[str], PatternType]], 
             list[tuple[fbarray, PatternType]]]:
         """
-        Mine formal concepts (extent-intent pairs) from the pattern structure.
+        Mine pattern concepts (extent-intent pairs) from the pattern structure.
 
         Parameters
         ----------
-        min_support : Union[int, float], optional
+        min_support: Union[int, float], optional
             Minimum support required for concepts (default is 0).
-        min_delta_stability : Union[int, float], optional
+        min_delta_stability: Union[int, float], optional
             Minimum delta stability for concept filtering (default is 0).
-        algorithm : Literal, optional
+        algorithm: Literal, optional
             Algorithm used for mining: 'CloseByOne object-wise' or 'gSofia' (default selects automatically).
-        return_objects_as_bitarrays : bool, optional
+        return_objects_as_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
-        use_tqdm : bool, optional
+        use_tqdm: bool, optional
             If True, displays a progress bar (default is False).
 
         Returns
         -------
-        Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]
+        concepts: Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]
             A list of concept tuples, each containing an extent and its corresponding intent.
         
         Examples
@@ -825,24 +848,24 @@ class PatternStructure:
 
         Parameters
         ----------
-        basis_name : Literal, optional
+        basis_name: Literal, optional
             Type of basis used for implications (default is "Canonical Direct").
-        min_support : Union[int, float], optional
+        min_support: Union[int, float], optional
             Minimum support for implications (default is 0).
-        min_delta_stability : Union[int, float], optional
+        min_delta_stability: Union[int, float], optional
             Minimum delta stability (default is 0).
-        max_key_length : Optional[int], optional
+        max_key_length: Optional[int], optional
             Maximum length of keys (default is None).
-        algorithm : Literal, optional
+        algorithm: Literal, optional
             Concept mining algorithm to use (default is None).
-        reduce_conclusions : bool, optional
+        reduce_conclusions: bool, optional
             If True, reduces the size of implication conclusions (default is False).
-        use_tqdm : bool, optional
+        use_tqdm: bool, optional
             If True, displays a progress bar (default is False).
 
         Returns
         -------
-        dict[PatternType, PatternType]
+        implications: dict[PatternType, PatternType]
             A dictionary mapping premises to conclusions in the implication basis.
         
         Examples
@@ -881,18 +904,18 @@ class PatternStructure:
 
         Parameters
         ----------
-        premises : Iterable[PatternType]
+        premises: Iterable[PatternType]
             The premises to base implications on.
-        pseudo_close_premises : bool, optional
+        pseudo_close_premises: bool, optional
             Whether to pseudo-close the premises (default is False).
-        reduce_conclusions : bool, optional
+        reduce_conclusions: bool, optional
             If True, reduces conclusions to minimal additions (default is False).
-        use_tqdm : bool, optional
+        use_tqdm: bool, optional
             If True, displays progress bars (default is False).
 
         Returns
         -------
-        Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]
+        premises: Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]
             A mapping from premises to conclusions.
         
         Examples
@@ -948,18 +971,20 @@ class PatternStructure:
         """
         Compute the immediate successor patterns of a given pattern.
 
+        The immediate successor patternsare the next more precise patterns.
+
         Parameters
         ----------
-        pattern : PatternType
+        pattern: PatternType
             The pattern to compute successors for.
-        return_extents : bool, optional
+        return_extents: bool, optional
             If True, returns extents along with patterns (default is False).
-        return_objects_as_bitarrays : bool, optional
+        return_objects_as_bitarrays: bool, optional
             If True, extents are returned as bitarrays instead of sets (default is False).
 
         Returns
         -------
-        Union[set[PatternType], dict[PatternType, set[str]], dict[PatternType, fbarray]]
+        next_patterns: Union[set[PatternType], dict[PatternType, set[str]], dict[PatternType, fbarray]]
             Either a set of successor patterns or a mapping of successors to extents.
 
         Examples
@@ -1008,12 +1033,12 @@ class PatternStructure:
 
         Parameters
         ----------
-        pattern : Pattern
+        pattern: Pattern
             The pattern for which to compute support.
 
         Returns
         -------
-        int
+        support: int
             The number of objects (support count) covered by the pattern.
 
         Examples
@@ -1031,12 +1056,12 @@ class PatternStructure:
 
         Parameters
         ----------
-        pattern : Pattern
+        pattern: Pattern
             The pattern for which to compute frequency.
 
         Returns
         -------
-        float
+        frequency: float
             The frequency of the pattern as a fraction between 0 and 1.
 
         Examples
@@ -1056,12 +1081,12 @@ class PatternStructure:
 
         Parameters
         ----------
-        pattern : Pattern
+        pattern: Pattern
             The pattern for which to compute delta stability.
 
         Returns
         -------
-        int
+        delta_s: int
             The delta stability value.
 
         Examples
@@ -1086,12 +1111,12 @@ class PatternStructure:
 
         Parameters
         ----------
-        extent : Union[bitarray, set[str]]
+        extent: Union[bitarray, set[str]]
             The extent to convert. If a bitarray is provided, each set bit is mapped to its corresponding object name.
 
         Returns
         -------
-        set[str]
+        readable: set[str]
             The human-readable extent as a set of object names.
 
         Examples
