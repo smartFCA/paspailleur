@@ -37,6 +37,21 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure) -> list['Patt
         pass
 
     def compute_bits_intersection(bits: list[bitarray], len_bitarray):
+        """
+        Compute the intersection of a list of bitarrays.
+
+        Parameters
+        ----------
+        bits: list[bitarray]
+            List of bitarrays to intersect.
+        len_bitarray: int
+            Length of the bitarrays.
+
+        Returns
+        -------
+        intersection: bitarray
+            Bitarray resulting from intersecting all input bitarrays.
+        """
         if bits == []:
             return(bitarray([1 for _ in range(len_bitarray)]))
         bit = bits[0]
@@ -45,6 +60,23 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure) -> list['Patt
         return(bit)
 
     def find_upper_neighbors(data: list, concept_extent: list, objects_indices: list):
+        """
+        Find upper neighbors of a given concept extent.
+
+        Parameters
+        ----------
+        data: list
+            The dataset.
+        concept_extent: list
+            Current concept extent.
+        objects_indices: list
+            All object indices.
+
+        Returns
+        -------
+        neighbors: list[list[int]]
+            List of upper neighbor extents.
+        """
         min_set = [obj for obj in objects_indices if obj not in concept_extent]
         concept_extent_values = [data[i] for i in concept_extent]
         neighbors = []
@@ -59,6 +91,23 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure) -> list['Patt
         return neighbors
 
     def find_next_concept_extent(data: list, concept_extent: list, List_extents: list):
+        """
+        Find the next concept extent in the lattice.
+
+        Parameters
+        ----------
+        data: list
+            The dataset.
+        concept_extent: list
+            The current extent.
+        List_extents: list
+            List of known extents.
+
+        Returns
+        -------
+        next_concept_extent: list
+            The next extent in the concept lattice.
+        """
         bin_col_names, rows = ps.binarize(data)
         next_concept_extent = None
         concept_extent_bit = compute_bits_intersection([rows[i] for i in concept_extent], len(rows[0]))
@@ -96,8 +145,20 @@ def list_intents_via_Lindig_complex(data: list, pattern_structure) -> list['Patt
 
 def iter_intents_via_ocbo(
         objects_patterns: list[Pattern]
-) -> Iterator[tuple[Pattern, bitarray]]:
-    """Iterate intents in patterns by running object-wise version of Close By One algorithm"""
+    ) -> Iterator[tuple[Pattern, bitarray]]:
+    """
+    Iterate intents by applying the object-wise Close By One algorithm.
+
+    Parameters
+    ----------
+    objects_patterns: list[Pattern]
+        List of patterns, one per object.
+
+    Returns
+    -------
+    intent_extent_pairs: Iterator[tuple[Pattern, bitarray]]
+        Yields each pattern (intent) and its extent.
+    """
     objects_per_pattern = bfuncs.group_objects_by_patterns(objects_patterns)
 
     n_objects = len(objects_patterns)
@@ -125,7 +186,26 @@ def iter_all_patterns_ascending(
         atomic_patterns_extents: OrderedDict[Pattern, bitarray],
         min_support: int = 0, depth_first: bool = True,
         controlled_iteration: bool = False,
-) -> Generator[tuple[Pattern, bitarray], bool, None]:
+    ) -> Generator[tuple[Pattern, bitarray], bool, None]:
+    """
+    Iterate all patterns in ascending order of precision using atomic patterns.
+
+    Parameters
+    ----------
+    atomic_patterns_extents: OrderedDict[Pattern, bitarray]
+        Atomic patterns and their extents.
+    min_support: int, optional
+        Minimum support for yielded patterns.
+    depth_first: bool, optional
+        Whether to use depth-first traversal (default True).
+    controlled_iteration: bool, optional
+        If True, allows caller to control traversal.
+
+    Returns
+    -------
+    pattern_extent_stream: Generator[tuple[Pattern, bitarray], bool, None]
+        Yields each pattern and its extent.
+    """
     # The algo is inspired by CloseByOne
     # For the start, let us just rewrite CloseByOne algorithm
     # with no though on how to optimise it for this particular case
@@ -178,8 +258,44 @@ def list_stable_extents_via_gsofia(
         min_supp: int = 0,
         use_tqdm: bool = False,
         n_atomic_patterns: int = None
-) -> set[fbarray]:
+    ) -> set[fbarray]:
+    """
+    Identify stable extents using the gSofia algorithm.
+
+    Parameters
+    ----------
+    atomic_patterns_iterator: Generator
+        Generator yielding atomic patterns and their extents.
+    min_delta_stability: int, optional
+        Minimum delta stability to accept an extent.
+    n_stable_extents: int, optional
+        Maximum number of stable extents to return.
+    min_supp: int, optional
+        Minimum support required for an extent.
+    use_tqdm: bool, optional
+        Whether to show progress bar.
+    n_atomic_patterns: int, optional
+        Number of atomic patterns expected.
+
+    Returns
+    -------
+    stable_extents: set[fbarray]
+        Set of stable extents.
+    """
     def maximal_bitarrays(bas: Collection[fbarray]) -> set[fbarray]:
+        """
+        Remove any bitarray that is a subset of another.
+
+        Parameters
+        ----------
+        bas: Collection[fbarray]
+            Collection of candidate bitarrays.
+
+        Returns
+        -------
+        max_set: set[fbarray]
+            Set of bitarrays that are maximal under subset inclusion.
+        """
         bas = sorted(bas, key=lambda ba: ba.count(), reverse=True)
         i = 0
         while i < len(bas):
@@ -194,7 +310,22 @@ def list_stable_extents_via_gsofia(
     def n_most_stable_extents(
             extents_data: Iterable[tuple[fbarray, tuple[int, set[fbarray]]]],
             n_most_stable=n_stable_extents
-    ) -> list[tuple[fbarray, tuple[int, set[fbarray]]]]:
+        ) -> list[tuple[fbarray, tuple[int, set[fbarray]]]]:
+        """
+        Select the top-N most stable extents based on delta index.
+
+        Parameters
+        ----------
+        extents_data: Iterable[tuple[fbarray, tuple[int, set[fbarray]]]]
+            A list of tuples mapping an extent to its delta and children.
+        n_most_stable: int, optional
+            The number of stable extents to retain.
+
+        Returns
+        -------
+        most_stable: list[tuple[fbarray, tuple[int, set[fbarray]]]]
+            The N most stable extents.
+        """
         extents_data = list(extents_data)
         most_stable_extents = heapq.nlargest(n_most_stable, extents_data, key=lambda x: x[1][0])
 
@@ -209,7 +340,26 @@ def list_stable_extents_via_gsofia(
     def init_new_pattern(
             new_extent: fbarray, new_atomic_extent: fbarray, old_children: Collection[fbarray],
             min_stability=min_delta_stability
-    ) -> tuple[Optional[int], Optional[set[fbarray]]]:
+        ) -> tuple[Optional[int], Optional[set[fbarray]]]:
+        """
+        Compute the delta and children of a new stable extent.
+
+        Parameters
+        ----------
+        new_extent: fbarray
+            The new extent being considered.
+        new_atomic_extent: fbarray
+            The extent of the atomic pattern currently being processed.
+        old_children: Collection[fbarray]
+            Children of the parent extent.
+        min_stability: int
+            Minimum allowed delta stability.
+
+        Returns
+        -------
+        stability_data: tuple[Optional[int], Optional[set[fbarray]]]
+            A tuple containing delta stability value and its valid children.
+        """
         # Find the delta-index of the new extent and its children extents, aka "InitNewPattern" in the gSofia paper
         new_delta, new_children = new_extent.count(), []
         for child in old_children:
@@ -286,7 +436,24 @@ def iter_keys_of_pattern(
         pattern: Pattern,
         atomic_patterns: OrderedDict[Pattern, fbarray],
         max_length: Optional[int] = None
-) -> Iterator[Pattern]:
+    ) -> Iterator[Pattern]:
+    """
+    Yield key patterns that generate the same extent as the given pattern.
+
+    Parameters
+    ----------
+    pattern: Pattern
+        The target pattern.
+    atomic_patterns: OrderedDict[Pattern, fbarray]
+        Atomic patterns and their extents.
+    max_length: Optional[int], optional
+        Maximum length of key patterns.
+
+    Returns
+    -------
+    keys: Iterator[Pattern]
+        Iterator of key patterns.
+    """
     # second condition implies the first one. But the first one is easier to test
     atoms_to_iterate = [atom for atom in atomic_patterns if atom <= pattern]
     if not atoms_to_iterate:
@@ -335,9 +502,24 @@ def iter_keys_of_patterns(
         max_length: Optional[int] = None
 ) -> Iterator[tuple[Pattern, int]]:
     """
+    Yield key patterns for a list of patterns, maintaining index association.
 
-    Important: atomic_patterns should be sorted in topological order.
+    Atomic_patterns should be sorted in topological order.
     So every i-th atomic pattern should be not-smaller than any previous (1, 2, ..., i-i) atomic pattern
+
+    Parameters
+    ----------
+    patterns: list[Pattern]
+        List of patterns to generate keys for.
+    atomic_patterns: OrderedDict[Pattern, fbarray]
+        Atomic patterns and their extents.
+    max_length: Optional[int], optional
+        Maximum key length.
+
+    Returns
+    -------
+    keys_with_index: Iterator[tuple[Pattern, int]]
+        Iterator of (key, original pattern index) tuples.
     """
     n_objects = len(atomic_patterns[next(p for p in atomic_patterns)])
     top_extent = fbarray(~bazeros(n_objects))
