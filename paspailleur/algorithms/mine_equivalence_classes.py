@@ -504,7 +504,7 @@ def iter_keys_of_patterns(
     """
     Yield key patterns for a list of patterns, maintaining index association.
 
-    Atomic_patterns should be sorted in topological order.
+    atomic_patterns should be sorted in topological order.
     So every i-th atomic pattern should be not-smaller than any previous (1, 2, ..., i-i) atomic pattern
 
     Parameters
