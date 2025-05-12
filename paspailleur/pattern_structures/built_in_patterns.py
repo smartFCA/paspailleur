@@ -5,7 +5,7 @@ from frozendict import frozendict
 import re
 
 
-from pattern import Pattern
+from .pattern import Pattern
 
 
 class ItemSetPattern(Pattern):
