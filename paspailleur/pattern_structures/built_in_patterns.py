@@ -60,6 +60,7 @@ class ItemSetPattern(Pattern):
         Returns
         -------
         representation: str
+
             The string representation of the item set pattern.
 
         Examples
@@ -853,10 +854,10 @@ class IntervalPattern(Pattern):
         >>> p2 = IntervalPattern( "[1, 5]" )
         >>> p1 - p2
         [-inf, inf]
-        
+
         Warning
         -------
-        The behavior of the function will be changing soon
+        The behavior of the function might change soon
         """
         if self == other:
             return self.min_pattern
