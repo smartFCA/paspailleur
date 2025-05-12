@@ -30,13 +30,9 @@ def extension(pattern: Pattern, objects_per_pattern: dict[Pattern, bitarray]) ->
     Examples
     --------
     >>> from paspailleur.pattern_structures.patterns import ItemSetPattern
-    >>> objects_names = ['Stewart Island', 'Fjordland NP', 'Te Anau', 'Queenstown']
-    >>> objects_patterns = [
-        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
-        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'}),
-        ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights', 'Jet Boating'}),
-        ItemSetPattern({'Hiking', 'Sightseeing Flights', 'Jet Boating', 'Wildwater Rafting', 'Bungee Jumping'}),
-    ]
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    #  or simply:
+    # >>> objects_patterns = [Pattern(frozenset(x)) for x in ['abc', 'abc', 'abcd', 'acde']]
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.extension(p, obj_to_patterns)
