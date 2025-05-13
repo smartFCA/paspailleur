@@ -9,30 +9,135 @@ from .pattern import Pattern
 
 
 class ItemSetPattern(Pattern):
+    """
+    A class representing a set of items as a pattern.
+
+    This class allows for the creation and manipulation of patterns that consist of a set of items.
+    It supports operations such as union, intersection, and difference.
+
+    References
+    ----------
+    Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules in large databases.
+
+    Attributes
+    ----------
+    PatternValueType:
+        The type of the pattern's value, which is a frozenset.
+
+    Properties
+    ----------
+    value
+        Return the value of the item set pattern
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern for the item set pattern.
+    """
     PatternValueType = frozenset
 
     @property
     def value(self) -> PatternValueType:
+        """
+        Return the value of the item set pattern.
+
+        Returns
+        -------
+        value: PatternValueType
+            The value of the itemset pattern, so the set of items itself.
+
+        Examples
+        --------
+        >>> p = ItemSetPattern({1, 2, 3})
+        >>> p.value
+        frozenset({1, 2, 3})
+        """
         return self._value
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the item set pattern.
+
+        Returns
+        -------
+        representation: str
+
+            The string representation of the item set pattern.
+
+        Examples
+        --------
+        >>> p = ItemSetPattern({1, 2})
+        >>> repr(p)
+        '{1, 2}'
+        """
         return repr(set(self.value))
 
     def __len__(self) -> int:
-        """Minimal number of atomic patterns required to generate the pattern
+        """
+        Return the minimal number of atomic patterns required to generate the item set pattern.
 
-        For ItemSetPattern, the length of the pattern is the length of its pattern.value
+        Returns
+        -------
+        length: int
+            The number of items in the item set pattern.
+
+        Examples
+        --------
+        >>> p = ItemSetPattern({1, 2, 3})
+        >>> len(p)
+        3
         """
         return len(self.value)
 
     def __sub__(self, other: Self) -> Self:
-        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self
+        """
+        Return the itemSetPattern that contains the items that can be found in self but not in other.
 
-         (if it's not possible, return self)"""
+        Parameters
+        ----------
+        other: Self
+            Another item set pattern to subtract from self.
+
+        Returns
+        -------
+        Self
+            The least precise pattern such that (self - other) | other == self.
+            If it's not possible, returns self.
+
+        Examples
+        --------
+        >>> p1 = ItemSetPattern({1, 2, 3})
+        >>> p2 = ItemSetPattern({2})
+        >>> p3 = p1 - p2
+        >>> p3
+        {1, 3}
+        """
         return self.__class__(self.value - other.value)
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
+        """
+        Parse a string description into an item set pattern value.
+
+        Parameters
+        ----------
+        value: str
+            The string description of the item set pattern.
+
+        Returns
+        -------
+        parsed: PatternValueType
+            The parsed item set pattern value.
+
+        Raises
+        ------
+        ValueError
+            If the value cannot be parsed into an ItemSetPattern object.
+
+        Examples
+        --------
+        >>> ItemSetPattern.parse_string_description('{1, 2, 3}')
+        frozenset({1, 2, 3})
+        """
         parsed_value = None
 
         try:
@@ -60,30 +165,153 @@ class ItemSetPattern(Pattern):
 
     @classmethod
     def preprocess_value(cls, value: Collection) -> PatternValueType:
+        """
+        Preprocess the value before storing it in the item set pattern.
+
+        Parameters
+        ----------
+        value: Collection
+            The value to preprocess.
+
+        Returns
+        -------
+        value: frozenset
+            The preprocessed value as a frozenset.
+
+        Examples
+        --------
+        >>> ItemSetPattern.preprocess_value([1, 2, 2])
+        frozenset({1, 2})
+        """
         return frozenset(value)
 
     @property
     def atomic_patterns(self) -> set[Self]:
-        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        """
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        For an ItemSetPattern an atomic pattern is a pattern containing one itme.
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic patterns, each containing a single item from the item set pattern.
+
+        Examples
+        --------
+        >>> p = ItemSetPattern({1, 2})
+        >>> p.atomic_patterns
+        {ItemSetPattern({1}), ItemSetPattern({2})}
+        """
         return {self.__class__({v}) for v in self.value}
 
     @property
     def min_pattern(self) -> Self:
-        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the minimal possible pattern for the item set pattern.
+
+        Returns
+        -------
+        Self
+            The minimal item set pattern, which is an empty frozenset.
+            `None` if undefined
+
+        Examples
+        --------
+        >>> p = ItemSetPattern({1})
+        >>> p.min_pattern
+        ItemSetPattern(frozenset())
+        """
         return self.__class__(frozenset())
 
 
 class CategorySetPattern(ItemSetPattern):
+    """
+    A class representing a set of categories as a pattern.
+
+    This class extends ItemSetPattern to include operations specific to category sets, such as handling a universe of categories.
+    But it's also an inversion of it, meaning for an object to fall under the ItemSetPattern class, it has to fit the the descriptions of all items in the set. On the other hand for an object to fall under the CategorySetPattern, it needs only fit to one item in the set.
+    
+    Attributes
+    ----------
+    PatternValueType:
+        The type of the pattern's value, which is a frozenset.
+    Universe: Optional[frozenset]
+        The set of all possible categories.
+    
+    Properties
+    ----------
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern for the category set pattern.
+    max_pattern
+        Return the maximal possible pattern for the category set pattern.
+    
+    """
     PatternValueType = frozenset
     Universe: Optional[frozenset] = None  # The set of all possible categories
 
     def __and__(self, other):
+        """
+        Return the union of self and another category set pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another category set pattern to intersect with.
+
+        Returns
+        -------
+        Self
+            The union of the two category set patterns.
+
+        Examples
+        --------
+        >>> p1 = CategorySetPattern({"A", "B"})
+        >>> p2 = CategorySetPattern({"B", "C"})
+        >>> p1 & p2
+        {'A', 'B', 'C'}
+        """
         return self.__class__(self.value | other.value)
 
     def __or__(self, other):
+        """
+        Return the intersection of self and another category set pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another category set pattern to intersect with.
+
+        Returns
+        -------
+        Self
+            The intersection of the two category set patterns.
+
+        Examples
+        --------
+        >>> p1 = CategorySetPattern({"A", "B"})
+        >>> p2 = CategorySetPattern({"B", "C"})
+        >>> p1 | p2
+        {'B'}
+        """
         return self.__class__(self.value & other.value)
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the category set pattern.
+
+        Returns
+        -------
+        representation: str
+            The string representation of the category set pattern.
+
+        Examples
+        --------
+        >>> CategorySetPattern({"A", "B"}).__repr__()
+        '{'A', 'B'}'
+        """
         repr_negative = self.Universe is not None and len(self.value) > len(self.Universe) / 2
         s = set(self.Universe) - self.value if repr_negative else self.value
         s = repr(set(s))
@@ -92,12 +320,54 @@ class CategorySetPattern(ItemSetPattern):
         return s
 
     def __sub__(self, other):
+        """
+        Return the CategorySetPattern that contains the items that can be found in self but not in other.
+
+        Parameters
+        ----------
+        other: Self
+            Another category set pattern to subtract from self.
+
+        Returns
+        -------
+        Self
+            The least precise pattern such that (self - other) | other == self.
+            If it's not possible, returns self.
+
+        Examples
+        --------
+        >>> p1 = CategorySetPattern({"A", "B"})
+        >>> p2 = CategorySetPattern({"B"})
+        >>> p1 - p2
+        {'A'}
+        """
         if self.min_pattern is not None and self == other:
             return self.min_pattern
         return self.__class__(self.value)
 
     @property
     def atomic_patterns(self) -> set[Self]:
+        """
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        For a CategorySetPattern an atomic pattern is a set containing all-but-one categories.
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic patterns derived from the universe of categories.
+
+        Raises
+        ------
+        AssertionError
+            If the min_pattern is not defined.
+
+        Examples
+        --------
+        >>> p = CategorySetPattern({"A"})
+        >>> p.atomic_patterns
+        {CategorySetPattern({'B'}), CategorySetPattern({'C'})} # assuming Universe={'A','B','C'}
+        """
         assert self.min_pattern is not None,\
             f"Atomic patterns of {self.__class__} class cannot be computed without predefined min_pattern value. " \
             f"The proposed solution is to inherit a new class from the current class and " \
@@ -108,20 +378,64 @@ class CategorySetPattern(ItemSetPattern):
 
     @property
     def min_pattern(self) -> Optional[Self]:
-        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the minimal possible pattern for the category set pattern.
+
+        Returns
+        -------
+        min: Optional[Self]
+            The minimal category set pattern or None if undefined.
+
+        Examples
+        --------
+        >>> CategorySetPattern.Universe = {"A", "B", "C"}
+        >>> p = CategorySetPattern({"A"})
+        >>> p.min_pattern
+        CategorySetPattern({'A', 'B', 'C'})
+        """
         if self.Universe is None:
             return None
         return self.__class__(self.Universe)
 
     @property
     def max_pattern(self) -> Self:
-        """Maximal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the maximal possible pattern for the category set pattern.
+
+        Returns
+        -------
+        max: Self
+            The maximal category set pattern, which is an empty frozenset.
+
+        Examples
+        --------
+        >>> p = CategorySetPattern({"A"})
+        >>> p.max_pattern
+        CategorySetPattern(frozenset())
+        """
         return self.__class__(frozenset())
 
     def __len__(self) -> int:
-        """Minimal number of atomic patterns required to generate the pattern
+        """
+        Return the minimal number of atomic patterns required to generate the category set pattern.
 
-        For CategorySetPattern, the length of a pattern is the categories the pattern.value does _not_ include
+        Returns
+        -------
+        length: int
+            The number of categories not included in the category set pattern.
+            The length of a pattern is the categories the pattern.value does _not_ include
+
+        Raises
+        ------
+        AssertionError
+            If the min_pattern is not defined.
+
+        Examples
+        --------
+        >>> CategorySetPattern.Universe = {"A", "B", "C"}
+        >>> p = CategorySetPattern({"A"})
+        >>> len(p)
+        2
         """
         assert self.min_pattern is not None, f"Length of pattern of {self.__class__} " \
                                              f"class cannot be computed without the predefined min_pattern value."
@@ -129,27 +443,147 @@ class CategorySetPattern(ItemSetPattern):
 
 
 class IntervalPattern(Pattern):
+    """
+    A class representing an interval as a pattern.
+
+    This class allows for the creation and manipulation of patterns that represent intervals,
+    including operations such as intersection, union, and difference.
+
+    Attributes
+    ----------
+    PatternValueType:
+        The type of the pattern's value, which is a tuple of bounds.
+    BoundsUniverse: list[float]
+        A list representing the universe of bounds for the interval.
+    
+    Properties
+    ----------
+    lower_bound
+        Return the lower bound of the interval.
+    is_lower_bound_closed
+        Check if the lower bound is closed.
+    upper_bound
+        Return the upper bound of the interval.
+    is_upper_bound_closed
+        Check if the upper bound is closed.
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern for the interval pattern.
+    max_pattern
+        Return the maximal possible pattern for the interval pattern.
+    maximal_atoms
+        Return the maximal atomic patterns for the interval pattern.
+    
+    Notes
+    -----
+    The IntervalPattern can be defined by a string representation of the interval, or by an pair of two numbers, or by just one number.
+
+    Examples
+    --------
+    >>> p1 = IntervalPattern( ((5, True), (10, False)) )  # The explicit way to define half-open interval [5, 10)
+    >>> p2 = IntervalPattern( "[5, 10)" )  # A more readable way to define interval [5, 10)
+    >>> print(p1 == p2)
+    True
+
+    >>> p3 = IntervalPattern( ((1, True), (1, True)) )  # The explicit way to define closed interval [1, 1]
+    >>> p4 = IntervalPattern( "[1, 1]" )
+    >>> p5 = IntervalPattern( [1, 1]  )
+    >>> p6 = IntervalPattern( 1 )
+    >>> print(p3 == p4, p3 == p5, p3 == p6)
+    True, True, True
+
+    >>> p7 = IntervalPattern( "[1, ∞]" )
+    >>> p8 = IntervalPattern( ">=1" )
+    >>> print(p7 == p8)
+    True
+    """
     # PatternValue semantics: ((lower_bound, is_closed), (upper_bound, is_closed))
     PatternValueType = tuple[tuple[float, bool], tuple[float, bool]]
     BoundsUniverse: list[float] = None
 
     @property
     def lower_bound(self) -> float:
+        """
+        Return the lower bound of the interval.
+
+        Returns
+        -------
+        bound: float
+            The lower bound of the interval.
+
+        Examples
+        --------
+        >>> IntervalPattern( "[1, 5)" ).lower_bound
+        1.0
+        """
         return self.value[0][0]
 
     @property
     def is_lower_bound_closed(self) -> bool:
+        """
+        Check if the lower bound is closed.
+
+        Returns
+        -------
+        closed: bool
+            True if the lower bound is closed, False otherwise.
+
+        Examples
+        --------
+        >>> IntervalPattern( "[1, 5)" ).is_lower_bound_closed
+        True
+        """
         return self.value[0][1]
 
     @property
     def upper_bound(self) -> float:
+        """
+        Return the upper bound of the interval.
+
+        Returns
+        -------
+        bound: float
+            The upper bound of the interval.
+
+        Examples
+        --------
+        >>> IIntervalPattern( "[1, 5)" ).upper_bound
+        5.0
+        """
         return self.value[1][0]
 
     @property
     def is_upper_bound_closed(self) -> bool:
+        """
+        Check if the upper bound is closed.
+
+        Returns
+        -------
+        closed: bool
+            True if the upper bound is closed, False otherwise.
+
+        Examples
+        --------
+        >>> IntervalPattern( "[1, 5)" ).is_upper_bound_closed
+        False
+        """
         return self.value[1][1]
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the interval pattern.
+
+        Returns
+        -------
+        representation: str
+            The string representation of the interval pattern.
+
+        Examples
+        --------
+        >>> repr(IntervalPattern( "[1, 5)" ))
+        '[1.0, 5.0)'
+        """
         if self == self.max_pattern:
             return 'ø'
 
@@ -166,14 +600,41 @@ class IntervalPattern(Pattern):
         return f"{lbound_sign}{self.lower_bound}, {self.upper_bound}{ubound_sign}"
 
     def __len__(self) -> int:
-        """Minimal number of atomic patterns required to generate the pattern
+        """
+        Return the minimal number of atomic patterns required to generate the interval pattern.
 
-        For IntervalPattern, the length of a pattern is the number of non-infinite bounds
+        Returns
+        -------
+        count: int
+            The number of non-infinite bounds in the interval.
+
+        Examples
+        --------
+        >>> len(IntervalPattern( "[1, 5]" ))
+        2
         """
         return int(self.lower_bound != -math.inf) + int(self.upper_bound != math.inf)
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
+        """
+        Parse a string description into an interval pattern value.
+
+        Parameters
+        ----------
+        value: str
+            The string description of the interval pattern.
+
+        Returns
+        -------
+        parsed: PatternValueType
+            The parsed interval pattern value.
+
+        Examples
+        --------
+        >>> IntervalPattern.parse_string_description('[1, 5)')
+        ((1.0, True), (5.0, False))
+        """
         value = value.strip()
         if value == 'ø':
             return (0, False), (0, False)
@@ -200,6 +661,24 @@ class IntervalPattern(Pattern):
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        """
+        Preprocess the value before storing it in the interval pattern.
+
+        Parameters
+        ----------
+        value:
+            The value to preprocess.
+
+        Returns
+        -------
+        value: PatternValueType
+            The preprocessed value as a tuple of bounds.
+
+        Examples
+        --------
+        >>> IntervalPattern.preprocess_value((1, 5))
+        ((1.0, True), (5.0, True))
+        """
         if isinstance(value, Number):
             value = (value, value)
 
@@ -220,7 +699,31 @@ class IntervalPattern(Pattern):
         return (float(lb), bool(closed_lb)), (float(rb), bool(closed_rb))
 
     def __and__(self, other: Self) -> Self:
-        """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
+        """
+        Return the **union** of self and another interval pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another interval pattern to union with.
+
+        Returns
+        -------
+        Self
+            The most precise pattern that is less precise than both self and other.
+
+        Notes
+        -----
+        Instead of having a normal intersection of intervals, we have an intersection of the restrictions meaning a union.
+        Because the union is the only way to get the most presice interval pattern that is less precise than both self and other
+
+        Examples
+        --------
+        >>> p1 = IntervalPattern( "[1, 5)" )
+        >>> p2 = IntervalPattern( "[3, 6)" )
+        >>> p1 & p2
+        [1.0, 6.0) 
+        """
         if self == self.min_pattern or other == self.min_pattern:
             return self.min_pattern
 
@@ -249,7 +752,26 @@ class IntervalPattern(Pattern):
         return self.__class__(new_value)
 
     def __or__(self, other: Self) -> Self:
-        """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
+        """
+        Return the **intersection** of self and another interval pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another interval pattern to union with.
+
+        Returns
+        -------
+        Self
+            The least precise pattern that is more precise than both self and other.
+
+        Examples
+        --------
+        >>> p1 = IntervalPattern( "[1, 5)" )
+        >>> p2 = IntervalPattern( "[3, 6]" )
+        >>> p1 | p2
+        [1.0, 5.0)
+        """
         if self == self.max_pattern or other == self.max_pattern:
             return self.max_pattern
 
@@ -281,7 +803,62 @@ class IntervalPattern(Pattern):
         return self.__class__(new_value)
 
     def __sub__(self, other: Self) -> Self:
-        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
+        """
+        Return the IntervalPattern that contains the items that can be found in self but not in other.
+
+        Parameters
+        ----------
+        other: Self
+            Another interval pattern to subtract from self.
+
+        Returns
+        -------
+        Self
+            The least precise pattern such that (self - other) | other == self.
+            If it's not possible, returns self.
+
+        Examples
+        --------
+        [1] p2 included in p1 
+        >>> p1 = IntervalPattern( "[1, 5]" )
+        >>> p2 = IntervalPattern( "[2, 3]" )
+        >>> p1 - p2
+        [1.0, 5.0]
+        [2] p1 included in p2
+        >>> p1 = IntervalPattern( "[1, 5]" )
+        >>> p2 = IntervalPattern( "[0, 6]" )
+        >>> p1 - p2
+        [1.0, 5.0]
+        [3]  shared lower bound p1 higher upper bound
+        >>> p1 = IntervalPattern( "[1, 5]" )
+        >>> p2 = IntervalPattern( "[1, 3]" )
+        >>> p1 - p2
+        [1.0, 5.0]
+        [4] shared upper bound p1 lower lower bound
+        >>> p1 = IntervalPattern( "[0, 5]" )
+        >>> p2 = IntervalPattern( "[1, 5]" )
+        >>> p1 - p2
+        [0.0, 5.0]
+        [5] shared lower bound p2 higher upper bound
+        >>> p1 = IntervalPattern( "[1, 3]" )
+        >>> p2 = IntervalPattern( "[1, 5]" )
+        >>> p1 - p2
+        <=3.0
+        [6] shared upper bound p2 lower lower bound
+        >>> p1 = IntervalPattern( "[1, 5]" )
+        >>> p2 = IntervalPattern( "[0, 5]" )
+        >>> p1 - p2
+        >=1.0
+        [7] p1==p2
+        >>> p1 = IntervalPattern( "[1, 5]" )
+        >>> p2 = IntervalPattern( "[1, 5]" )
+        >>> p1 - p2
+        [-inf, inf]
+
+        Warning
+        -------
+        The behavior of the function might change soon
+        """
         if self == other:
             return self.min_pattern
 
@@ -300,7 +877,21 @@ class IntervalPattern(Pattern):
 
     @property
     def atomic_patterns(self) -> set[Self]:
-        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        """
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+
+        For an IntervalPattern an atomic pattern is a half-bounded interval.
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic patterns derived from the interval.
+
+        Examples
+        --------
+        >>> IntervalPattern( "[1, 5]" )atomic_patterns
+        {IntervalPattern("[-∞, ∞]"), IntervalPattern(">=1"), IntervalPattern("<=5") }
+        """
         if self.value == self.max_pattern.value:
             return {self.max_pattern}
 
@@ -318,40 +909,174 @@ class IntervalPattern(Pattern):
 
     @property
     def min_pattern(self) -> Self:
-        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the minimal possible pattern for the interval pattern.
+
+        Returns
+        -------
+        min: Self
+            The minimal interval pattern, which is defined as (-inf, inf).
+            `None` if undefined
+
+        Examples
+        --------
+        >>> IntervalPattern.min_pattern
+        (-inf, inf)
+        """
         return self.__class__(((-math.inf, True), (math.inf, True)))
 
     @property
     def max_pattern(self) -> Self:
-        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the maximal possible pattern for the interval pattern.
+
+        Returns
+        -------
+        max: Self
+            The maximal interval pattern, which is represented as 'ø'.
+
+        Examples
+        --------
+        >>> IntervalPattern.max_pattern
+        'ø'
+        """
         return self.__class__("ø")
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
+        """
+        Return the maximal atomic patterns for the interval pattern.
+
+        Returns
+        -------
+        max_atoms: Optional[set[Self]]
+            A set of maximal atomic patterns or None if undefined.
+
+        Examples
+        --------
+        >>> IntervalPattern().maximal_atoms
+        {...}
+        """
         return {self.max_pattern}
 
 
 class ClosedIntervalPattern(IntervalPattern):
+    """
+    A class representing a closed interval as a pattern.
+
+    This class extends IntervalPattern to specifically handle closed intervals.
+
+    Attributes
+    ----------
+    PatternValueType :
+        The type of the pattern's value, which is a tuple of two floats.
+    
+    Properties
+    ----------
+    lower_bound
+        Return the lower bound of the closed interval.
+    upper_bound
+        Return the upper bound of the closed interval.
+    is_lower_bound_closed
+        Check if the lower bound is closed.
+    is_upper_bound_closed
+        Check if the upper bound is closed.
+    """
     PatternValueType = tuple[float, float]
 
     @property
     def lower_bound(self) -> float:
+        """
+        Return the lower bound of the closed interval.
+
+        Returns
+        -------
+        bound: float
+            The lower bound of the closed interval.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern((1.0, 5.0)).lower_bound
+        1.0
+        """
         return self._value[0]
 
     @property
     def upper_bound(self) -> float:
+        """
+        Return the upper bound of the closed interval.
+
+        Returns
+        -------
+        bound: float
+            The upper bound of the closed interval.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern((1.0, 5.0)).upper_bound
+        5.0
+        """
         return self._value[1]
 
     @property
     def is_lower_bound_closed(self) -> bool:
+        """
+        Check if the lower bound is closed.
+
+        Returns
+        -------
+        closed: bool
+            True, indicating that the lower bound is always closed.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern((1.0, 5.0)).is_lower_bound_closed
+        True
+        """
         return True
 
     @property
     def is_upper_bound_closed(self) -> bool:
+        """
+        Check if the upper bound is closed.
+
+        Returns
+        -------
+        closed: bool
+            True, indicating that the upper bound is always closed.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern((1.0, 5.0)).is_upper_bound_closed
+        True
+        """
         return True
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
+        """
+        Parse a string description into a closed interval pattern value.
+
+        Parameters
+        ----------
+        value: str
+            The string description of the closed interval pattern.
+
+        Returns
+        -------
+        parsed: PatternValueType
+            The parsed closed interval pattern value.
+
+        Raises
+        ------
+        AssertionError
+            If the bounds are not enclosed in square brackets.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern.parse_string_description('[1,5]')
+        (1.0, 5.0)
+        """
         if value != 'ø' and ',' in value:
             assert value[0] == '[' and value[-1] == ']', \
                 'Only closed intervals are supported within ClosedIntervalPattern. ' \
@@ -362,6 +1087,29 @@ class ClosedIntervalPattern(IntervalPattern):
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        """
+        Preprocess the value before storing it in the closed interval pattern.
+
+        Parameters
+        ----------
+        value:
+            The value to preprocess.
+
+        Returns
+        -------
+        value: PatternValueType
+            The preprocessed value as a tuple of two floats.
+
+        Raises
+        ------
+        ValueError
+            If the value cannot be preprocessed into a ClosedIntervalPattern.
+
+        Examples
+        --------
+        >>> ClosedIntervalPattern.preprocess_value([1, 5])
+        (1.0, 5.0)
+        """
         if isinstance(value, Sequence) and len(value) == 2 and all(isinstance(v, Number) for v in value):
             return float(value[0]), float(value[1])
 
@@ -375,10 +1123,53 @@ class ClosedIntervalPattern(IntervalPattern):
 
 
 class NgramSetPattern(Pattern):
+    """
+    A class representing a set of n-grams as a pattern.
+
+    Attributes
+    ----------
+    PatternValueType:
+        The type of the pattern's value, which is a frozenset of tuples.
+    StopWords: set[str]
+        A set of exclusively stop words to be excluded from the n-grams.
+        But if a set has both stop words and non stop words it is kept in the analysis
+
+    Properties
+    ----------
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern for the n-gram set pattern.    
+    
+    Examples
+    --------
+    >>> p1 = NgramSetPattern({('hello', 'world')})  # explicit way to define a pattern with a single "hello world" ngram
+    >>> p2 = NgramSetPattern('hello world')  # simplified way to define {'hello world'} pattern
+    >>> print(p1 == p2)
+    True
+    >>> p3 = NgramSetPattern( {('hello', 'world'), ('foo',), ('bar',) } )  # explicit way to define a pattern with 3 ngrams
+    >>> p4 = NgramSetPattern(['hello world', 'foo', 'bar'])  # simplified way to define a pattern with 3 ngrams 
+    >>> print(p3 == p4)
+    True
+    """
     PatternValueType = frozenset[tuple[str, ...]]
     StopWords: set[str] = frozenset()
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the n-gram set pattern.
+
+        Returns
+        -------
+        representation: str
+            The string representation of the n-gram set pattern.
+
+        Examples
+        --------
+        >>> p = NgramSetPattern({('hello', 'world')})
+        >>> repr(p)
+        "{'hello world'}"
+        """
         ngrams = sorted(self.value, key=lambda ngram: (-len(ngram), ngram))
         ngrams_verb = [' '.join(ngram) for ngram in ngrams]
         pattern_verb = "{'" + "', '".join(ngrams_verb) + "'}"
@@ -386,6 +1177,29 @@ class NgramSetPattern(Pattern):
 
     @classmethod
     def parse_string_description(cls, value: str) -> PatternValueType:
+        """
+        Parse a string description into an n-gram set pattern value.
+
+        Parameters
+        ----------
+        value: str
+            The string description of the n-gram set pattern.
+
+        Returns
+        -------
+        parsed: PatternValueType
+            The parsed n-gram set pattern value.
+
+        Raises
+        ------
+        ValueError
+            If the value cannot be parsed into an NgramSetPattern.
+
+        Examples
+        --------
+        >>> NgramSetPattern.parse_string_description("{'hello world', 'foo bar'}")
+        frozenset({('hello', 'world'), ('foo', 'bar')})
+        """
         try:
             parsed_value = super().parse_string_description(value)
         except Exception as e:
@@ -402,19 +1216,74 @@ class NgramSetPattern(Pattern):
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        """
+        Preprocess the value before storing it in the n-gram set pattern.
+
+        Parameters
+        ----------
+        value:
+            The value to preprocess.
+
+        Returns
+        -------
+        value: PatternValueType
+            The preprocessed value as a frozenset of tuples.
+
+        Examples
+        --------
+        >>> NgramSetPattern.preprocess_value(['hello world', 'foo'])
+        frozenset({('hello', 'world'), ('foo',)})
+        """
         value = [re.sub(r" +", " ", v).strip().split(' ') if isinstance(v, str) else v for v in value]
         value = [ngram for ngram in value if not set(ngram) <= cls.StopWords]
         return frozenset(map(tuple, value))
 
     def __len__(self) -> int:
-        """Minimal number of atomic patterns required to generate the pattern
+        """
+        Return the number of n-grams in the n-gram set pattern.
 
-        For NgramSetPattern, the length of a pattern is the number of ngram it contains
+        Returns
+        -------
+        count: int
+            The number of n-grams.
+
+        Examples
+        --------
+        >>> len(NgramSetPattern([('hello', 'world')]))
+        1
+        >>> len(NgramSetPattern(['hello', 'world']))
+        2
+        >>> len(NgramSetPattern([('hello', 'world', 'foo')]))
+        1
+        >>> len(NgramSetPattern([('hello', 'world'), ('foo')]))
+        2
+        >>> len(NgramSetPattern(['hello', 'world', 'foo']))
+        3
         """
         return len(self.value)
 
     def __and__(self, other: Self) -> Self:
-        """Return self & other, i.e. the most precise pattern that is less precise than both self and other"""
+        """
+        Return the intersection of self and another n-gram set pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another n-gram set pattern to intersect with.
+
+        Returns
+        -------
+        Self
+            The intersected n-gram set pattern.
+            The most precise pattern that is less precise than both self and other
+
+        Examples
+        --------
+        >>> p1 = NgramSetPattern({('hello', 'world')})
+        >>> p2 = NgramSetPattern({('hello', 'world'), ('foo',)})
+        >>> p1 & p2
+        {'hello world'}
+        """
         common_ngrams: list[tuple[str, ...]] = []
         for ngram_a in self.value:
             words_pos_a = dict()
@@ -454,24 +1323,101 @@ class NgramSetPattern(Pattern):
         return self.__class__(frozenset(common_ngrams))
 
     def __or__(self, other: Self) -> Self:
-        """Return self | other, i.e. the least precise pattern that is more precise than both self and other"""
+        """
+        Return the union of self and another n-gram set pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another n-gram set pattern to union with.
+
+        Returns
+        -------
+        Self
+            The union of the two n-gram set patterns.
+            The least precise pattern that is more precise than both self and other
+
+        Examples
+        --------
+        >>> p1 = NgramSetPattern({('hello',)})
+        >>> p2 = NgramSetPattern({('world',)})
+        >>> p1 | p2
+        {'hello', 'world'}
+        """
         return self.__class__(self.filter_max_ngrams(self.value | other.value))
 
     def __sub__(self, other: Self) -> Self:
-        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
+        """
+        Return the NgramSetPattern that contains the items that can be found in self but not in other.
+
+        Parameters
+        ----------
+        other: Self
+            Another n-gram set pattern to subtract from self.
+
+        Returns
+        -------
+        Self
+            The resulting n-gram set pattern after subtraction.
+
+        Examples
+        --------
+        >>> p1 = NgramSetPattern({('hello',)}, {('world',)})
+        >>> p2 = NgramSetPattern({('world',)})
+        >>> p1 - p2
+        {'hello'}
+        """
         if self == other:
             return self.min_pattern
 
         return self.__class__(self.filter_max_ngrams(self.value - other.value))
 
     @staticmethod
-    def _issubngram(ngram_a: tuple[str], ngram_b: tuple[str]):
+    def _issubngram(ngram_a: tuple[str], ngram_b: tuple[str])-> bool:
+        """
+        Check if ngram_a is a sub-ngram of ngram_b.
+
+        Parameters
+        ----------
+        ngram_a: tuple[str]
+            The n-gram to check if it is a sub-ngram.
+        ngram_b: tuple[str]
+            The n-gram to check against.
+
+        Returns
+        -------
+        is_sub: bool
+            True if ngram_a is a sub-ngram of ngram_b, False otherwise.
+
+        Examples
+        --------
+        >>> NgramSetPattern._issubngram(('hello',), ('hello', 'world'))
+        True
+        """
         if len(ngram_a) > len(ngram_b):
             return False
         return any(ngram_b[i:i + len(ngram_a)] == ngram_a for i in range(len(ngram_b) - len(ngram_a) + 1))
 
     @classmethod
     def filter_max_ngrams(self, ngrams: PatternValueType) -> PatternValueType:
+        """
+        Filter maximal n-grams from the set of n-grams.
+
+        Parameters
+        ----------
+        ngrams: PatternValueType
+            The set of n-grams to filter.
+
+        Returns
+        -------
+        maximal_ngrams: PatternValueType
+            The filtered set of maximal n-grams, excluding the rest.
+
+        Examples
+        --------
+        >>> NgramSetPattern.filter_max_ngrams({('hello',), ('hello', 'world')})
+        frozenset({('hello', 'world')}) # it filters out hello beacause there is a greater N-gram
+        """
         ngrams = sorted(ngrams, key=lambda ngram: len(ngram), reverse=True)
         i = 0
         while i < len(ngrams):
@@ -483,7 +1429,25 @@ class NgramSetPattern(Pattern):
 
     @property
     def atomic_patterns(self) -> set[Self]:
-        """Return the set of all less precise patterns that cannot be obtained by intersection of other patterns"""
+        """
+        Return the set of every individual sub-ngram for each ngram from the given pattern.
+
+        For an NgramSetPattern an atomic pattern is a set containing just one ngram.
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic patterns derived from the n-grams.
+
+        Examples
+        --------
+        >>> p1 = NgramSetPattern({('hello', 'world')})
+        >>> p1.atomic_patterns
+        {{'hello world'}, {'hello'}, {'world'}}
+        >>> p2 = NgramSetPattern(["hello world !", "foo"])
+        >>> p2.atomic_patterns
+        {{'hello world !'}, {'foo'}, {'hello'}, {'!'}, {'hello world'}, {'world !'}, {'world'}}
+        """
         atoms = set()
 
         for ngram in self.value:
@@ -494,19 +1458,103 @@ class NgramSetPattern(Pattern):
 
     @property
     def min_pattern(self) -> Optional[Self]:
-        """Minimal possible pattern, the sole one per Pattern class. `None` if undefined"""
+        """
+        Return the minimal possible pattern for the n-gram set pattern.
+
+        Returns
+        -------
+        min: Optional[Self]
+            The minimal n-gram set pattern, which is an empty frozenset.
+            `None` if undefined
+        
+        Examples
+        --------
+        >>> NgramSetPattern({}).min_pattern
+        {''}
+        """
         return self.__class__([])
 
 
 class CartesianPattern(Pattern):
+    """
+    A class representing a Cartesian product of multiple dimensions as a pattern.
+
+    Attributes
+    ----------
+    PatternValueType:
+        The type of the pattern's value, which is a frozendict mapping dimension names to Pattern instances.
+    DimensionTypes: dict[str, Type[Pattern]]
+        Optional mapping from dimension names to specific Pattern types for parsing.
+    
+    Properties
+    ----------
+    atomic_patterns
+        Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
+    min_pattern
+        Return the minimal possible pattern for the Cartesian pattern.
+    max_pattern
+        Return the maximal atomic patterns of the Cartesian pattern.
+    maximal_atoms
+        Return the maximal atomic patterns of the Cartesian pattern.
+    """
     PatternValueType = frozendict[str, Pattern]
     DimensionTypes: dict[str, Type[Pattern]] = None  # required for parsing stings of dimensional patterns
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the Cartesian pattern.
+
+        Returns
+        -------
+        representation: str
+            A string representing the dictionary form of the Cartesian pattern.
+
+        Examples
+        --------
+        >>> repr(CartesianPattern({'x': Pattern('A'), 'y': Pattern('B')}))
+        "{'x': Pattern('A'), 'y': Pattern('B')}"
+        """
         return repr(dict(self.value))
 
     @classmethod
     def preprocess_value(cls, value) -> PatternValueType:
+        """
+        Preprocess the value before storing it in the Cartesian pattern.
+
+        Parameters
+        ----------
+        value: dict
+            A dictionary mapping dimension names to pattern descriptions or Pattern instances.
+
+        Returns
+        -------
+        value: PatternValueType
+            The preprocessed frozendict of dimension names to Pattern instances.
+
+        Raises
+        ------
+        AssertionError
+            If required dimension types are missing or unprocessable.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+            'age': IntervalPattern,
+            'name': NgramSetPattern,
+            'personal qualities': ItemSetPattern
+        }
+        >>> PersonPattern.preprocess_value({
+            'age': 20,
+            'name': 'Jean-Francois Martin',
+            'personal qualities': ['Ambitious', 'Approachable', 'Articulate']
+        })
+        frozendict({
+            'age': IntervalPattern((20.0, 20.0)),
+            'name': NgramSetPattern({('Jean-Francois',), ('Martin',)}),
+            'personal qualities': ItemSetPattern({'Ambitious', 'Approachable', 'Articulate'})
+        })
+        """
         if cls.DimensionTypes is not None:
             value = {k: v if isinstance(v, cls.DimensionTypes[k]) else cls.DimensionTypes[k](v)
                      for k, v in value.items()}
@@ -525,9 +1573,59 @@ class CartesianPattern(Pattern):
         return frozendict({k: value[k] for k in keys_order})
 
     def __and__(self, other: Self) -> Self:
+        """
+        Return the intersection of self and another Cartesian pattern. Or the intersection of patterns for every dimension.
+
+        Parameters
+        ----------
+        other: Self
+            Another Cartesian pattern to intersect with.
+
+        Returns
+        -------
+        Self
+            The most precise pattern that is less precise than both self and other.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+                }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> p2 = PersonPattern({'age': "[30, 50]", 'name': "Smith"})
+        >>> p1 & p2
+        {'age': [20.0, 50.0], 'name': {'Smith'}}
+        """
         return self.__class__({k: self.value[k] & other.value[k] for k in set(self.value) & set(other.value)})
 
     def __or__(self, other: Self) -> Self:
+        """
+        Return the union of self and another Cartesian pattern.
+
+        Parameters
+        ----------
+        other: Self
+            Another Cartesian pattern to union with.
+
+        Returns
+        -------
+        Self
+            The least precise pattern that is more precise than both self and other.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> p2 = PersonPattern({'age': "[30, 50]", 'name': "Smith"})
+        >>> p1 | p2
+        {'age': [30.0, 40.0], 'name': {'John Smith'}}
+        """
         keys_a, keys_b = set(self.value), set(other.value)
         left_keys, common_keys, right_keys = keys_a-keys_b, keys_a & keys_b, keys_b - keys_a
         join = {k: self.value[k] | other.value[k] for k in common_keys}
@@ -535,7 +1633,31 @@ class CartesianPattern(Pattern):
         return self.__class__(join)
 
     def __sub__(self, other: Self) -> Self:
-        """Return self - other, i.e. the least precise pattern s.t. (self-other)|other == self"""
+        """
+        Return the CartesianPattern that contains the items that can be found in self but not in other.
+
+        Parameters
+        ----------
+        other: Self
+            Another Cartesian pattern to subtract from self.
+
+        Returns
+        -------
+        Self
+            The least precise pattern such that (self - other) | other == self.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> p2 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"}) 
+        >>> p1 - p2
+        {'name': {'John Smith'}}
+        """
         if self == other:
             return self.min_pattern
 
@@ -543,17 +1665,78 @@ class CartesianPattern(Pattern):
 
     @property
     def atomic_patterns(self) -> set[Self]:
+        """
+        Return the set of atomic patterns of a CartesianPattern which is the union of sets of atomic patterns per its every dimension
+
+        Returns
+        -------
+        atoms: set[Self]
+            A set of atomic Cartesian patterns.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> atoms = p1.atomic_patterns
+        >>> for atom in atoms:
+            >>> print(atom)
+        {'name': {'John Smith'}}
+        {'name': {'Smith'}}
+        {'name': {'John'}}
+        {'age': <= 40.0}
+        {'age': >= 20.0}
+        {}
+        {'name': {'John Smith'}}
+        """
         return {self.__class__({k: atom}) for k, pattern in self.value.items() for atom in pattern.atomic_patterns}
 
     def __len__(self) -> int:
-        """Minimal number of atomic patterns required to generate the pattern
+        """
+        Return the minimal number of atomic patterns required to generate the Cartesian pattern.
 
-        For CartesianPattern, the length of a pattern is the sum of lengths of all 'dimensional' subpatterns
+        Returns
+        -------
+        count: int
+            The total number of atomic subpatterns across all dimensions.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> len(p1)
+        3
         """
         return sum(len(subpattern) for subpattern in self.value.values())
 
     @property
     def min_pattern(self) -> Optional[Self]:
+        """
+        Return the minimal possible pattern for the Cartesian pattern.
+
+        Returns
+        -------
+        min: Optional[Self]
+            The minimal Cartesian pattern or None if any subpattern has no minimum.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> p1.min_pattern
+        {}
+        """
         if any(p.min_pattern is None for p in self.value.values()):
             return None
 
@@ -561,6 +1744,25 @@ class CartesianPattern(Pattern):
 
     @property
     def max_pattern(self) -> Optional[Self]:
+        """
+        Return the maximal possible pattern for the Cartesian pattern.
+
+        Returns
+        -------
+        max: Optional[Self]
+            The maximal Cartesian pattern or None if any subpattern has no maximum.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+                'age': IntervalPattern,
+                'name': NgramSetPattern
+            }
+        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
+        >>> p1.min_pattern
+        None
+        """
         if any(p.max_pattern is None for p in self.value.values()):
             return None
 
@@ -568,6 +1770,31 @@ class CartesianPattern(Pattern):
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
+        """
+        Return the maximal atomic patterns of the Cartesian pattern.
+
+        Returns
+        -------
+        max_atoms: Optional[set[Self]]
+            A set of maximal atomic Cartesian patterns.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+            'age': IntervalPattern,
+            'name': NgramSetPattern,
+            'personal qualities': ItemSetPattern
+            }
+        >>> p = PersonPattern({
+            'age': "[25, 35]",
+            'name': "Alice Johnson",
+            'personal qualities': ['Thoughtful', 'Curious']
+        })
+        >>> for atom in p.maximal_atoms:
+            print(atom)
+        {'age': ø}
+        """
         max_atoms = set()
         for k, pattern in self.value.items():
             if pattern.maximal_atoms is None:
@@ -576,4 +1803,35 @@ class CartesianPattern(Pattern):
         return max_atoms
 
     def __getitem__(self, item: str) -> Pattern:
+        """
+        Access a sub-pattern in a specific dimension.
+
+        Parameters
+        ----------
+        item: str
+            The dimension name.
+
+        Returns
+        -------
+        pattern: Pattern
+            The Pattern instance corresponding to the dimension.
+
+        Examples
+        --------
+        >>> class PersonPattern(CartesianPattern):
+            DimensionTypes = {
+            'age': IntervalPattern,
+            'name': NgramSetPattern,
+            'personal qualities': ItemSetPattern
+            }
+        >>> p = PersonPattern({
+            'age': "[25, 35]",
+            'name': "Alice Johnson",
+            'personal qualities': ['Thoughtful', 'Curious']
+        })
+        >>> print(p['age'])
+        [25.0, 35.0]
+        >>> prin(p['name'])
+        {'Alice Johnson'}
+        """
         return self.value[item]
