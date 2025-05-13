@@ -1,4 +1,4 @@
-User API
+User's API
 ========
 
 (Abstract) Pattern Class
