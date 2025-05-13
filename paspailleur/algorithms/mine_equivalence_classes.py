@@ -149,6 +149,10 @@ def iter_intents_via_ocbo(
     """
     Iterate intents by applying the object-wise Close By One algorithm.
 
+    References
+    ----------
+    Kuznetsov, S. O. (1993). A fast algorithm for computing all intersections of objects from an arbitrary semilattice. Nauchno-Tekhnicheskaya Informatsiya Seriya 2-Informatsionnye Protsessy i Sistemy, (1), 17-20.
+    
     Parameters
     ----------
     objects_patterns: list[Pattern]
@@ -205,6 +209,28 @@ def iter_all_patterns_ascending(
     -------
     pattern_extent_stream: Generator[tuple[Pattern, bitarray], bool, None]
         Yields each pattern and its extent.
+
+    Examples
+    --------
+    >>> atomic_patterns_extents = OrderedDict([
+        (ItemSetPattern({'A'}), bitarray('1110')),
+        (ItemSetPattern({'B'}), bitarray('1101')),
+        (ItemSetPattern({'C'}), bitarray('1011'))
+    ])
+    
+    --- Non-controlled iteration ---
+    >>> for p, e in mec.iter_all_patterns_ascending(atomic_patterns_extents):
+        print(p, e)
+    
+    --- Controlled iteration ---
+    >>> gen = mec.iter_all_patterns_ascending(atomic_patterns_extents, controlled_iteration=True)
+    >>> next(gen)  # initialize
+    >>> try:
+        while True:
+            pattern, extent = gen.send(True)  # control exploration
+            print(pattern, extent)
+    except StopIteration:
+        pass
     """
     # The algo is inspired by CloseByOne
     # For the start, let us just rewrite CloseByOne algorithm
@@ -262,6 +288,10 @@ def list_stable_extents_via_gsofia(
     """
     Identify stable extents using the gSofia algorithm.
 
+    References
+    ----------
+    Efficient Mining of Subsample-Stable Graph Patterns by Aleksey Buzmakov; Sergei O. Kuznetsov; Amedeo Napoli. Published in: 2017 IEEE International Conference on Data Mining (ICDM)
+
     Parameters
     ----------
     atomic_patterns_iterator: Generator
@@ -281,6 +311,10 @@ def list_stable_extents_via_gsofia(
     -------
     stable_extents: set[fbarray]
         Set of stable extents.
+
+    Notes
+    -----
+    The extents returned with n_stable_extents parameter are not necessarily the n most stable extents. They are just n extents that seem to be the very stable.
     """
     def maximal_bitarrays(bas: Collection[fbarray]) -> set[fbarray]:
         """
@@ -500,7 +534,7 @@ def iter_keys_of_patterns(
         patterns: list[Pattern],
         atomic_patterns: OrderedDict[Pattern, fbarray],
         max_length: Optional[int] = None
-) -> Iterator[tuple[Pattern, int]]:
+    ) -> Iterator[tuple[Pattern, int]]:
     """
     Yield key patterns for a list of patterns, maintaining index association.
 
