@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Paspailleur'
-copyright = '2025, Egor Dudyrev'
+copyright = '2025, SmartFCA/LORIA'
 author = 'Egor Dudyrev'
 release = '0.2'
 
