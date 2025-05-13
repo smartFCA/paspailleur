@@ -29,10 +29,7 @@ def extension(pattern: Pattern, objects_per_pattern: dict[Pattern, bitarray]) ->
     
     Examples
     --------
-    >>> from paspailleur.pattern_structures.patterns import ItemSetPattern
     >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
-    #  or simply:
-    # >>> objects_patterns = [Pattern(frozenset(x)) for x in ['abc', 'abc', 'abcd', 'acde']]
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.extension(p, obj_to_patterns)
@@ -67,6 +64,9 @@ def intention(objects: bitarray, objects_per_pattern: dict[Pattern, bitarray]) -
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> from bitarray.util import zeros
     >>> obj_ba = zeros(len(objects_names))
     >>> obj_ba[0] = obj_ba[1] = 1
@@ -102,6 +102,9 @@ def minimal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.minimal_pattern(obj_to_patterns)
     ItemSetPattern({'Hiking'})
     """
@@ -128,6 +131,9 @@ def maximal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.maximal_pattern(obj_to_patterns)
     ItemSetPattern({'Hiking', 'Sightseeing Flights', 'Jet Boating', 'Wildwater Rafting', 'Bungee Jumping'})
     """
@@ -154,6 +160,9 @@ def group_objects_by_patterns(objects_patterns: list[Pattern]) -> dict[Pattern, 
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.group_objects_by_patterns(objects_patterns)
     {ItemSetPattern({...}): bitarray(...), ...}
     """
@@ -194,6 +203,9 @@ def iter_patterns_ascending(
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> pattern_order = order_patterns_via_extents(list(obj_to_patterns.items()))
     >>> for pattern in bfuncs.iter_patterns_ascending(list(obj_to_patterns), pattern_order):
     print(pattern)
@@ -239,6 +251,9 @@ def rearrange_indices(order_before: list[bitarray], elements_before: list, eleme
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> before = [bitarray('010'), bitarray('001'), bitarray('000')]
     >>> elems_before = ['A', 'B', 'C']
     >>> elems_after = ['C', 'A', 'B']
@@ -283,6 +298,9 @@ def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], 
 
     Examples
     --------
+    >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
+    >>> from paspailleur.algorithms import base_functions as bfuncs
+    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> pattern_extents = list(obj_to_patterns.items())
     >>> order = bfuncs.order_patterns_via_extents(pattern_extents)
     >>> order[0]
