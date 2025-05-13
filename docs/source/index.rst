@@ -24,4 +24,5 @@ Contents
 .. toctree::
 
    usage
-
+   user_api
+   developer_api
