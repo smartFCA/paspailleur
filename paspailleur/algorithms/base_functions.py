@@ -67,11 +67,9 @@ def intention(objects: bitarray, objects_per_pattern: dict[Pattern, bitarray]) -
     >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
-    >>> from bitarray.util import zeros
-    >>> obj_ba = zeros(len(objects_names))
-    >>> obj_ba[0] = obj_ba[1] = 1
+    >>> obj_ba = bitarray('1100')
     >>> bfuncs.intention(obj_ba, obj_to_patterns)
-    ItemSetPattern({'Hiking', 'Observing Nature', 'Sightseeing Flights'})
+    Pattern(frozenset({'a', 'b', 'c'}))
     """
     super_patterns = [ptrn for ptrn, irr_ext in objects_per_pattern.items()
                       if basubset(objects, irr_ext)] #if basubset(irr_ext, objects)]
@@ -106,7 +104,7 @@ def minimal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.minimal_pattern(obj_to_patterns)
-    ItemSetPattern({'Hiking'})
+    Pattern(frozenset({'a'}))
     """
     some_pattern = next(pattern for pattern in objects_per_pattern)
     if some_pattern.min_pattern is not None:
@@ -135,7 +133,7 @@ def maximal_pattern(objects_per_pattern: dict[Pattern, bitarray]) -> Pattern:
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.maximal_pattern(obj_to_patterns)
-    ItemSetPattern({'Hiking', 'Sightseeing Flights', 'Jet Boating', 'Wildwater Rafting', 'Bungee Jumping'})
+    Pattern(frozenset({'a', 'b', 'c', 'd', 'e'}))
     """
     some_pattern = next(pattern for pattern in objects_per_pattern)
     if some_pattern.max_pattern is not None:
@@ -164,7 +162,7 @@ def group_objects_by_patterns(objects_patterns: list[Pattern]) -> dict[Pattern, 
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> bfuncs.group_objects_by_patterns(objects_patterns)
-    {ItemSetPattern({...}): bitarray(...), ...}
+    {Pattern(frozenset({'a', 'b', 'c'})): bitarray('1100'), Pattern(frozenset({'a', 'b', 'c', 'd'})): bitarray('0010'), Pattern(frozenset({'a', 'c', 'd', 'e'})): bitarray('0001')}
     """
     empty_extent = bazeros(len(objects_patterns))
 
@@ -206,9 +204,10 @@ def iter_patterns_ascending(
     >>> objects_patterns = [Pattern(frozenset('abc')), Pattern(frozenset('abc')), Pattern(frozenset('abcd')), Pattern(frozenset('acde'))]
     >>> from paspailleur.algorithms import base_functions as bfuncs
     >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
-    >>> pattern_order = order_patterns_via_extents(list(obj_to_patterns.items()))
+    >>> pattern_order = bfuncs.order_patterns_via_extents(list(obj_to_patterns.items()))
     >>> for pattern in bfuncs.iter_patterns_ascending(list(obj_to_patterns), pattern_order):
-    print(pattern)
+        print(pattern)
+    
     """
     assert all(not greater_ptrns[:i].any() for i, greater_ptrns in enumerate(greater_patterns_ordering)), \
         'The list of `patterns` from the smaller to the greater patterns. ' \
