@@ -251,7 +251,6 @@ def rearrange_indices(order_before: list[bitarray], elements_before: list, eleme
     Examples
     --------
     >>> from paspailleur.algorithms import base_functions as bfuncs
-    >>> obj_to_patterns = bfuncs.group_objects_by_patterns(objects_patterns)
     >>> before = [bitarray('010'), bitarray('001'), bitarray('000')]
     >>> elems_before = ['A', 'B', 'C']
     >>> elems_after = ['C', 'A', 'B']
