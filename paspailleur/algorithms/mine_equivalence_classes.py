@@ -225,8 +225,8 @@ def iter_all_patterns_ascending(
     --- Controlled iteration ---
     >>> gen = mec.iter_all_patterns_ascending(atomic_patterns_extents, controlled_iteration=True)
     >>> next(gen)  # initialize
-    >>> try:
-        while True:
+    >>> while True:
+        try:
             pattern, extent = gen.send(True)  # control exploration
             print(pattern, extent)
     except StopIteration:
