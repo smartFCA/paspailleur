@@ -14,7 +14,7 @@ Check out the :doc:`usage` section for further information, including how to :re
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
 
@@ -24,5 +24,5 @@ Contents
 .. toctree::
 
    usage
-   user_api
-   developer_api
+   patterns_api
+   algorithms_api
