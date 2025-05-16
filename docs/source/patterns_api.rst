@@ -1,5 +1,5 @@
-User's API
-========
+Patterns API
+============
 
 (Abstract) Pattern Class
 ........................
