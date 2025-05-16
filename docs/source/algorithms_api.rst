@@ -1,5 +1,5 @@
-Developer's API
-===============
+Algorithms API
+==============
 
 Base functions
 ..............
