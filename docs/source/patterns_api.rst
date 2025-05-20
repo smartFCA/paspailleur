@@ -5,7 +5,7 @@ Patterns API
 ------------------------
 
 .. autoclass:: paspailleur.pattern_structures.pattern.Pattern
-
+   :members:
 
 Built-in Patterns
 -----------------
@@ -19,6 +19,7 @@ Pattern Structure
 
 .. autoclass:: paspailleur.pattern_structures.pattern_structure.PatternStructure
 
+
 Basic operations on a context
 .............................
 
@@ -29,6 +30,7 @@ Basic operations on a context
 
 Initialisation of the Pattern Structure
 .......................................
+
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.fit
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.intent
