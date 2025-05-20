@@ -2,25 +2,25 @@ Patterns API
 ============
 
 (Abstract) Pattern Class
-........................
+------------------------
 
 .. autoclass:: paspailleur.pattern_structures.pattern.Pattern
 
 
 Built-in Patterns
-.................
+-----------------
 
 .. automodule:: paspailleur.pattern_structures.built_in_patterns
    :members:
 
 
 Pattern Structure
-.................
+-----------------
 
 .. autoclass:: paspailleur.pattern_structures.pattern_structure.PatternStructure
 
 Basic operations on a context
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+.............................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.extent
 
@@ -28,14 +28,14 @@ Basic operations on a context
 
 
 Initialisation of the Pattern Structure
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+.......................................
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.fit
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.intent
 
 
 Properties that are easy to compute
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+...................................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern
 
@@ -53,7 +53,7 @@ Properties that are easy to compute
 
 
 Pattern Iterators
-,,,,,,,,,,,,,,,,,
+.................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_atomic_patterns
 
@@ -65,7 +65,7 @@ Pattern Iterators
 
 
 High-level FCA API
-,,,,,,,,,,,,,,,,,,
+..................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_concepts
 
@@ -77,7 +77,7 @@ High-level FCA API
 
 
 Measures of Patterns
-,,,,,,,,,,,,,,,,,,,,
+....................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_support
 
@@ -87,6 +87,6 @@ Measures of Patterns
 
 
 Helping Functions
-,,,,,,,,,,,,,,,,,
+.................
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.verbalise_extent
