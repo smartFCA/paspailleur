@@ -58,10 +58,12 @@ For this we'll be using the Titanic example since it has more than one pattern t
    class FarePattern(bip.IntervalPattern):
       BoundsUniverse = (0, 50, 100, 200, 300, 600)
 
+With this we've initialized the pattern classes to be used in the analysis.
+
 Pattern Structure to represent the dataset
 ..........................................
 
-With the patterns defined, you can now construct a dataset pattern structure:
+With the pattern classes defined, you can now construct a dataset pattern structure:
 
 .. code-block:: python
    :linenos:
@@ -83,6 +85,8 @@ With the patterns defined, you can now construct a dataset pattern structure:
          "Fare": FarePattern
       }
    )
+
+Which is the intents behind the pattern classes, used to make the actual analysis.
 
 Discover patterns in the data
 -----------------------------
