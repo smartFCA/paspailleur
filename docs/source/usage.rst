@@ -21,7 +21,8 @@ Paspailleur lets you describe the data using complex "patterns" such as itemsets
 Built-in patterns
 .................
 
-For this we'll be using the Titanic example since it has more than one pattern type:
+The study will use the Titanic example and focus on only 20 Passengers, not all of them.
+We'll be using the Titanic example since it has more than one pattern type, which uses more than one pattern class:
 
 .. code-block:: python
    :linenos:
@@ -86,7 +87,7 @@ With the pattern classes defined, you can now construct a dataset pattern struct
       }
    )
 
-Which is the intents behind the pattern classes, used to make the actual analysis.
+Which are the intents behind the pattern classes, used to make the actual analysis.
 
 Discover patterns in the data
 -----------------------------
