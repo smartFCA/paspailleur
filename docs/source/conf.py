@@ -36,3 +36,7 @@ autodoc_member_order = 'bysource'
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+
+html_sidebars = {
+    "**": ["sidebar-nav-bs", "page-toc", "sourcelink"]
+}
