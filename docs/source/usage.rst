@@ -69,22 +69,23 @@ With the pattern classes defined, you can now construct a dataset pattern struct
 .. code-block:: python
    :linenos:
 
-   from paspailleur.pattern_structures import MixedPatternStructure
+   from paspailleur.pattern_structures.built_in_patterns import CartesianPattern
 
-   pattern_structure = MixedPatternStructure(
+   pattern_structure = CartesianPattern(
       df,
       {
-         "Survived": SurvivedPattern,
-         "Known Age": KnownAgePattern,
-         "Known Cabin": KnownCabinPattern,
-         "Sex": SexPattern,
-         "Embarked": EmbarkedPattern,
-         "Passenger Class": PassengerClassPattern,
-         "Age": AgePattern,
-         "# Siblings and Spouses": NSiblingsPattern,
-         "# Parents and Children": NParentsPattern,
-         "Fare": FarePattern
-      }
+        'Survived': SurvivedPattern, 
+        'Known Age': KnownAgePattern, 
+        'Known Cabin': KnownCabinPattern, 
+        'Sex': SexPattern, 
+        'Embarked': EmbarkedPattern, 
+        'Passenger Class': PassengerClassPattern, 
+        'Age': AgePattern,
+        '# Siblings and Spouses': NSiblingsPattern, 
+        '# Parents and Children': NParentsPattern,
+        'Fare': FarePattern, 
+        'Name': NamePattern
+    }
    )
 
 Which are the intents behind the pattern classes, used to make the actual analysis.
