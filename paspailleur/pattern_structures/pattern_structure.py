@@ -5,6 +5,7 @@ from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros
+from caspailleur import inverse_order
 
 from caspailleur.io import to_absolute_number
 from tqdm.auto import tqdm
@@ -450,6 +451,7 @@ class PatternStructure:
         Generator[PatternType, bool, None],
         Generator[tuple[PatternType, set[str]], bool, None],
         Generator[tuple[PatternType, fbarray], bool, None]]:
+        kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce',
         """
         Iterate over atomic patterns in the structure.
 
@@ -461,6 +463,13 @@ class PatternStructure:
             If True, returns extents as bitarrays (default is False).
         kind: Literal, optional
             Iteration strategy: 'bruteforce', 'ascending', or 'ascending controlled' (default is 'bruteforce').
+        support_characteristic: Literal, optional
+            Defines what type of atomic patterns to output.
+            If 'any' (which is the default), then output all the atomic patterns.
+            If 'maximal' then output the most precise atomic patterns w.r.t. their support.
+            (i.e. if atomic pattern is support-maximal, then any more precise atomic pattern would describe fewer objects).
+            If 'minimal' then output the least precise atomic patterns w.r.t. their support.
+            (i.e. if atomic pattern is support-minimal, then any less precise atomic pattern would describe more objects).
 
         Yields
         ------
@@ -472,7 +481,8 @@ class PatternStructure:
         >>> for atom, extent in ps.iter_atomic_patterns():
             print(atom, extent)
         """
-        assert self._atomic_patterns is not None
+        assert self._atomic_patterns is not None and self._atomic_patterns_order is not None, \
+            "Please initialise atomic patterns first using `ps.init_atomic_patterns()` function."
 
         def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray):
             """
@@ -495,19 +505,46 @@ class PatternStructure:
                 return ptrn, {self._object_names[g] for g in ext.search(True)}
             return ptrn, ext
 
+
+        def filter_atomic_patterns_by_support(support_characteristic_: Literal["any", "maximal", "minimal"]):
+            if support_characteristic_ == 'any':
+                return self._atomic_patterns, self._atomic_patterns_order
+
+            if support_characteristic_ not in {'maximal', 'minimal'}:
+                raise ValueError(f"Unsupported value for `support_characteristic`: {support_characteristic}. "
+                                 f"The only accepted values are `any`, `maximal`, and `minimal`.")
+
+            atomic_supports = [extent.count() for extent in self._atomic_patterns.values()]
+            if support_characteristic_ == 'maximal':
+                atoms_to_iterate = [i for i, superatoms in enumerate(self._atomic_patterns_order)
+                                    if not any(atomic_supports[i]==atomic_supports[j] for j in superatoms.search(True))]
+            else:  # if support_characteristic_ == 'minimal':
+                subatoms_order = inverse_order(self._atomic_patterns_order)
+                atoms_to_iterate = [i for i, subatoms in enumerate(subatoms_order)
+                                    if not any(atomic_supports[i] == atomic_supports[j] for j in subatoms.search(True))]
+
+            atomic_order_ = [bitarray([self._atomic_patterns_order[i][j] for j in atoms_to_iterate])
+                             for i in atoms_to_iterate]
+            atoms_to_iterate = set(atoms_to_iterate)
+            atomic_patterns_ = OrderedDict([
+                (atom, extent) for idx, (atom, extent) in enumerate(self._atomic_patterns.items())
+                if idx in atoms_to_iterate
+            ])
+            return atomic_patterns_, atomic_order_
+
+        atomic_patterns, atomic_order = filter_atomic_patterns_by_support(support_characteristic)
+
         if kind == 'bruteforce':
-            for pattern, extent in self._atomic_patterns.items():
+            for pattern, extent in atomic_patterns.items():
                 yield form_yielded_value(pattern, extent)
 
         if kind == 'ascending':
-            assert self._atomic_patterns_order is not None
-            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, False)
+            iterator = bfuncs.iter_patterns_ascending(atomic_patterns, atomic_order, False)
             for pattern, extent in iterator:
                 yield form_yielded_value(pattern, extent)
 
         if kind == 'ascending controlled':
-            assert self._atomic_patterns_order is not None
-            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, True)
+            iterator = bfuncs.iter_patterns_ascending(atomic_patterns, atomic_order, True)
             next(iterator)  # initialise
             yield
             go_more_precise = True
