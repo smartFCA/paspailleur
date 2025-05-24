@@ -372,7 +372,7 @@ class PatternStructure:
         >>> ps.atomic_patterns
         OrderedDict({Pattern("A"): {"obj1", "obj3"}, Pattern("B"): {"obj2"}})
         """
-        return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
+        return OrderedDict(self.iter_atomic_patterns(return_bitarrays=False))
 
     @property
     def n_atomic_patterns(self) -> int:
@@ -389,7 +389,7 @@ class PatternStructure:
         >>> ps.n_atomic_patterns
         5
         """
-        return sum(1 for _ in self.iter_atomic_patterns(return_extents=False, return_bitarrays=False))
+        return sum(1 for _ in self.iter_atomic_patterns(return_bitarrays=True))
 
     @property
     def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
@@ -445,20 +445,26 @@ class PatternStructure:
     #####################
     def iter_atomic_patterns(
         self,
-        return_extents: bool = True, return_bitarrays: bool = False,
-        kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce'
-        ) -> Union[
-        Generator[PatternType, bool, None],
-        Generator[tuple[PatternType, set[str]], bool, None],
-        Generator[tuple[PatternType, fbarray], bool, None]]:
+        return_bitarrays: bool = False,
         kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce',
+        support_characteristic: Literal["any", "maximal", "minimal"] = "any",
+    ) -> Generator[tuple[PatternType, Union[set[str], fbarray]], Union[bool, None], None]:
         """
-        Iterate over atomic patterns in the structure.
+        Iterate over atomic patterns in the pattern structure.
+
+        If `controlled` is False, then the function works as a generator that can be directly put into for-in loop,
+        If `controlled` is True, then patterns' navigation can be controleld by `pattern_iterator.send()` function.
+        After receiving pattern `p`,
+        send `True` to the iterator in order to continue iterating over atomic patterns more precise than `p`,
+        and send `False` to "early stop" the iteration.
+
+        Important:
+        When `controlled` is set to `True`,
+        initialise the generator using `next(pattern_generator)` before generating any atomic patterns.
+
 
         Parameters
         ----------
-        return_extents: bool, optional
-            If True, returns extents along with patterns (default is True).
         return_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
         kind: Literal, optional
@@ -473,8 +479,10 @@ class PatternStructure:
 
         Yields
         ------
-        pattern_data: Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
-            Patterns optionally paired with their extent as a set of object names or bitarray.
+        pattern_generator: Generator[tuple[PatternType, Union[set[str], fbarray]], Union[bool, None], None]
+            Generator of pairs of atomic patterns and their extents (either as a set of objects' names or as a bitarray).
+            When `controlled` parameter is set to `True`, one can send boolean `refine_atomic_pattern` parameter
+            to the generator in order to control the patterns' navigation.
 
         Examples
         --------
@@ -484,7 +492,7 @@ class PatternStructure:
         assert self._atomic_patterns is not None and self._atomic_patterns_order is not None, \
             "Please initialise atomic patterns first using `ps.init_atomic_patterns()` function."
 
-        def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray):
+        def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray) -> tuple[Pattern, Union[set[str], fbarray]]:
             """
             Format the yielded result based on configuration.
 
@@ -499,11 +507,7 @@ class PatternStructure:
             -------
             Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
             """
-            if not return_extents:
-                return ptrn
-            if not return_bitarrays:
-                return ptrn, {self._object_names[g] for g in ext.search(True)}
-            return ptrn, ext
+            return ptrn, self.verbalise_extent(ext) if not return_bitarrays else ext
 
 
         def filter_atomic_patterns_by_support(support_characteristic_: Literal["any", "maximal", "minimal"]):
@@ -850,9 +854,7 @@ class PatternStructure:
                                                             concepts_generator}
 
         if algorithm == 'gSofia':
-            atomic_patterns_iterator = self.iter_atomic_patterns(
-                return_extents=True, return_bitarrays=True, kind='ascending controlled'
-            )
+            atomic_patterns_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled')
             extents_ba = mec.list_stable_extents_via_gsofia(
                 atomic_patterns_iterator,
                 min_delta_stability=min_delta_stability,
@@ -1029,7 +1031,7 @@ class PatternStructure:
         >>> ps.next_patterns(Pattern("A"))
         {Pattern("A & B")}
         """
-        atom_iterator = self.iter_atomic_patterns(return_extents=True, return_bitarrays=True, kind='ascending controlled')
+        atom_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled')
         extent = self.extent(pattern, return_bitarray=True)
         next(atom_iterator)  # initialise iterator
 
