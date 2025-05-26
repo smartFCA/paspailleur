@@ -3,12 +3,14 @@ from functools import reduce
 from itertools import takewhile
 from collections import OrderedDict
 
+from caspailleur import inverse_order
 from tqdm.auto import tqdm
 from typing import Iterator, Generator, Collection, Iterable, Optional
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
 from paspailleur.algorithms import base_functions as bfuncs
+from paspailleur.algorithms.base_functions import iterate_antichains
 from paspailleur.pattern_structures.pattern import Pattern
 
 
@@ -212,15 +214,16 @@ def iter_all_patterns_ascending(
 
     Examples
     --------
+    >>> from paspailleur.pattern_structures.built_in_patterns import ItemSetPattern
     >>> atomic_patterns_extents = OrderedDict([
-        (ItemSetPattern({'A'}), bitarray('1110')),
-        (ItemSetPattern({'B'}), bitarray('1101')),
-        (ItemSetPattern({'C'}), bitarray('1011'))
-    ])
+    ...    (ItemSetPattern({'A'}), bitarray('1110')),
+    ...    (ItemSetPattern({'B'}), bitarray('1101')),
+    ...    (ItemSetPattern({'C'}), bitarray('1011'))
+    ... ])
     
     --- Non-controlled iteration ---
     >>> for p, e in mec.iter_all_patterns_ascending(atomic_patterns_extents):
-        print(p, e)
+    ...    print(p, e)
     
     --- Controlled iteration ---
     >>> gen = mec.iter_all_patterns_ascending(atomic_patterns_extents, controlled_iteration=True)
@@ -623,3 +626,123 @@ def iter_keys_of_patterns(
                               for extent in patterns_per_extents)
 
         go_more_precise &= appropriate_length
+
+
+def iter_keys_of_atomised_pattern(
+    pattern_atoms: set[Pattern],
+    atomic_patterns: OrderedDict[Pattern, fbarray],
+    max_length: Optional[int] = None,
+    subatoms_order: list[fbarray] = None
+) -> Iterator[set[Pattern]]:
+    """
+    Yield subsets of atomic patterns that represent the least precise patterns with the same extent as `pattern_atoms`
+
+    Parameters
+    ----------
+    pattern_atoms: set[Pattern]
+        The target pattern represented with a set of its atomic patterns, i.e. target pattern is the join of pattern_atoms
+        (it can be a minimal subset of atomic patterns, or maximal, or anything in between).
+    atomic_patterns: OrderedDict[Pattern, fbarray]
+        Atomic patterns and their extents.
+    max_length: Optional[int], optional
+        Maximum length of key patterns.
+    subatoms_order: list[fbarray], optional
+        Partial order of `atomic_patterns` represented with list of frozenbitarrays.
+        The value `subatoms_order[i][j] == True` means that j-th atomic pattern is less precise than i-th atomic pattern.
+
+    Returns
+    -------
+    keys: Iterator[set[Pattern]]
+        Iterator of domination-minimal antichains of atomic patterns whose join equals to the join of `pattern_atoms`.
+
+    Notes
+    -----
+    We say that one subset of atomic patterns is dominated by another subset of atomic patterns,
+    if for every element of the first set, there is some greater atomic pattern in the second set.
+    """
+    assert all(atom in atomic_patterns for atom in pattern_atoms),  \
+        "Every atom from `pattern_atoms` should be mentioned in `atomic_patterns`"
+
+    def extent_from_indices(atomic_indices: list[int], aextents: list[fbarray]) -> fbarray:
+        return reduce(fbarray.__and__, (aextents[i] for i in atomic_indices), aextents[0] | ~aextents[0])
+
+    def subset_closure(antichain_: list[int], subatoms_order_: list[fbarray]) -> fbarray:
+        if not antichain_:
+            return fbarray(bazeros(len(subatoms_order_)))
+
+        subatoms = bitarray(reduce(fbarray.__or__, (subatoms_order_[i] for i in antichain_)))
+        for i in antichain_:
+            subatoms[i] = True
+        return fbarray(subatoms)
+
+    def setup_search_space(
+            subatoms_order_: Optional[list[fbarray]], pattern_atoms_: set[Pattern],
+            atomic_patterns_: OrderedDict[Pattern, fbarray]
+    ) -> tuple[OrderedDict[Pattern, fbarray], list[fbarray]]:
+        if subatoms_order_ is None:
+            subatoms = [atom for atom, atom_extent in atomic_patterns_.items()
+                        if basubset(extent, atom_extent)
+                        and any(basubset(atomic_patterns_[target_atom], atom_extent) and atom <= target_atom
+                                for target_atom in pattern_atoms)]
+            subatoms_order_ = inverse_order(list(map(
+                fbarray,
+                bfuncs.order_patterns_via_extents([(subatom, atomic_patterns_[subatom]) for subatom in subatoms])
+            )))
+        else:  # if subatoms_order_ is not None
+            atoms_list = list(atomic_patterns_)
+            pattern_atoms_idxs = [i for i, a in enumerate(atomic_patterns_) if a in pattern_atoms_]
+            all_pattern_atoms_idxs = subset_closure(pattern_atoms_idxs, subatoms_order_)
+            subatoms = [atoms_list[i] for i in all_pattern_atoms_idxs.search(True)]
+            subatoms_order_ = [fbarray([subatoms_order_[i][j] for j in all_pattern_atoms_idxs.search(True)])
+                               for i in all_pattern_atoms_idxs.search(True)]
+            # assert closure.count() >= len(pattern_atoms_idxs)
+            # assert all(any(a<=b for b in pattern_atoms_) for a in subatoms)
+            # assert all(all(subatoms_order_[i][j] == (b <= a) for j, b in enumerate(subatoms) if i!=j)
+            #            for i, a in enumerate(subatoms))
+
+        assert not any(descendants[i:].any() for i, descendants in enumerate(subatoms_order_)), \
+            ("The OrderedDict of `atomic_patterns` should be topologically sorted. "
+             "That is, for every atomic pattern, all its lesser patterns should be defined _before_ the pattern "
+             "(one can say, they should smaller patterns should have smaller indices).")
+
+        atomic_patterns_ = OrderedDict([(atom, atomic_patterns_[atom]) for atom in subatoms])
+        return atomic_patterns_, subatoms_order_
+
+    if not pattern_atoms:
+        yield set()
+        return
+
+    extent = reduce(fbarray.__and__, (atomic_patterns[a] for a in pattern_atoms))
+    atomic_patterns, subatoms_order = setup_search_space(subatoms_order, pattern_atoms, atomic_patterns)
+    atomic_patterns, atomic_extents = zip(*atomic_patterns.items())
+
+    antichain_iterator = iterate_antichains(subatoms_order)
+    refine_antichain = None  # to initialise the iterator
+    found_keys: dict[tuple[int, ...], fbarray] = dict()  #
+    while True:
+        try:
+            antichain = antichain_iterator.send(refine_antichain)
+        except StopIteration:
+            break
+
+        antichain_extent = extent_from_indices(antichain, atomic_extents)
+        too_precise_extent = not basubset(extent, antichain_extent)
+        too_long_antichain = len(antichain) > max_length if max_length is not None else False
+        if too_precise_extent or too_long_antichain:
+            refine_antichain = False
+            continue
+
+        if antichain_extent != extent:
+            refine_antichain = True
+            continue
+
+        antichain_closure = subset_closure(antichain, subatoms_order)
+        dominates_found_key: bool = any(basubset(found_closure, antichain_closure) for found_closure in found_keys.values())
+        if dominates_found_key:
+            refine_antichain = False
+            continue
+
+        # now, antichain_extent == extent and no dominated antichains were classified as keys. So current antichain is a key
+        found_keys[antichain] = antichain_closure
+        yield {atomic_patterns[i] for i in antichain}
+        refine_antichain = False
