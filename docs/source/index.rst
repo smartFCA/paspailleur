@@ -17,7 +17,7 @@ Check out the :doc:`usage` section for further information, including how to :re
 .. toctree::
    :maxdepth: 3
    :caption: Contents
-   :titlesonly:
+
 
    usage
    patterns_api
