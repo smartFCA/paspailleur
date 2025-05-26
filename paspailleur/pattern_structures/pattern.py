@@ -14,14 +14,9 @@ class Pattern:
     ----------
     PatternValueType: 
         A type variable representing the type of the pattern's value.
-    
-    Private Attributes
-    ------------------
     _value: 
         The processed value of the pattern.
-    
-    properties
-    ----------
+
     value
         Return the value of the pattern.
     meetable
