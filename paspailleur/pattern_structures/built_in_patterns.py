@@ -16,16 +16,16 @@ class ItemSetPattern(Pattern):
     It supports operations such as union, intersection, and difference.
 
     References
-    ----------
+    ..........
     Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules in large databases.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset.
 
     Properties
-    ----------
+    ..........
     value
         Return the value of the item set pattern
     atomic_patterns
@@ -233,21 +233,20 @@ class CategorySetPattern(ItemSetPattern):
     But it's also an inversion of it, meaning for an object to fall under the ItemSetPattern class, it has to fit the the descriptions of all items in the set. On the other hand for an object to fall under the CategorySetPattern, it needs only fit to one item in the set.
     
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset.
     Universe: Optional[frozenset]
         The set of all possible categories.
     
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern
         Return the minimal possible pattern for the category set pattern.
     max_pattern
         Return the maximal possible pattern for the category set pattern.
-    
     """
     PatternValueType = frozenset
     Universe: Optional[frozenset] = None  # The set of all possible categories
@@ -450,14 +449,14 @@ class IntervalPattern(Pattern):
     including operations such as intersection, union, and difference.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a tuple of bounds.
     BoundsUniverse: list[float]
         A list representing the universe of bounds for the interval.
     
     Properties
-    ----------
+    ..........
     lower_bound
         Return the lower bound of the interval.
     is_lower_bound_closed
@@ -967,12 +966,12 @@ class ClosedIntervalPattern(IntervalPattern):
     This class extends IntervalPattern to specifically handle closed intervals.
 
     Attributes
-    ----------
+    ..........
     PatternValueType :
         The type of the pattern's value, which is a tuple of two floats.
     
     Properties
-    ----------
+    ..........
     lower_bound
         Return the lower bound of the closed interval.
     upper_bound
@@ -1127,7 +1126,7 @@ class NgramSetPattern(Pattern):
     A class representing a set of n-grams as a pattern.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset of tuples.
     StopWords: set[str]
@@ -1135,7 +1134,7 @@ class NgramSetPattern(Pattern):
         But if a set has both stop words and non stop words it is kept in the analysis
 
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern
@@ -1480,14 +1479,14 @@ class CartesianPattern(Pattern):
     A class representing a Cartesian product of multiple dimensions as a pattern.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozendict mapping dimension names to Pattern instances.
     DimensionTypes: dict[str, Type[Pattern]]
         Optional mapping from dimension names to specific Pattern types for parsing.
     
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern

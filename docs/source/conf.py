@@ -28,6 +28,7 @@ extensions = [
 templates_path = ['_templates']
 exclude_patterns = []
 
+autodoc_member_order = 'bysource'
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -35,3 +36,12 @@ exclude_patterns = []
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+
+html_sidebars = { # this is for the primary sidebar (the one on the left)
+    "**": ["sidebar-nav-bs", "page-toc"]
+}
+
+html_theme_options = { # this is for the secondary sidebar (the one on the right side)
+    "show_toc_level": 2,
+    "secondary_sidebar_items": ["page-toc", "sourcelink"]
+}
