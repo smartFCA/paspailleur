@@ -84,7 +84,7 @@ Initialisation of the Pattern Structure
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.fit
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.intent
+.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.init_atomic_patterns
 
 
 Properties that are easy to compute
