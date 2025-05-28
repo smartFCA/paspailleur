@@ -14,8 +14,6 @@ from .pattern import Pattern
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 
 
-"""Most of the changes that appear are merely a change of alignment for either the parameters of functions or the parameters of the expected return of the functions (after ->) done only to faciliate the reading of them in the functions and the usage of the collapse/expand arrows in VS code
-"""
 class PatternStructure:
     """
     A class to process complex datasets where every row (called object) is described by one pattern.
@@ -23,16 +21,16 @@ class PatternStructure:
     All patterns should be of the same class defined by PatternType attribute.
 
     References
-    ----------
+    ..........
     Ganter, B., & Kuznetsov, S. O. (2001, July). Pattern structures and their projections. In International conference on conceptual structures (pp. 129-142). Berlin, Heidelberg: Springer Berlin Heidelberg.
     
     Attributes
-    ----------
+    ..........
     PatternType: TypeVar
         A type variable bound to the Pattern class.
     
     Private Attributes
-    ------------------
+    ..................
     _object_irreducibles: Optional[dict[PatternType, fbarray]]
         Patterns introduced by objects.
     _object_names: Optional[list[str]]
@@ -44,10 +42,8 @@ class PatternStructure:
         _atomic_patterns_order[i][j] == True would mean that i-th atomic pattern is less precise than j-th atomic pattern.
         _atomic_patterns_order[i][j] == False can mean both that j-th atomic pattern is less precise than i-th atomic pattern and that i-th and j-th atomic patterns can not be compared.
 
-
-
     Properties
-    ----------
+    ..........
     premaximal_patterns
         Return the premaximal patterns in the structure.
     atomic_patterns_order
