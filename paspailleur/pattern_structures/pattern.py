@@ -11,12 +11,17 @@ class Pattern:
     the characteristics of the pattern, such as whether it can be met, joined, or atomized.
 
     Attributes
-    ----------
+    ..........
     PatternValueType: 
         A type variable representing the type of the pattern's value.
+    
+    Private Attributes
+    ..................
     _value: 
         The processed value of the pattern.
-
+    
+    Properties
+    ..........
     value
         Return the value of the pattern.
     meetable

@@ -37,6 +37,11 @@ autodoc_member_order = 'bysource'
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 
-html_sidebars = {
-    "**": ["sidebar-nav-bs", "page-toc", "sourcelink"]
+html_sidebars = { # this is for the primary sidebar (the one on the left)
+    "**": ["sidebar-nav-bs", "page-toc"]
+}
+
+html_theme_options = { # this is for the secondary sidebar (the one on the right side)
+    "show_toc_level": 2,
+    "secondary_sidebar_items": ["page-toc", "sourcelink"]
 }
