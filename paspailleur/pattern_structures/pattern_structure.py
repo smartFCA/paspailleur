@@ -683,8 +683,9 @@ class PatternStructure:
     def iter_keys(
             self,
             patterns: Union[PatternType, Iterable[PatternType]],
-            max_length: Optional[int] = None
-        ) -> Union[
+            max_length: Optional[int] = None,
+            use_tqdm: bool = False
+    ) -> Union[
             Iterator[PatternType], 
             Iterator[tuple[PatternType, PatternType]]]:
         """
@@ -702,6 +703,8 @@ class PatternStructure:
             A pattern or list of patterns to decompose into atomic keys.
         max_length: Optional[int], optional
             Maximum length of key combinations (default is None).
+        use_tqdm: bool, default = False
+            Flag whether to show tqdm progress bar or not.
 
         Yields
         ------
@@ -713,13 +716,21 @@ class PatternStructure:
         >>> for key in ps.iter_keys(Pattern("A | B")):
             print(key)
         """
-        if isinstance(patterns, self.PatternType):
-            return mec.iter_keys_of_pattern(patterns, self._atomic_patterns, max_length=max_length)
+        descending_pattern_order = inverse_order(self._atomic_patterns_order)
+        is_single_pattern = isinstance(patterns, self.PatternType)
+        patterns = [patterns] if is_single_pattern else patterns
 
-        # `patterns` is a collection of patterns
-        patterns = list(patterns)
-        iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns, max_length=max_length)
-        return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+        patterns_extents = [(pattern, self.extent(pattern, return_bitarray=True)) for pattern in patterns]
+        keys_iterator = mec.iter_keys_of_patterns_via_atoms(
+            patterns_extents,
+            self._atomic_patterns, descending_pattern_order, max_length,
+            use_tqdm=use_tqdm,
+        )
+
+        if is_single_pattern:
+            return (key for key, _ in keys_iterator)
+        return ((key, patterns_extents[pattern_i][0]) for key, pattern_i in keys_iterator)
+
 
     def iter_subgroups(
             self,
