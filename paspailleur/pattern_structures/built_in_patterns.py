@@ -974,21 +974,27 @@ class IntervalPattern(Pattern):
         if atoms_configuration == 'min':
             atoms = []
             if not (self.lower_bound == -math.inf and self.is_lower_bound_closed):
-                atoms.append( (self.lower_bound, self.is_lower_bound_closed) )
+                atoms.append( ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True)) )
             if not (self.upper_bound == math.inf and self.is_upper_bound_closed):
-                atoms.append( (self.upper_bound, self.is_upper_bound_closed) )
+                atoms.append( ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)) )
             return {self.__class__(v) for v in atoms}
 
         # atoms_configuration == 'max'
-        atoms = [
-            ((-math.inf, True), (math.inf, True)),
-            ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
-            ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True))
-        ]
+        assert self.BoundsUniverse is not None, ("Please define BoundsUniverse class attribute in order to "
+                                                 "be able to compute all atomic patterns for a specified pattern.")
+
+
+        atoms = []
+        for bound in self.BoundsUniverse:
+            for is_bound_closed in [False, True]:
+                if bound >= self.upper_bound:
+                    atoms.append( ((-math.inf, True), (bound, is_bound_closed)) )
+                if bound <= self.lower_bound:
+                    atoms.append( ((bound, is_bound_closed), (math.inf, True))  )
         if not self.is_upper_bound_closed:
-            atoms.append(tuple([(-math.inf, True), (self.upper_bound, True)]))
+            atoms.remove( ((-math.inf, True), (self.upper_bound, True)) )
         if not self.is_lower_bound_closed:
-            atoms.append(tuple([(self.lower_bound, True), (math.inf, True)]))
+            atoms.remove( ((self.lower_bound, True), (math.inf, True)) )
 
         return {self.__class__(v) for v in atoms}
 
