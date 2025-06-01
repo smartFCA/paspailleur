@@ -739,7 +739,9 @@ class PatternStructure:
             quality_threshold: float,
             kind: Literal["bruteforce"] = 'bruteforce',
             max_length: Optional[int] = None,
-            return_objects_as_bitarrays: bool = False
+            min_support: Optional[Union[int, float]] = 0,
+            return_objects_as_bitarrays: bool = False,
+            use_tqdm: bool = False,
         ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
         """
         Iterate over subgroups that satisfy a quality threshold.
@@ -763,8 +765,13 @@ class PatternStructure:
             Subgroup mining strategy (currently only 'bruteforce' supported).
         max_length: Optional[int], optional
             Maximum length of subgroups (default is None).
+        min_support: Union[int, float], optional
+            The minimal amount of objects that a subgroup should describe. Defaults to 0.
         return_objects_as_bitarrays: bool, optional
             If True, extents are returned as bitarrays (default is False).
+        use_tqdm: bool, optional
+            Flag whether to show tqdm progress bar to visualise the number of passed subgroup candidates.
+            Defaults to False.
 
         Yields
         ------
@@ -780,14 +787,20 @@ class PatternStructure:
             goal_objects = set(goal_objects)
             goal_objects = bitarray([obj_name in goal_objects for obj_name in self._object_names])
 
+        min_support = to_absolute_number(min_support, len(self._object_names))
+
         quality_func, tp_min, fp_max = msubg.setup_quality_measure_function(
             quality_measure, quality_threshold, goal_objects.count(), len(goal_objects)
         )
 
         subgroups_iterator: Optional[Iterator[tuple[Pattern, bitarray, float]]] = None
         if kind == 'bruteforce':
-            subgroups_iterator = msubg.iter_subgroups_bruteforce(
-                self, goal_objects, quality_threshold, quality_func, tp_min, fp_max, max_length)
+            subgroups_iterator = msubg.iter_subgroups_via_atoms(
+                self._atomic_patterns, goal_objects, quality_threshold, quality_func, max(tp_min, min_support), max_length,
+                inverse_order(self._atomic_patterns_order),
+                use_tqdm=use_tqdm
+            )
+
 
         if subgroups_iterator is None:
             raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
