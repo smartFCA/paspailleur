@@ -1,5 +1,6 @@
 import math
-from typing import Self, Collection, Optional, Sequence, Type
+from builtins import set
+from typing import Self, Collection, Optional, Sequence, Type, Literal
 from numbers import Number
 from frozendict import frozendict
 import re
@@ -185,6 +186,37 @@ class ItemSetPattern(Pattern):
         """
         return frozenset(value)
 
+
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. ItemSets containing just one item.
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter _does not affect_ the output
+            of the function.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__({v}) for v in self.value}
+
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -203,7 +235,7 @@ class ItemSetPattern(Pattern):
         >>> p.atomic_patterns
         {ItemSetPattern({1}), ItemSetPattern({2})}
         """
-        return {self.__class__({v}) for v in self.value}
+        return super().atomic_patterns
 
     @property
     def min_pattern(self) -> Self:
@@ -345,6 +377,41 @@ class CategorySetPattern(ItemSetPattern):
             return self.min_pattern
         return self.__class__(self.value)
 
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. CategorySets that exclude just one category from the minimal pattern
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter _does not affect_ the
+            output of the function.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        assert self.min_pattern is not None, \
+            f"Pattern of  {self.__class__} class cannot be splitted without predefined min_pattern value. " \
+            f"The proposed solution is to inherit a new class from the current class and " \
+            f"explicitly specify the value of min_pattern."
+
+        leftout_vals = self.min_pattern.value - self.value
+        return {self.__class__(self.min_pattern.value - {v}) for v in leftout_vals}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -372,9 +439,7 @@ class CategorySetPattern(ItemSetPattern):
             f"Atomic patterns of {self.__class__} class cannot be computed without predefined min_pattern value. " \
             f"The proposed solution is to inherit a new class from the current class and " \
             f"explicitly specify the value of min_pattern."
-
-        leftout_vals = self.min_pattern.value - self.value
-        return {self.__class__(self.min_pattern.value-{v}) for v in leftout_vals}
+        return super().atomic_patterns
 
     @property
     def min_pattern(self) -> Optional[Self]:
@@ -875,6 +940,58 @@ class IntervalPattern(Pattern):
         # subtraction is impossible
         return self.__class__(self.value)
 
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of one-sided intervals
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If equals to 'min', return up to 2 atomic patterns each representing a bound of the original interval.
+            If equals to 'max', return _all_ less precise one-sided intervals, where the bounds are defined by
+            `BoundUniverse` class attribute.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        if self.value == self.max_pattern.value:
+            return {self.max_pattern}
+
+        if atoms_configuration == 'min':
+            atoms = []
+            if not (self.lower_bound == -math.inf and self.is_lower_bound_closed):
+                atoms.append( (self.lower_bound, self.is_lower_bound_closed) )
+            if not (self.upper_bound == math.inf and self.is_upper_bound_closed):
+                atoms.append( (self.upper_bound, self.is_upper_bound_closed) )
+            return {self.__class__(v) for v in atoms}
+
+        # atoms_configuration == 'max'
+        atoms = [
+            ((-math.inf, True), (math.inf, True)),
+            ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
+            ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True))
+        ]
+        if not self.is_upper_bound_closed:
+            atoms.append(tuple([(-math.inf, True), (self.upper_bound, True)]))
+        if not self.is_lower_bound_closed:
+            atoms.append(tuple([(self.lower_bound, True), (math.inf, True)]))
+
+        return {self.__class__(v) for v in atoms}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -892,20 +1009,7 @@ class IntervalPattern(Pattern):
         >>> IntervalPattern( "[1, 5]" )atomic_patterns
         {IntervalPattern("[-∞, ∞]"), IntervalPattern(">=1"), IntervalPattern("<=5") }
         """
-        if self.value == self.max_pattern.value:
-            return {self.max_pattern}
-
-        atoms = [
-            ((-math.inf, True), (math.inf, True)),
-            ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
-            ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True))
-        ]
-        if not self.is_upper_bound_closed:
-            atoms.append(tuple([(-math.inf, True), (self.upper_bound, True)]))
-        if not self.is_lower_bound_closed:
-            atoms.append(tuple([(self.lower_bound, True), (math.inf, True)]))
-
-        return {self.__class__(v) for v in atoms}
+        return super().atomic_patterns
 
     @property
     def min_pattern(self) -> Self:
@@ -1427,6 +1531,46 @@ class NgramSetPattern(Pattern):
             i += 1
         return frozenset(ngrams)
 
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the singleton sets of ngrams
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If set to 'min', then return the set of individual ngrams from the value of the original pattern.
+            If set to 'max', the return all sub-ngrams that can only be found in the original pattern.
+            Defaults to 'min'.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        if atoms_configuration == 'min':
+            return {self.__class__([ngram]) for ngram in self.value}
+
+        # atoms_configuration == 'max':
+        atoms = set()
+        for ngram in self.value:
+            for atom_size in range(1, len(ngram)+1):
+                atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
+
+        return {self.__class__([v]) for v in atoms}
+
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -1448,13 +1592,7 @@ class NgramSetPattern(Pattern):
         >>> p2.atomic_patterns
         {{'hello world !'}, {'foo'}, {'hello'}, {'!'}, {'hello world'}, {'world !'}, {'world'}}
         """
-        atoms = set()
-
-        for ngram in self.value:
-            for atom_size in range(1, len(ngram)+1):
-                atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
-
-        return {self.__class__([v]) for v in atoms}
+        return super().atomic_patterns
 
     @property
     def min_pattern(self) -> Optional[Self]:
@@ -1663,6 +1801,38 @@ class CartesianPattern(Pattern):
 
         return self.__class__({k: (v - other.value[k]) if k in other.value else v for k, v in self.value.items()})
 
+
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the union of atomic patterns computed for each dimension
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Whether to output the maximal set of atomic patterns for each dimension (if set to 'max') or
+            the minimal set of atomic patterns for each dimension (if set to 'min').
+            Defaults to 'min'.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__({k: atom}) for k, pattern in self.value.items()
+                for atom in pattern.split(atoms_configuration)}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -1692,7 +1862,7 @@ class CartesianPattern(Pattern):
         {}
         {'name': {'John Smith'}}
         """
-        return {self.__class__({k: atom}) for k, pattern in self.value.items() for atom in pattern.atomic_patterns}
+        return super().atomic_patterns
 
     def __len__(self) -> int:
         """

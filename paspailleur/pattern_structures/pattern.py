@@ -1,4 +1,4 @@
-from typing import TypeVar, Self, Optional
+from typing import TypeVar, Self, Optional, Literal
 
 
 class Pattern:
@@ -617,6 +617,35 @@ class Pattern:
         """
         return hash(self.value)
 
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If 'max' then returns _all_ atomic (so "unsplittable") patterns whose join equals to the original pattern.
+            If 'min' the returns the _minimal_ set of atomic patterns whose join equals to the current pattern.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        raise NotImplementedError
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -638,7 +667,7 @@ class Pattern:
         >>> p.atomic_patterns
         {'A', 'B'} # Assuming A and B are atomic patterns
         """
-        raise NotImplementedError
+        return self.split(atoms_configuration='max')
 
     @property
     def min_pattern(self) -> Optional[Self]:
