@@ -242,22 +242,24 @@ class PatternStructure:
         """
         min_support = to_absolute_number(min_support, len(self._object_names))
 
-        atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
-        atomic_patterns |= self.max_atoms
+        atomic_patterns: dict[Pattern, bitarray] = {}
+        object_irreducibles_iterator = tqdm(self._object_irreducibles.items(), total=len(self._object_irreducibles),
+                                            desc='Compute atomic extents', disable=not use_tqdm)
+        for oi_pattern, oi_extent in object_irreducibles_iterator:
+            for atomic_pattern in oi_pattern.split(atoms_configuration='max'):
+                if atomic_pattern not in atomic_patterns:
+                    atomic_patterns[atomic_pattern] = bitarray(len(oi_extent))
+                atomic_patterns[atomic_pattern] |= oi_extent
 
-        atoms_iterator = atomic_patterns
-        if use_tqdm:
-            atoms_iterator = tqdm(atoms_iterator, total=len(atomic_patterns), desc='Compute atomic extents')
+        for max_atom in self.max_atoms:
+            atomic_patterns[max_atom] = self.extent(max_atom, return_bitarray=True)
 
-        atoms_extents: list[tuple[Pattern, fbarray]] = []
-        for atom in atoms_iterator:
-            extent = self.extent(atom, return_bitarray=True)
-            if extent.count() < min_support:
-                continue
-            atoms_extents.append((atom, extent))
+        atoms_extents: list[tuple[Pattern, fbarray]] = [
+            (atom, fbarray(extent)) for atom, extent in atomic_patterns.items()
+            if extent.count() >= min_support
+        ]
 
         atoms_order = bfuncs.order_patterns_via_extents(atoms_extents, use_tqdm=use_tqdm)
-        assert all(not ba[i] for i, ba in enumerate(atoms_order)), 'Something went wrong during the run of the programm. Ask the developer'
 
         def topological_key(atom_idx):
             extent: fbarray = atoms_extents[atom_idx][1]
