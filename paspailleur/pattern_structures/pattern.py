@@ -620,7 +620,7 @@ class Pattern:
         """
         return hash(self.value)
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
 
@@ -670,7 +670,7 @@ class Pattern:
         >>> p.atomic_patterns
         {'A', 'B'} # Assuming A and B are atomic patterns
         """
-        return self.split(atoms_configuration='max')
+        return self.atomise(atoms_configuration='max')
 
     @property
     def min_pattern(self) -> Optional[Self]:

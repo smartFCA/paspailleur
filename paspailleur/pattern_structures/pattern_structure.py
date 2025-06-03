@@ -121,7 +121,7 @@ class PatternStructure:
 
         extent = None
         if pattern.atomisable and self._atomic_patterns is not None:
-            atoms = pattern.split('min')
+            atoms = pattern.atomise('min')
             if all(atom in self._atomic_patterns for atom in atoms):
                 total_extent = ~bazeros(len(self._object_names))
                 extent = reduce(fbarray.__and__, (self._atomic_patterns[atom] for atom in atoms), total_extent)
@@ -275,7 +275,7 @@ class PatternStructure:
         object_irreducibles_iterator = tqdm(self._object_irreducibles.items(), total=len(self._object_irreducibles),
                                             desc='Compute atomic extents', disable=not use_tqdm)
         for oi_pattern, oi_extent in object_irreducibles_iterator:
-            for atomic_pattern in oi_pattern.split(atoms_configuration='max'):
+            for atomic_pattern in oi_pattern.atomise(atoms_configuration='max'):
                 if atomic_pattern not in atomic_patterns:
                     atomic_patterns[atomic_pattern] = bitarray(len(oi_extent))
                 atomic_patterns[atomic_pattern] |= oi_extent
@@ -1244,3 +1244,8 @@ class PatternStructure:
         if not isinstance(extent, bitarray):
             return extent
         return {self._object_names[g] for g in extent.search(True)}
+
+    @property
+    def objects(self) -> set[str]:
+        """Return the names of objects in the Pattern Structure"""
+        return set(self._object_names)

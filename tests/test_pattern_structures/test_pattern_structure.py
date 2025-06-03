@@ -34,7 +34,7 @@ def test_fit():
     assert ps._atomic_patterns is None
 
     class APattern(Pattern):  # short for atomised pattern
-        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(p.value) for p in patterns]
@@ -148,7 +148,7 @@ def test_max_pattern():
 
 def test_atomic_patterns():
     class APattern(Pattern):  # short for atomised pattern
-        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
@@ -333,7 +333,7 @@ def test_iter_atomic_patterns():
     # Test Atomised patterns where all atomic patterns are incomparable #
     #####################################################################
     class APattern(Pattern):  # short for atomised pattern
-        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]

@@ -187,7 +187,7 @@ class ItemSetPattern(Pattern):
         return frozenset(value)
 
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. ItemSets containing just one item.
 
@@ -376,7 +376,7 @@ class CategorySetPattern(ItemSetPattern):
             return self.min_pattern
         return self.__class__(self.value)
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. CategorySets that exclude just one category from the minimal pattern
 
@@ -938,7 +938,7 @@ class IntervalPattern(Pattern):
         # subtraction is impossible
         return self.__class__(self.value)
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. the set of one-sided intervals
 
@@ -1255,7 +1255,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. the set of one-sided intervals
 
@@ -1283,7 +1283,7 @@ class ClosedIntervalPattern(IntervalPattern):
         and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
 
         """
-        return {self.__class__(atom) for atom in super().split(atoms_configuration)
+        return {self.__class__(atom) for atom in super().atomise(atoms_configuration)
                 if atom.is_lower_bound_closed and atom.is_upper_bound_closed}
 
 
@@ -1592,7 +1592,7 @@ class NgramSetPattern(Pattern):
             i += 1
         return frozenset(ngrams)
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. the singleton sets of ngrams
 
@@ -1862,7 +1862,7 @@ class CartesianPattern(Pattern):
         return self.__class__({k: (v - other.value[k]) if k in other.value else v for k, v in self.value.items()})
 
 
-    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
         Split the pattern into atomic patterns, i.e. the union of atomic patterns computed for each dimension
 
@@ -1891,7 +1891,7 @@ class CartesianPattern(Pattern):
 
         """
         return {self.__class__({k: atom}) for k, pattern in self.value.items()
-                for atom in pattern.split(atoms_configuration)}
+                for atom in pattern.atomise(atoms_configuration)}
 
     @property
     def atomic_patterns(self) -> set[Self]:
