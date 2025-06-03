@@ -1913,6 +1913,9 @@ class CartesianPattern(Pattern):
         >>> PersonPattern.get_min_pattern()
         {}  # Stands for `PersonPattern({'age': '[-inf, +inf]', 'name': set()})`
         """
+        if cls.DimensionTypes is None:
+            return None
+
         min_patterns = {dim: dtype.get_min_pattern() for dim, dtype in cls.DimensionTypes.items()}
         if any(v is None for v in min_patterns.values()):
             return None
@@ -1939,6 +1942,8 @@ class CartesianPattern(Pattern):
         >>> PersonPattern.get_max_pattern()
         None  # because max_pattern for dimension 'name' is not defined
         """
+        if cls.DimensionTypes is None:
+            return None
         max_patterns_per_dim = {dimension: dtype.get_max_pattern() for dimension, dtype in cls.DimensionTypes.items()}
         if any(max_pattern is None for max_pattern in max_patterns_per_dim.values()):
             return None
