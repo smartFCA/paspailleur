@@ -4,7 +4,7 @@ from functools import reduce
 from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
-from bitarray.util import zeros as bazeros
+from bitarray.util import zeros as bazeros, subset as basubset
 from caspailleur import inverse_order
 
 from caspailleur.io import to_absolute_number
@@ -66,7 +66,7 @@ class PatternStructure:
     """
     PatternType = TypeVar('PatternType', bound=Pattern)
 
-    def __init__(self, pattern_type: Type[Pattern] = Pattern):
+    def __init__(self, pattern_type: Type[Pattern] = None):
         """
         Initialize the PatternStructure with a specific pattern class.
 
@@ -197,6 +197,26 @@ class PatternStructure:
         >>> ps.fit(data)
         """
         object_names, objects_patterns = zip(*object_descriptions.items())
+        if self.PatternType is None:  # try to automatically identify the PatternType
+            PatternTypes = {pattern.__class__ for pattern in objects_patterns if isinstance(pattern, Pattern)}
+            if len(PatternTypes) > 1:
+                raise ValueError(
+                    f'PatternType of the PatternStructure cannot be identified as `object_descriptions` provided into '
+                    f'`PatternStructure.fit()` function have multiple pattern types: {PatternTypes}. '
+                    f'Convert all objects descriptions to a single pattern type and run fit() function once again.')
+            self.PatternType = next(iter(PatternTypes))
+
+        objects_patterns = list(objects_patterns)
+        for i in range(len(objects_patterns)):
+            if isinstance(objects_patterns[i], self.PatternType): continue
+
+            try:
+                objects_patterns[i] = self.PatternType(objects_patterns[i])
+            except Exception as e:
+                raise ValueError(f"Value of object '{object_names[i]}' cannot be converted to "
+                                 f"PatternType '{self.PatternType}'. The raised error is: {e}.")
+
+
         object_irreducibles = bfuncs.group_objects_by_patterns(objects_patterns)
 
         self._object_names = list(object_names)
