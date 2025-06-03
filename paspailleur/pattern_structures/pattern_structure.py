@@ -751,15 +751,16 @@ class PatternStructure:
         >>> for key in ps.iter_keys(Pattern("A | B")):
             print(key)
         """
-        descending_pattern_order = inverse_order(self._atomic_patterns_order)
+        sup_min_atoms, sup_min_order = self._filter_atomic_patterns_by_support("minimal")
+        descending_pattern_order = inverse_order(sup_min_order)
+
         is_single_pattern = isinstance(patterns, self.PatternType)
         patterns = [patterns] if is_single_pattern else patterns
-
         patterns_extents = [(pattern, self.extent(pattern, return_bitarray=True)) for pattern in patterns]
+
         keys_iterator = mec.iter_keys_of_patterns_via_atoms(
             patterns_extents,
-            self._atomic_patterns, descending_pattern_order, max_length,
-            use_tqdm=use_tqdm,
+            sup_min_atoms, descending_pattern_order, max_length, use_tqdm=use_tqdm,
         )
 
         if is_single_pattern:
@@ -777,6 +778,7 @@ class PatternStructure:
             min_support: Optional[Union[int, float]] = 0,
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False,
+            atomic_support_characteristic: Literal["maximal", "minimal"] = "maximal",
         ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
         """
         Iterate over subgroups that satisfy a quality threshold.
@@ -807,6 +809,13 @@ class PatternStructure:
         use_tqdm: bool, optional
             Flag whether to show tqdm progress bar to visualise the number of passed subgroup candidates.
             Defaults to False.
+        atomic_support_characteristic: Literal["maximal", "minimal"], optional
+            What type of atomic patterns to use to find subgroups.
+            If "maximal" (the default) then prefer more precise atomic patterns (called support-maximal),
+            and if "minimal" then prefer less precise atomic patterns (called support-minimal).
+            For example, say there are two interval patterns "Age >= 20" and "Age > 10" that describe _the same_ objects.
+            Then the former pattern is support-maximal (as it is more precise) and the latter is support-minimal
+            (as it is less precise).
 
         Yields
         ------
@@ -828,14 +837,15 @@ class PatternStructure:
             quality_measure, quality_threshold, goal_objects.count(), len(goal_objects)
         )
 
+        atomic_patterns, atomic_order = self._filter_atomic_patterns_by_support(atomic_support_characteristic)
+
         subgroups_iterator: Optional[Iterator[tuple[Pattern, bitarray, float]]] = None
         if kind == 'bruteforce':
             subgroups_iterator = msubg.iter_subgroups_via_atoms(
-                self._atomic_patterns, goal_objects, quality_threshold, quality_func, max(tp_min, min_support), max_length,
-                inverse_order(self._atomic_patterns_order),
+                atomic_patterns, goal_objects, quality_threshold, quality_func, max(tp_min, min_support), max_length,
+                inverse_order(atomic_order),
                 use_tqdm=use_tqdm
             )
-
 
         if subgroups_iterator is None:
             raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
@@ -843,8 +853,7 @@ class PatternStructure:
 
         if return_objects_as_bitarrays:
             return subgroups_iterator
-        return ((pattern, self.verbalise_extent(extent_ba), quality)
-                for pattern, extent_ba, quality in subgroups_iterator)
+        return ((pattern, self.verbalise_extent(extent), score) for pattern, extent, score in subgroups_iterator)
 
     ######################
     # High-level FCA API #
@@ -913,13 +922,15 @@ class PatternStructure:
                                                             concepts_generator}
 
         if algorithm == 'gSofia':
-            atomic_patterns_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled')
+            atomic_patterns_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled',
+                                                                 support_characteristic='maximal')
+            n_atomic_patterns = len(self._filter_atomic_patterns_by_support('maximal')[0]) if self._atomic_patterns_order is not None else None
             extents_ba = mec.list_stable_extents_via_gsofia(
                 atomic_patterns_iterator,
                 min_delta_stability=min_delta_stability,
                 min_supp=min_support,
                 use_tqdm=use_tqdm,
-                n_atomic_patterns=len(self._atomic_patterns)
+                n_atomic_patterns=n_atomic_patterns
             )
             extents_intents_dict: dict[fbarray, Pattern] = dict()
             for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
