@@ -57,6 +57,9 @@ class Pattern:
         ValueError
             If the value cannot be parsed from a string.
         """
+        if isinstance(value, Pattern):
+            value = value.value
+
         if isinstance(value, str):
             try:
                 value = self.parse_string_description(value)

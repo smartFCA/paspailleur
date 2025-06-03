@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from collections.abc import Iterator
+from typing import Literal, Self
 
 import pytest
 
@@ -13,7 +14,9 @@ from bitarray import frozenbitarray as fbarray, bitarray
 
 def test_init():
     ps = PatternStructure()
+    assert ps.PatternType is None
 
+    ps = PatternStructure(Pattern)
     ptrn = ps.PatternType({1, 2, 3})
     assert type(ptrn) == Pattern
     assert ptrn.value == {1, 2, 3}
@@ -31,8 +34,7 @@ def test_fit():
     assert ps._atomic_patterns is None
 
     class APattern(Pattern):  # short for atomised pattern
-        @property
-        def atomic_patterns(self):
+        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(p.value) for p in patterns]
@@ -146,8 +148,7 @@ def test_max_pattern():
 
 def test_atomic_patterns():
     class APattern(Pattern):  # short for atomised pattern
-        @property
-        def atomic_patterns(self):
+        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
@@ -223,26 +224,42 @@ def test_builtin_atomic_patterns():
     patterns = [bip.IntervalPattern('[0, 10]'), bip.IntervalPattern('(2, 11]'), bip.IntervalPattern('[5, 10]')]
     context = dict(zip('abc', patterns))
     atomic_patterns_true_verb = [
-        ('[-inf, +inf]', 'abc'), ('[-inf, 11]', 'abc'), ('[0, +inf]', 'abc'),
-        ('[-inf, 10]', 'ac'), ('[2, +inf]', 'bc'), ('(2, +inf]', 'bc'),
-        ('[5, +inf]', 'c'),
+        ('>= 0.0', 'abc'), ('> 0.0', 'bc'),
+        ('<= 11.0', 'abc'), ('< 11.0', 'ac'),
+        ('<= 10.0', 'ac'),
+         ('>= 2.0', 'bc'), ('> 2.0', 'bc'),
+        ('>= 5.0', 'c'),
         ('ø', '')
     ]
+
+    atomic_patterns_order_true = {
+        '>= 0.0': ['> 0.0', '>= 5.0', '> 2.0', '>= 2.0', 'ø'],
+        '<= 11.0': ['<= 10.0', '< 11.0', 'ø'], '< 11.0': ['<= 10.0', 'ø'],
+        '<= 10.0': ['ø'],
+        '> 0.0': ['>= 2.0', 'ø', '>= 5.0', '> 2.0'],
+        '>= 2.0': ['ø', '>= 5.0', '> 2.0'], '> 2.0': ['ø', '>= 5.0'],
+        '>= 5.0': ['ø'],
+        'ø': []
+    }
+
     atomic_patterns_true_verb = OrderedDict([(bip.IntervalPattern(ptrn), set(ext))
                                              for ptrn, ext in atomic_patterns_true_verb])
-    atomic_patterns_order_true = {
-        '[-inf, +inf]': {'[-inf, 11]', '[0, +inf]', '[-inf, 10]', '[2, +inf]', '(2, +inf]', '[5, +inf]', 'ø'},
-        '[-inf, 11]': {'[-inf, 10]', 'ø'},
-        '[0, +inf]': {'[2, +inf]', '(2, +inf]', '[5, +inf]', 'ø'},
-        '[-inf, 10]': {'ø'},
-        '[2, +inf]': {'(2, +inf]', '[5, +inf]', 'ø'},
-        '(2, +inf]': {'[5, +inf]', 'ø'},
-        '[5, +inf]': {'ø'},
-        'ø': set(),
-    }
     atomic_patterns_order_true = {bip.IntervalPattern(k): {bip.IntervalPattern(v) for v in vs}
                                   for k, vs in atomic_patterns_order_true.items()}
 
+    ps = PatternStructure()
+    ps.fit(context)
+    with pytest.raises(AssertionError):
+        ps.atomic_patterns  # because the basic IntervalPattern is not atomisable
+
+    class BoundedIntervalPattern(bip.IntervalPattern):
+        BoundsUniverse = (0, 2, 5, 10, 11)
+    atomic_patterns_true_verb = OrderedDict([(BoundedIntervalPattern(ptrn), set(ext))
+                                             for ptrn, ext in atomic_patterns_true_verb.items()])
+    atomic_patterns_order_true = {BoundedIntervalPattern(k): {BoundedIntervalPattern(v) for v in vs}
+                                  for k, vs in atomic_patterns_order_true.items()}
+    context = dict(zip('abc', [BoundedIntervalPattern(p) for p in patterns]))
+    ps = PatternStructure()
     ps.fit(context)
     assert set(ps.atomic_patterns) == set(atomic_patterns_true_verb)
     assert all([ps.atomic_patterns[k] == atomic_patterns_true_verb[k] for k in atomic_patterns_true_verb])
@@ -266,6 +283,7 @@ def test_builtin_atomic_patterns():
     atomic_patterns_true_verb = OrderedDict([(bip.NgramSetPattern([ptrn]), set(ext))
                                              for ptrn, ext in atomic_patterns_true_verb])
 
+    ps = PatternStructure()
     ps.fit(context)
     assert set(ps.atomic_patterns) == set(atomic_patterns_true_verb)
     assert all(len(ps.atomic_patterns[prev]) >= len(ps.atomic_patterns[next])
@@ -290,21 +308,22 @@ def test_builtin_atomic_patterns():
 
 
 def test_builtin_premaximal_patterns():
-    ps = PatternStructure()
-
     patterns = [bip.ItemSetPattern({1, 2, 3}), bip.ItemSetPattern({4}), bip.ItemSetPattern({1, 2, 4})]
     context = dict(zip('abc', patterns))
+    ps = PatternStructure()
     ps.fit(context)
     assert ps.premaximal_patterns == {patterns[0]: {'a'}, patterns[2]: {'c'}}
 
     patterns = [bip.IntervalPattern('[0, 10]'), bip.IntervalPattern('(2, 11]'), bip.IntervalPattern('[5, 10]')]
     context = dict(zip('abc', patterns))
+    ps = PatternStructure()
     ps.fit(context)
     assert ps.premaximal_patterns == {patterns[2]: {'c'}}
 
     patterns = [['hello world', 'who is there'], ['hello world'], ['world is there']]
     patterns = [bip.NgramSetPattern(ngram) for ngram in patterns]
     context = dict(zip('abc', patterns))
+    ps = PatternStructure()
     ps.fit(context)
     assert ps.premaximal_patterns == {patterns[0]: {'a'}, patterns[2]: {'c'}}
 
@@ -314,8 +333,7 @@ def test_iter_atomic_patterns():
     # Test Atomised patterns where all atomic patterns are incomparable #
     #####################################################################
     class APattern(Pattern):  # short for atomised pattern
-        @property
-        def atomic_patterns(self):
+        def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
             return {self.__class__(frozenset([v])) for v in self.value}
 
     patterns = [APattern(frozenset({1, 2, 3})), APattern(frozenset({0, 4})), APattern(frozenset({1, 2, 4}))]
@@ -332,17 +350,17 @@ def test_iter_atomic_patterns():
     ps.fit(context, compute_atomic_patterns=False)
     ps._atomic_patterns = atomic_patterns_true
 
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=False, return_bitarrays=False)
+    atomic_patterns = ps.iter_atomic_patterns(return_bitarrays=False)
     assert isinstance(atomic_patterns, Iterator)
-    assert list(atomic_patterns) == list(atomic_patterns_true.keys())
+    assert list(dict(atomic_patterns)) == list(atomic_patterns_true)
 
     atomic_patterns_true_verb = OrderedDict([(k, {'abc'[g] for g in ext_ba.search(True)})
                                              for k, ext_ba in atomic_patterns_true.items()])
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=False)
+    atomic_patterns = ps.iter_atomic_patterns(return_bitarrays=False)
     assert isinstance(atomic_patterns, Iterator)
     assert list(atomic_patterns) == list(atomic_patterns_true_verb.items())
 
-    atomic_patterns = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True)
+    atomic_patterns = ps.iter_atomic_patterns(return_bitarrays=True)
     assert isinstance(atomic_patterns, Iterator)
     assert list(atomic_patterns) == list(atomic_patterns_true.items())
 
@@ -359,7 +377,7 @@ def test_iter_atomic_patterns():
 
     ps = PatternStructure()
     ps._atomic_patterns = atomic_patterns_true
-    atomic_patterns = OrderedDict(list(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True)))
+    atomic_patterns = OrderedDict(list(ps.iter_atomic_patterns(return_bitarrays=True)))
     assert len(atomic_patterns) == len(atomic_patterns_true)
     assert list(atomic_patterns) == list(atomic_patterns_true)
     assert atomic_patterns == atomic_patterns_true
@@ -370,7 +388,7 @@ def test_iter_atomic_patterns():
     del atomic_patterns_true_stopped[bip.NgramSetPattern(['hello world'])]
 
     atomic_patterns_stopped, pattern = [], None
-    iterator = ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True, kind='ascending controlled')
+    iterator = ps.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled')
     next(iterator)  # initialisation
 
     while True:
@@ -505,12 +523,12 @@ def test_iter_keys():
     ps = PatternStructure()
     ps.fit(context)
 
-    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True))
+    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_bitarrays=True))
 
     intents = [intent for extent, intent in ps.mine_concepts()]
     for intent in intents:
-        iter_trusted = list(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
-        iterator = list(ps.iter_keys(intent))
+        iter_trusted = set(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
+        iterator = set(ps.iter_keys(intent))
         assert iterator == iter_trusted, f"Problem with intent {intent}"
 
         extent = ps.extent(intent)
@@ -518,24 +536,30 @@ def test_iter_keys():
             assert ps.extent(key) == extent, f"Problem with the extent of intent {intent}"
 
     iter_trusted = mec.iter_keys_of_patterns(intents, atomic_patterns)
-    iter_trusted = [(ptrn, intents[intent_i]) for ptrn, intent_i in iter_trusted]
+    iter_trusted = {(ptrn, intents[intent_i]) for ptrn, intent_i in iter_trusted}
 
-    iterator = list(ps.iter_keys(intents))
+    iterator = set(ps.iter_keys(intents))
     assert iterator == iter_trusted
 
-    iterator = list(ps.iter_keys(intents[::-1]))
-    assert set(iterator) == set(iter_trusted)
+    iterator = set(ps.iter_keys(intents[::-1]))
     assert iterator == iter_trusted
 
-    patterns = [bip.IntervalPattern(0), bip.IntervalPattern(1), bip.IntervalPattern(1)]
+    ############################
+    # Test for IntervalPattern #
+    ############################
+    class BoundedIntervalPattern(bip.IntervalPattern):
+        BoundsUniverse = (0, 1)
+
+    patterns = [BoundedIntervalPattern(0), BoundedIntervalPattern(1), BoundedIntervalPattern(1)]
     context = dict(zip('abc', patterns))
+    ps = PatternStructure()
     ps.fit(context)
-    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_extents=True, return_bitarrays=True))
+    atomic_patterns = OrderedDict(ps.iter_atomic_patterns(return_bitarrays=True))
 
     intents = [intent for extent, intent in ps.mine_concepts()]
     for intent in intents:
-        iter_trusted = list(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
-        iterator = list(ps.iter_keys(intent))
+        iter_trusted = set(mec.iter_keys_of_pattern(intent, atomic_patterns=atomic_patterns))
+        iterator = set(ps.iter_keys(intent))
         assert iterator == iter_trusted, f"Problem with intent {intent}"
 
         extent = ps.extent(intent)

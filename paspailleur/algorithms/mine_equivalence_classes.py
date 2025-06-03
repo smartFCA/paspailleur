@@ -733,10 +733,11 @@ def iter_keys_of_patterns_via_atoms(
                 continue
 
             pattern = patterns[pattern_i][0]
-            if not any(subatoms[i] <= pattern for i in antichain):
+            is_subpattern = all(subatoms[i] <= pattern for i in antichain)
+            if not is_subpattern:
                 continue
-            found_closures[pattern_i].append(ac_closure)
 
+            found_closures[pattern_i].append(ac_closure)
             key = reduce(pattern.__class__.__or__, (subatoms[i] for i in antichain), pattern.min_pattern)
             yield key, pattern_i
 

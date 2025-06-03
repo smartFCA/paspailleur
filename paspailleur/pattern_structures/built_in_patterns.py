@@ -1017,6 +1017,28 @@ class IntervalPattern(Pattern):
         """
         return super().atomic_patterns
 
+    @property
+    def atomisable(self) -> bool:
+        """
+        Check if the pattern can be atomized. IntervalPattern can only be atomised when `BoundsUniverse` is defined
+
+        Returns
+        -------
+        flag: bool
+            True if the pattern can be atomized, False otherwise.
+
+        Examples
+        --------
+        >>> p = Pattern("example")
+        >>> p.atomisable
+        True
+
+        """
+        if self.BoundsUniverse is None:
+            return False
+
+        return super().atomisable
+
     @classmethod
     def get_min_pattern(cls) -> Self:
         """
@@ -1232,6 +1254,37 @@ class ClosedIntervalPattern(IntervalPattern):
             pass
 
         raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
+
+    def split(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of one-sided intervals
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If equals to 'min', return up to 2 atomic patterns each representing a bound of the original interval.
+            If equals to 'max', return _all_ less precise one-sided intervals, where the bounds are defined by
+            `BoundUniverse` class attribute.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__(atom) for atom in super().split(atoms_configuration)
+                if atom.is_lower_bound_closed and atom.is_upper_bound_closed}
 
 
 class NgramSetPattern(Pattern):

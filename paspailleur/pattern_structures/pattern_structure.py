@@ -184,7 +184,7 @@ class PatternStructure:
             self,
             object_descriptions: dict[str, PatternType],
             compute_atomic_patterns: bool = None, min_atom_support: Union[int, float] = 0,
-            use_tqdm: bool = True
+            use_tqdm: bool = False
         ):
         """
         Initialize the PatternStructure with object descriptions.
@@ -238,13 +238,7 @@ class PatternStructure:
         self._object_irreducibles = {k: fbarray(v) for k, v in object_irreducibles.items()}
 
         if compute_atomic_patterns is None:
-            # Set to True if the values can be computed
-            pattern = list(object_irreducibles)[0]
-            try:
-                _ = pattern.atomic_patterns
-                compute_atomic_patterns = True
-            except NotImplementedError:
-                compute_atomic_patterns = False
+            compute_atomic_patterns = objects_patterns[0].atomisable
 
         if compute_atomic_patterns:
             self.init_atomic_patterns(use_tqdm=use_tqdm, min_support=min_atom_support)
@@ -551,7 +545,7 @@ class PatternStructure:
         >>> for atom, extent in ps.iter_atomic_patterns():
             print(atom, extent)
         """
-        assert self._atomic_patterns is not None and self._atomic_patterns_order is not None, \
+        assert self._atomic_patterns is not None, \
             "Please initialise atomic patterns first using `ps.init_atomic_patterns()` function."
 
         def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray) -> tuple[Pattern, Union[set[str], fbarray]]:
@@ -570,6 +564,15 @@ class PatternStructure:
             Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
             """
             return ptrn, self.verbalise_extent(ext) if not return_bitarrays else ext
+
+        if kind == 'bruteforce' and support_characteristic == 'any':
+            for pattern, extent in self._atomic_patterns.items():
+                yield form_yielded_value(pattern, extent)
+            return
+
+        assert self._atomic_patterns_order is not None, \
+            ("Please initialise the order of atomic patterns (together with the atomic patterns themselves) "
+             "using `ps.init_atomic_patterns()` function.")
 
         atomic_patterns, atomic_order = self._filter_atomic_patterns_by_support(support_characteristic)
 
