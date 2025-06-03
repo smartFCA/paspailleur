@@ -685,6 +685,18 @@ class Pattern:
         >>> p.min_pattern
         None  # Assuming no minimal pattern is defined
         """
+        return self.get_min_pattern()
+
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
+        """
+        Return the minimal possible pattern, the sole one per Pattern class.
+
+        Returns
+        -------
+        min_pattern: Optional[Self]
+            The minimal pattern or None if undefined
+        """
         return None
 
     @property
@@ -701,6 +713,24 @@ class Pattern:
         --------
         >>> p = Pattern("A")
         >>> p.max_pattern
+        None  # Assuming no maximal pattern is defined
+        """
+        return self.get_max_pattern()
+
+    @classmethod
+    def get_max_pattern(cls) -> Optional[Self]:
+        """
+        Return the maximal possible pattern, the sole one per Pattern class.
+
+        Returns
+        -------
+        max: Optional[Self]
+            The maximal pattern or None if undefined.
+
+        Examples
+        --------
+        >>> p = Pattern("A")
+        >>> p.get_max_pattern()
         None  # Assuming no maximal pattern is defined
         """
         return None

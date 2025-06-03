@@ -237,10 +237,10 @@ class ItemSetPattern(Pattern):
         """
         return super().atomic_patterns
 
-    @property
-    def min_pattern(self) -> Self:
+    @classmethod
+    def get_min_pattern(cls) -> Self:
         """
-        Return the minimal possible pattern for the item set pattern.
+        Return the minimal possible pattern, i.e. empty ItemSetPattern
 
         Returns
         -------
@@ -250,11 +250,10 @@ class ItemSetPattern(Pattern):
 
         Examples
         --------
-        >>> p = ItemSetPattern({1})
-        >>> p.min_pattern
+        >>> ItemSetPattern.get_min_pattern()
         ItemSetPattern(frozenset())
         """
-        return self.__class__(frozenset())
+        return cls(frozenset())
 
 
 class CategorySetPattern(ItemSetPattern):
@@ -344,7 +343,7 @@ class CategorySetPattern(ItemSetPattern):
         >>> CategorySetPattern({"A", "B"}).__repr__()
         '{'A', 'B'}'
         """
-        repr_negative = self.Universe is not None and len(self.value) > len(self.Universe) / 2
+        repr_negative = self.Universe is not None and len(self.Universe) / 2 < len(self.value) < len(self.Universe)
         s = set(self.Universe) - self.value if repr_negative else self.value
         s = repr(set(s))
         if repr_negative:
@@ -441,10 +440,10 @@ class CategorySetPattern(ItemSetPattern):
             f"explicitly specify the value of min_pattern."
         return super().atomic_patterns
 
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the category set pattern.
+        Return the minimal possible pattern for the category set pattern, i.e. CategorySet containing all categories
 
         Returns
         -------
@@ -454,31 +453,30 @@ class CategorySetPattern(ItemSetPattern):
         Examples
         --------
         >>> CategorySetPattern.Universe = {"A", "B", "C"}
-        >>> p = CategorySetPattern({"A"})
-        >>> p.min_pattern
+        >>> CategorySetPattern.get_min_pattern()
         CategorySetPattern({'A', 'B', 'C'})
         """
-        if self.Universe is None:
-            return None
-        return self.__class__(self.Universe)
+        return cls(cls.Universe) if cls.Universe is not None else None
 
-    @property
-    def max_pattern(self) -> Self:
+    @classmethod
+    def get_max_pattern(cls) -> Self:
         """
-        Return the maximal possible pattern for the category set pattern.
+        Return the maximal possible pattern for the category set pattern, i.e. empty CategorySet
+
+        Empty CategorySet is the maximal possible pattern, because it does not allow for any category.
+        That is, it is so maximal and so precise, that it should never occur in the data.
 
         Returns
         -------
         max: Self
-            The maximal category set pattern, which is an empty frozenset.
+            The maximal category set pattern, which is an empty CategorySet
 
         Examples
         --------
-        >>> p = CategorySetPattern({"A"})
-        >>> p.max_pattern
+        >>> CategorySetPattern.get_max_pattern()
         CategorySetPattern(frozenset())
         """
-        return self.__class__(frozenset())
+        return cls(frozenset())
 
     def __len__(self) -> int:
         """
@@ -991,10 +989,10 @@ class IntervalPattern(Pattern):
                     atoms.append( ((-math.inf, True), (bound, is_bound_closed)) )
                 if bound <= self.lower_bound:
                     atoms.append( ((bound, is_bound_closed), (math.inf, True))  )
-        if not self.is_upper_bound_closed:
-            atoms.remove( ((-math.inf, True), (self.upper_bound, True)) )
-        if not self.is_lower_bound_closed:
-            atoms.remove( ((self.lower_bound, True), (math.inf, True)) )
+        if self.is_upper_bound_closed:
+            atoms.remove( ((-math.inf, True), (self.upper_bound, False)) )
+        if self.is_lower_bound_closed:
+            atoms.remove( ((self.lower_bound, False), (math.inf, True)) )
 
         return {self.__class__(v) for v in atoms}
 
@@ -1017,28 +1015,30 @@ class IntervalPattern(Pattern):
         """
         return super().atomic_patterns
 
-    @property
-    def min_pattern(self) -> Self:
+    @classmethod
+    def get_min_pattern(cls) -> Self:
         """
-        Return the minimal possible pattern for the interval pattern.
+        Return the minimal possible pattern for the interval pattern, i.e. interval [-inf, +inf]
 
         Returns
         -------
         min: Self
-            The minimal interval pattern, which is defined as (-inf, inf).
-            `None` if undefined
+            The minimal interval pattern, which is defined as [-inf, inf].
 
         Examples
         --------
-        >>> IntervalPattern.min_pattern
-        (-inf, inf)
+        >>> IntervalPattern.get_min_pattern()
+        IntervalPattern('[-inf, +inf]')
         """
-        return self.__class__(((-math.inf, True), (math.inf, True)))
+        return cls(((-math.inf, True), (math.inf, True)))
 
-    @property
-    def max_pattern(self) -> Self:
+    @classmethod
+    def get_max_pattern(cls) -> Self:
         """
-        Return the maximal possible pattern for the interval pattern.
+        Return the maximal possible pattern for the interval pattern, i.e. the empty interval.
+
+        Empty interval is the maximal pattern, because it does not cover any other interval. So it describes no objects.
+
 
         Returns
         -------
@@ -1047,10 +1047,10 @@ class IntervalPattern(Pattern):
 
         Examples
         --------
-        >>> IntervalPattern.max_pattern
-        'ø'
+        >>> IntervalPattern.get_max_pattern()
+        IntervalPattern('ø')
         """
-        return self.__class__("ø")
+        return cls("ø")
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
@@ -1600,23 +1600,22 @@ class NgramSetPattern(Pattern):
         """
         return super().atomic_patterns
 
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the n-gram set pattern.
+        Return the minimal possible pattern for the n-gram set pattern, i.e. empty NgramSet
 
         Returns
         -------
         min: Optional[Self]
-            The minimal n-gram set pattern, which is an empty frozenset.
-            `None` if undefined
+            The minimal n-gram set pattern, which is an empty NgramSet
         
         Examples
         --------
-        >>> NgramSetPattern({}).min_pattern
-        {''}
+        >>> NgramSetPattern.get_min_pattern
+        NgramSetPattern(set())
         """
-        return self.__class__([])
+        return cls([])
 
 
 class CartesianPattern(Pattern):
@@ -1892,10 +1891,10 @@ class CartesianPattern(Pattern):
         """
         return sum(len(subpattern) for subpattern in self.value.values())
 
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the Cartesian pattern.
+        Return the minimal possible pattern for the Cartesian pattern that contains min patterns per every dimension.
 
         Returns
         -------
@@ -1905,23 +1904,23 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
-        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
-        >>> p1.min_pattern
-        {}
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ... }
+        >>> PersonPattern.get_min_pattern()
+        {}  # Stands for `PersonPattern({'age': '[-inf, +inf]', 'name': set()})`
         """
-        if any(p.min_pattern is None for p in self.value.values()):
+        min_patterns = {dim: dtype.get_min_pattern() for dim, dtype in cls.DimensionTypes.items()}
+        if any(v is None for v in min_patterns.values()):
             return None
 
-        return self.__class__({k: pattern.min_pattern for k, pattern in self.value.items()})
+        return cls(min_patterns)
 
-    @property
-    def max_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_max_pattern(cls) -> Optional[Self]:
         """
-        Return the maximal possible pattern for the Cartesian pattern.
+        Return the maximal possible pattern for the Cartesian pattern that contains max patterns per every dimension
 
         Returns
         -------
@@ -1931,18 +1930,19 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
-        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
-        >>> p1.min_pattern
-        None
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
+        >>> PersonPattern.get_max_pattern()
+        None  # because max_pattern for dimension 'name' is not defined
         """
-        if any(p.max_pattern is None for p in self.value.values()):
+        max_patterns_per_dim = {dimension: dtype.get_max_pattern() for dimension, dtype in cls.DimensionTypes.items()}
+        if any(max_pattern is None for max_pattern in max_patterns_per_dim.values()):
             return None
 
-        return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})
+        return cls(max_patterns_per_dim)
+
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
