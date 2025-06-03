@@ -480,6 +480,31 @@ class PatternStructure:
     #####################
     # Pattern Iterators #
     #####################
+    def _filter_atomic_patterns_by_support(self, support_characteristic: Literal["any", "maximal", "minimal"])\
+            -> tuple[OrderedDict[PatternType, fbarray], list[bitarray]]:
+        if support_characteristic not in {'maximal', 'minimal', 'any'}:
+            raise ValueError(f"Unsupported value for `support_characteristic`: {support_characteristic}. "
+                             f"The only accepted values are 'any`, 'maximal', and 'minimal'.")
+
+        atomic_patterns, atomic_patterns_order = self._atomic_patterns, self._atomic_patterns_order
+        if support_characteristic == 'any':
+            return atomic_patterns, atomic_patterns_order
+
+        atomic_supports = [extent.count() for extent in self._atomic_patterns.values()]
+        if support_characteristic == 'maximal':
+            atoms_to_iterate = [i for i, superatoms in enumerate(self._atomic_patterns_order)
+                                if not any(atomic_supports[i] == atomic_supports[j] for j in superatoms.search(True))]
+        else:  # if support_characteristic == 'minimal':
+            subatoms_order = inverse_order(self._atomic_patterns_order)
+            atoms_to_iterate = [i for i, subatoms in enumerate(subatoms_order)
+                                if not any(atomic_supports[i] == atomic_supports[j] for j in subatoms.search(True))]
+
+        atomic_order = [bitarray([atomic_patterns_order[i][j] for j in atoms_to_iterate]) for i in atoms_to_iterate]
+        atoms_to_iterate = set(atoms_to_iterate)
+        atomic_patterns = OrderedDict([(atom, extent) for idx, (atom, extent) in enumerate(atomic_patterns.items())
+                                        if idx in atoms_to_iterate])
+        return atomic_patterns, atomic_order
+
     def iter_atomic_patterns(
         self,
         return_bitarrays: bool = False,
@@ -546,34 +571,7 @@ class PatternStructure:
             """
             return ptrn, self.verbalise_extent(ext) if not return_bitarrays else ext
 
-
-        def filter_atomic_patterns_by_support(support_characteristic_: Literal["any", "maximal", "minimal"]):
-            if support_characteristic_ == 'any':
-                return self._atomic_patterns, self._atomic_patterns_order
-
-            if support_characteristic_ not in {'maximal', 'minimal'}:
-                raise ValueError(f"Unsupported value for `support_characteristic`: {support_characteristic}. "
-                                 f"The only accepted values are `any`, `maximal`, and `minimal`.")
-
-            atomic_supports = [extent.count() for extent in self._atomic_patterns.values()]
-            if support_characteristic_ == 'maximal':
-                atoms_to_iterate = [i for i, superatoms in enumerate(self._atomic_patterns_order)
-                                    if not any(atomic_supports[i]==atomic_supports[j] for j in superatoms.search(True))]
-            else:  # if support_characteristic_ == 'minimal':
-                subatoms_order = inverse_order(self._atomic_patterns_order)
-                atoms_to_iterate = [i for i, subatoms in enumerate(subatoms_order)
-                                    if not any(atomic_supports[i] == atomic_supports[j] for j in subatoms.search(True))]
-
-            atomic_order_ = [bitarray([self._atomic_patterns_order[i][j] for j in atoms_to_iterate])
-                             for i in atoms_to_iterate]
-            atoms_to_iterate = set(atoms_to_iterate)
-            atomic_patterns_ = OrderedDict([
-                (atom, extent) for idx, (atom, extent) in enumerate(self._atomic_patterns.items())
-                if idx in atoms_to_iterate
-            ])
-            return atomic_patterns_, atomic_order_
-
-        atomic_patterns, atomic_order = filter_atomic_patterns_by_support(support_characteristic)
+        atomic_patterns, atomic_order = self._filter_atomic_patterns_by_support(support_characteristic)
 
         if kind == 'bruteforce':
             for pattern, extent in atomic_patterns.items():
