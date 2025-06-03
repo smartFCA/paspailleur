@@ -741,3 +741,4 @@ def iter_keys_of_patterns_via_atoms(
             yield key, pattern_i
 
         refine_antichain = superpatterns.count() > len(same_extent_patterns)
+    pbar.close()
