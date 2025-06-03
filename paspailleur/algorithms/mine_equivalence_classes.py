@@ -414,7 +414,7 @@ def list_stable_extents_via_gsofia(
 
     # dict: extent => (delta_index, children_extents)
     stable_extents: dict[fbarray, tuple[int, set[fbarray]]] = dict()
-    refine_previous_pattern: bool = None
+    refine_previous_pattern: bool = True
 
     # special treatment for the first atomic pattern
     atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
