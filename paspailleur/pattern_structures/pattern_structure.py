@@ -119,7 +119,13 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        extent = bfuncs.extension(pattern, self._object_irreducibles)
+        extent = None
+        if pattern.atomisable and self._atomic_patterns is not None:
+            atoms = pattern.split('min')
+            if all(atom in self._atomic_patterns for atom in atoms):
+                total_extent = ~bazeros(len(self._object_names))
+                extent = reduce(fbarray.__and__, (self._atomic_patterns[atom] for atom in atoms), total_extent)
+        extent = bfuncs.extension(pattern, self._object_irreducibles) if extent is None else extent
 
         if return_bitarray:
             return fbarray(extent)
@@ -154,13 +160,22 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        objects_ba = objects
-        if not isinstance(objects_ba, bitarray):
-            objects_ba = bazeros(len(self._object_names))
-            for object_name in objects:
-                objects_ba[self._object_names.index(object_name)] = True
 
-        return bfuncs.intention(objects_ba, self._object_irreducibles)
+        if isinstance(objects, bitarray):
+            objects_ba = objects
+        else:  # not isinstance(objects_ba, bitarray):
+            objects = set(objects)
+            objects_ba = bitarray([obj in objects for obj in self._object_names])
+
+        if self._atomic_patterns is None:
+            return bfuncs.intention(objects_ba, self._object_irreducibles)
+
+        selected_atoms = {i: atom for i, (atom, aextent) in enumerate(self._atomic_patterns.items())
+                          if basubset(objects_ba, aextent)}
+
+        if not selected_atoms:
+            return self.PatternType.get_min_pattern()
+        return reduce(self.PatternType.__or__, selected_atoms.values())
 
     ###########################################
     # Initialisation of the Pattern Structure #
