@@ -990,9 +990,11 @@ class IntervalPattern(Pattern):
                 if bound <= self.lower_bound:
                     atoms.append( ((bound, is_bound_closed), (math.inf, True))  )
         if self.is_upper_bound_closed:
-            atoms.remove( ((-math.inf, True), (self.upper_bound, False)) )
+            excessive_atom = ((-math.inf, True), (self.upper_bound, False))
+            if excessive_atom in atoms: atoms.remove(excessive_atom)
         if self.is_lower_bound_closed:
-            atoms.remove( ((self.lower_bound, False), (math.inf, True)) )
+            excessive_atom = ((self.lower_bound, False), (math.inf, True))
+            if excessive_atom in atoms: atoms.remove(excessive_atom)
 
         return {self.__class__(v) for v in atoms}
 
