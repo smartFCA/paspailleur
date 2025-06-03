@@ -3,12 +3,14 @@ from functools import reduce
 from itertools import takewhile
 from collections import OrderedDict
 
+from caspailleur import inverse_order
 from tqdm.auto import tqdm
 from typing import Iterator, Generator, Collection, Iterable, Optional
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
 from paspailleur.algorithms import base_functions as bfuncs
+from paspailleur.algorithms.base_functions import iterate_antichains
 from paspailleur.pattern_structures.pattern import Pattern
 
 
@@ -212,15 +214,16 @@ def iter_all_patterns_ascending(
 
     Examples
     --------
+    >>> from paspailleur.pattern_structures.built_in_patterns import ItemSetPattern
     >>> atomic_patterns_extents = OrderedDict([
-        (ItemSetPattern({'A'}), bitarray('1110')),
-        (ItemSetPattern({'B'}), bitarray('1101')),
-        (ItemSetPattern({'C'}), bitarray('1011'))
-    ])
+    ...    (ItemSetPattern({'A'}), bitarray('1110')),
+    ...    (ItemSetPattern({'B'}), bitarray('1101')),
+    ...    (ItemSetPattern({'C'}), bitarray('1011'))
+    ... ])
     
     --- Non-controlled iteration ---
     >>> for p, e in mec.iter_all_patterns_ascending(atomic_patterns_extents):
-        print(p, e)
+    ...    print(p, e)
     
     --- Controlled iteration ---
     >>> gen = mec.iter_all_patterns_ascending(atomic_patterns_extents, controlled_iteration=True)
@@ -406,7 +409,8 @@ def list_stable_extents_via_gsofia(
 
     if not atomic_patterns_iterator.gi_suspended:
         next(atomic_patterns_iterator)
-    atomic_patterns_iterator = tqdm(atomic_patterns_iterator, total=n_atomic_patterns, disable=not use_tqdm, desc='gSofia algorithm')
+    atomic_patterns_iterator = atomic_patterns_iterator
+    pbar = tqdm(total=n_atomic_patterns, disable=not use_tqdm, desc='gSofia algorithm')
 
     # dict: extent => (delta_index, children_extents)
     stable_extents: dict[fbarray, tuple[int, set[fbarray]]] = dict()
@@ -423,9 +427,6 @@ def list_stable_extents_via_gsofia(
         try:
             atomic_pattern, atomic_extent = atomic_patterns_iterator.send(refine_previous_pattern)
         except StopIteration:
-            if use_tqdm:
-                atomic_patterns_iterator.total = atomic_patterns_iterator.n
-                atomic_patterns_iterator.close()
             break
 
         old_stable_extents, stable_extents = dict(stable_extents), dict()
@@ -459,9 +460,9 @@ def list_stable_extents_via_gsofia(
         # after generating all new stable extents
         if n_stable_extents is not None and len(stable_extents) > n_stable_extents:
             stable_extents = dict(n_most_stable_extents(stable_extents.items(), n_stable_extents))
+        pbar.update(1)
 
-        if use_tqdm:
-            atomic_patterns_iterator.update()
+    pbar.close()
 
     return set(stable_extents)
 
@@ -623,3 +624,122 @@ def iter_keys_of_patterns(
                               for extent in patterns_per_extents)
 
         go_more_precise &= appropriate_length
+
+
+def iter_keys_of_patterns_via_atoms(
+        patterns: list[tuple[Pattern, fbarray]],
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        subatoms_order: list[fbarray] = None,
+        max_length: Optional[int] = None,
+        use_tqdm: bool = False
+) -> Iterator[tuple[Pattern, int]]:
+    """
+    Yield the least precise patterns (aka keys) that describe the same extent as `patterns`
+
+    Parameters
+    ----------
+    patterns: list[tuple[Pattern, fbarray]]
+        A list of target patterns and their extents
+    atomic_patterns: OrderedDict[Pattern, fbarray]
+        Atomic patterns (and their extents) that will be used for finding keys.
+    subatoms_order: list[fbarray], optional
+        Partial order of `atomic_patterns` represented with list of frozenbitarrays.
+        The value `subatoms_order[i][j] == True` means that j-th atomic pattern is less precise than i-th atomic pattern.
+        If the value is not provided (i.e. equals to `None`), then the partial order will be computed inside this function.
+    max_length: Optional[int], optional
+        Maximum number of atomic pattern that a key can consist of.
+        This parameter can be used for "early-stopping" to avoid generating too complex keys.
+    use_tqdm: bool, default = False
+        Flag whether to show tqdm progress bar or not.
+
+
+    Yields
+    ------
+    key: Pattern
+        One of the least precise patterns that describe the same extent as i-th provided pattern (identified by `pattern_index`)
+    pattern_index: int
+        Index of the provided pattern described by `key`
+
+    """
+    def extract_subatoms_data(
+            patterns_: list[tuple[Pattern, fbarray]], atomic_patterns_: OrderedDict[Pattern, fbarray],
+            subatoms_order_: list[fbarray],
+    ) -> tuple[list[Pattern], list[fbarray], list[fbarray], list[fbarray]]:
+        subatom_indices: list[int] = []
+        subatoms: list[Pattern] = []
+        subatom_extents: list[fbarray] = []
+        patterns_per_subatom: list[fbarray] = []
+
+        for atom_i, (atom, aextent) in enumerate(atomic_patterns_.items()):
+            superpattern_flags = [basubset(extent, aextent) and atom <= pattern for pattern, extent in patterns_]
+            if not any(superpattern_flags):
+                continue
+
+            subatom_indices.append(atom_i)
+            subatoms.append(atom)
+            subatom_extents.append(aextent)
+            patterns_per_subatom.append(fbarray(superpattern_flags))
+
+        if subatoms_order_:
+            subatoms_order_ = [bitarray([subatoms_order_[i][j] for j in subatom_indices]) for i in subatom_indices]
+        else:
+            subatoms_order_ = inverse_order(bfuncs.order_patterns_via_extents(list(zip(subatoms, subatom_extents))))
+        subatoms_order_ = list(map(fbarray, subatoms_order_))
+        assert all(not subs_ba[i:].any() for i, subs_ba in enumerate(subatoms_order_)), \
+            ("Patterns in the OrderedDict of `atomic_patterns` should be ordered by increasing precision: "
+             "that is more precise atomic patterns should follow less atomic patterns. "
+             "In other words, greater atomic patterns have to be provided after the lesser atomic patterns.")
+
+        return subatoms, subatom_extents, patterns_per_subatom, subatoms_order_
+
+
+    subatoms, subatom_extents, patterns_per_subatom, subatoms_order = extract_subatoms_data(
+        patterns, atomic_patterns, subatoms_order)
+    global_extent = subatom_extents[0] | ~subatom_extents[0]
+
+    # now subatoms, subatom_extents, and subatoms_order are fully established
+    antichain_iterator = iterate_antichains(subatoms_order)
+    refine_antichain = None
+    found_closures: list[list[fbarray]] = [[] for _ in patterns]
+    pbar = tqdm(total=None, disable=not use_tqdm, desc="Iterate key candidates", unit_scale=True)
+    while True:
+        try:
+            antichain = antichain_iterator.send(refine_antichain)
+        except StopIteration:
+            break
+        pbar.update(1)
+
+        if max_length is not None and len(antichain) > max_length:
+            refine_antichain = False
+            continue
+
+        superpatterns = reduce(fbarray.__and__, (patterns_per_subatom[i] for i in antichain), ~bazeros(len(patterns)))
+        if not superpatterns.any():
+            refine_antichain = False
+            continue
+
+        ac_extent = reduce(fbarray.__and__, (subatom_extents[i] for i in antichain), global_extent)
+        same_extent_patterns = [i for i in superpatterns.search(True) if patterns[i][1] == ac_extent]
+        if not same_extent_patterns:
+            refine_antichain = True
+            continue
+
+        ac_closure = reduce(bitarray.__or__, (subatoms_order[i] for i in antichain), bitarray(len(subatoms_order)))
+        for i in antichain: ac_closure[i] = True
+
+        for pattern_i in same_extent_patterns:
+            dominates_found_key = any(basubset(found_closure, ac_closure) for found_closure in found_closures[pattern_i])
+            if dominates_found_key:
+                continue
+
+            pattern = patterns[pattern_i][0]
+            is_subpattern = all(subatoms[i] <= pattern for i in antichain)
+            if not is_subpattern:
+                continue
+
+            found_closures[pattern_i].append(ac_closure)
+            key = reduce(pattern.__class__.__or__, (subatoms[i] for i in antichain), pattern.min_pattern)
+            yield key, pattern_i
+
+        refine_antichain = superpatterns.count() > len(same_extent_patterns)
+    pbar.close()
