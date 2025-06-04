@@ -45,6 +45,7 @@ Patterns' Merge
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.substractable
 
+
 Atomic Representations
 ......................
 

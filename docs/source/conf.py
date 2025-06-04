@@ -43,5 +43,6 @@ html_sidebars = { # this is for the primary sidebar (the one on the left)
 
 html_theme_options = { # this is for the secondary sidebar (the one on the right side)
     "show_toc_level": 3,
+    "github_url": "https://github.com/smartFCA/paspailleur.git",
     "secondary_sidebar_items": ["page-toc", "sourcelink"]
 }
