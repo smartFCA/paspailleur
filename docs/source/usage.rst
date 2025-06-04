@@ -1,7 +1,7 @@
+.. _getting_started:
+
 Paspailleur in one page
 =======================
-
-.. _installation:
 
 Install
 -------
