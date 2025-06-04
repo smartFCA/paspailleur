@@ -473,3 +473,86 @@ def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], 
 
     patterns_order = rearrange_indices(patterns_order, [p for p, _ in patterns_list], [p for p, _ in patterns_extents])
     return patterns_order
+
+
+def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int, ...], bool, None]:
+    """
+    Iterate antichains of indices whose partial order is defined by `descending_order` parameter.
+
+    Antichain is a term from Order theory that represents a set of incomparable elements.
+    That is, a subset of indices {i, j, k, ..., n} makes an antichain when every pair of indices (i, j), (i, k), ...,
+    represents a pair of incomparable elements: e.g. `descending_order[i][j] == descending_order[j, i] == False`.
+
+    Important:
+    Elements in `descending_order` should be lexicographically ordered.
+    That is, for every i-th element, all its lesser elements should have lower indices: from 0 to i-1.
+
+
+    Parameters
+    ----------
+    descending_order: list[bitarray]
+        Defined the partial order of indices.
+        Value `descending_order[i][j]==True` indicates that i-th element is greater than the j-th element.
+
+    Yields
+    ------
+    antichains_iterator: Generator[list[int], bool, None]
+        Generator of antichains of the partial order defined by `descending_order`.
+        The navigation can be controlled using boolean value into `antichains_iterator.send()`.
+        If the passed value is `True` then the generator will pass through dominating antichains.
+
+    Examples
+    --------
+    Use the function as a generator:
+    >>> descending_order = [bitarray('0000'), bitarray('0100'), bitarray('1000'), bitarray('0000')]
+    >>> list(iterate_antichains(descending_order))  # get the list of all possible antichains
+    [(), (0,), (1,), (1, 0), (2,), (2, 1), (3,), (3, 0), (3, 1), (3, 1, 0), (3, 2), (3, 2, 1)]
+
+    Control the navigation over antichains:
+    >>> descending_order = [bitarray('0000'), bitarray('0100'), bitarray('1000'), bitarray('0000')]
+    >>> iterator = iterate_antichains(descending_order)
+    >>> iterator.send(None)  # send None value to get the first antichain which is the empty tuple
+    ()
+    >>> iterator.send(True)  # get the next antichain while saying True for antichains that dominate the empty antichain
+    (0,)
+    >>> iterator.send(False)  # get the next antichain while forbidding any antichain that has elements greater than the 0th
+    (1,)
+    >>> list(iterator)  # generate all antichains that are left to iterate
+    [(3,), (3, 1)]
+
+    The second iteration method has omitted all antichains that contain element 0.
+    It has also skipped all antichains that contain element 2,
+    because the 2nd element is defined as greater than the 0th: `descending_order[2][0]==True`.
+
+    """
+    assert not any(greaters[i+1:].any() for i, greaters in enumerate(descending_order)), \
+        "`descending_order` should be lexicographically ordered."
+
+    def ba_from_indices(indices: tuple[int, ...], default: bitarray = bazeros(len(descending_order))) -> fbarray:
+        ba = bitarray(default)
+        for i in indices:
+            ba[i] = True
+        return fbarray(ba)
+
+    descending_order = [ba_from_indices((i,), ba) for i, ba in enumerate(descending_order)]
+
+    refine_antichain = yield tuple()
+    if refine_antichain == False:
+        return
+
+    forbidden_antichains: set[fbarray] = set()
+
+    queue: list[tuple[tuple[int, ...], bitarray]] = [((i,), lesser) for i, lesser in enumerate(descending_order)][::-1]
+    while queue:
+        antichain, sub_elements = queue.pop()
+        if any(basubset(forbidden, sub_elements) for forbidden in forbidden_antichains):
+            continue
+
+        refine_antichain = yield antichain
+        if refine_antichain == False:
+            forbidden_antichains.add(ba_from_indices(antichain))
+            continue
+
+        next_elements = [next_i for next_i in (~sub_elements).search(True, 0, min(antichain))]
+        next_elements = next_elements[::-1]
+        queue.extend([(antichain+(next_i,), sub_elements | descending_order[next_i]) for next_i in next_elements])

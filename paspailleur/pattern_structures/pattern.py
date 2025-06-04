@@ -1,4 +1,4 @@
-from typing import TypeVar, Self, Optional
+from typing import TypeVar, Self, Optional, Literal
 
 
 class Pattern:
@@ -57,6 +57,9 @@ class Pattern:
         ValueError
             If the value cannot be parsed from a string.
         """
+        if isinstance(value, Pattern):
+            value = value.value
+
         if isinstance(value, str):
             try:
                 value = self.parse_string_description(value)
@@ -617,6 +620,35 @@ class Pattern:
         """
         return hash(self.value)
 
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If 'max' then returns _all_ atomic (so "unsplittable") patterns whose join equals to the original pattern.
+            If 'min' the returns the _minimal_ set of atomic patterns whose join equals to the current pattern.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        raise NotImplementedError
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -638,7 +670,7 @@ class Pattern:
         >>> p.atomic_patterns
         {'A', 'B'} # Assuming A and B are atomic patterns
         """
-        raise NotImplementedError
+        return self.atomise(atoms_configuration='max')
 
     @property
     def min_pattern(self) -> Optional[Self]:
@@ -656,6 +688,18 @@ class Pattern:
         >>> p.min_pattern
         None  # Assuming no minimal pattern is defined
         """
+        return self.get_min_pattern()
+
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
+        """
+        Return the minimal possible pattern, the sole one per Pattern class.
+
+        Returns
+        -------
+        min_pattern: Optional[Self]
+            The minimal pattern or None if undefined
+        """
         return None
 
     @property
@@ -672,6 +716,24 @@ class Pattern:
         --------
         >>> p = Pattern("A")
         >>> p.max_pattern
+        None  # Assuming no maximal pattern is defined
+        """
+        return self.get_max_pattern()
+
+    @classmethod
+    def get_max_pattern(cls) -> Optional[Self]:
+        """
+        Return the maximal possible pattern, the sole one per Pattern class.
+
+        Returns
+        -------
+        max: Optional[Self]
+            The maximal pattern or None if undefined.
+
+        Examples
+        --------
+        >>> p = Pattern("A")
+        >>> p.get_max_pattern()
         None  # Assuming no maximal pattern is defined
         """
         return None
