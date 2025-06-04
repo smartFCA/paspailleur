@@ -6,5 +6,5 @@ Patterns API
    :caption: Pattern API Sections
 
    pattern
-   builtins
+   built_in_patterns/index
    structures
