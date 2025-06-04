@@ -62,7 +62,21 @@ Orpailleur was also the name of the team where the package's development was ini
 So, in a sense, `Paspailleur` can be deciphered as "Pattern Structures miner".
 
 
+.. rubric:: Useful links
 
+GALACTIC software (https://galactic.univ-lr.fr): a Python package for working with Pattern Structures developed in La Rochelle Université.
+It is also a part of SmartFCA project.
+
+More software developed within SmartFCA project: https://www.smartfca.org/software/.
+
+Uta Priss webpage on FCA (https://upriss.github.io/fca/fca.html): old-by-gold landing page for FCA community.
+
+
+.. rubric:: Funding
+
+The package development is supported by ANR project SmartFCA (ANR-21-CE23-0023).
+
+SmartFCA (https://www.smartfca.org/) is a big platform that will contain many extensions of Formal Concept Analysis including pattern structures, Relational Concept Analysis, Graph-FCA and others. While caspailleur is a small python package that covers only the basic notions of FCA.
 
 
 .. toctree::
