@@ -6,4 +6,10 @@ Built In Patterns
    :maxdepth: 2
    :caption: Built-in patterns Sections
 
+   ItemSetPattern
+   CategorySetPattern
+   IntervalPattern
+   ClosedIntervalPattern
+   NgramSetPattern
+   CartesianPattern
    
