@@ -812,7 +812,7 @@ class PatternStructure:
             What type of atomic patterns to use to find subgroups.
             If "maximal" (the default) then prefer more precise atomic patterns (called support-maximal),
             and if "minimal" then prefer less precise atomic patterns (called support-minimal).
-            For example, say there are two interval patterns "Age >= 20" and "Age > 10" that describe _the same_ objects.
+            For example, say there are two interval patterns "Age >= 20" and "Age > 10" that describe *the same* objects.
             Then the former pattern is support-maximal (as it is more precise) and the latter is support-minimal
             (as it is less precise).
 

@@ -194,7 +194,7 @@ class ItemSetPattern(Pattern):
         Parameters
         ----------
         atoms_configuration: Literal['min', 'max']
-            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter _does not affect_ the output
+            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter *does not affect* the output
             of the function.
 
         Returns
@@ -211,7 +211,7 @@ class ItemSetPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__({v}) for v in self.value}
@@ -382,7 +382,7 @@ class CategorySetPattern(ItemSetPattern):
         Parameters
         ----------
         atoms_configuration: Literal['min', 'max']
-            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter _does not affect_ the
+            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter *does not affect* the
             output of the function.
 
         Returns
@@ -398,8 +398,8 @@ class CategorySetPattern(ItemSetPattern):
         that are join-irreducible elements of the lattice of all patterns.
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
-        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        every pattern can be represented by an •antichain* of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         assert self.min_pattern is not None, \
@@ -962,7 +962,7 @@ class IntervalPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         if self.value == self.max_pattern.value:
@@ -1279,7 +1279,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__(atom) for atom in super().atomise(atoms_configuration)
@@ -1616,7 +1616,7 @@ class NgramSetPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         if atoms_configuration == 'min':
@@ -1886,7 +1886,7 @@ class CartesianPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__({k: atom}) for k, pattern in self.value.items()
