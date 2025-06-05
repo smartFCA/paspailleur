@@ -7,7 +7,7 @@ Pattern Class
 Values' Encapsulation
 .....................
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.value
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.value
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.parse_string_description
 
@@ -19,11 +19,11 @@ Patterns' Order
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.issubpattern
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issupersubpattern
+.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issuperpattern
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.min_pattern
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.min_pattern
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.max_pattern
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.max_pattern
 
 
 Patterns' Merge
@@ -39,18 +39,18 @@ Patterns' Merge
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.difference
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.meetable
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.meetable
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.joinable
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.joinable
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.substractable
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.substractable
 
 
 Atomic Representations
 ......................
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.atomic_patterns
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.atomic_patterns
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.maximal_atoms
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.maximal_atoms
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.atomisable
+.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.atomisable

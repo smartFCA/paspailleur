@@ -23,19 +23,19 @@ Initialisation of the Pattern Structure
 Properties that are easy to compute
 ...................................
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.max_pattern
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.max_pattern
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.max_atoms
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.max_atoms
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.n_atomic_patterns
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.n_atomic_patterns
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns_order
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns_order
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.premaximal_patterns
+.. autoproperty:: paspailleur.pattern_structures.pattern_structure.PatternStructure.premaximal_patterns
 
 
 Pattern Iterators
@@ -59,7 +59,7 @@ High-level FCA API
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications_from_premises
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.next_pattern
+.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.next_patterns
 
 
 Measures of Patterns

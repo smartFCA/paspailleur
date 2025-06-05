@@ -194,7 +194,7 @@ class ItemSetPattern(Pattern):
         Parameters
         ----------
         atoms_configuration: Literal['min', 'max']
-            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter _does not affect_ the output
+            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter *does not affect* the output
             of the function.
 
         Returns
@@ -211,7 +211,7 @@ class ItemSetPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__({v}) for v in self.value}
@@ -382,7 +382,7 @@ class CategorySetPattern(ItemSetPattern):
         Parameters
         ----------
         atoms_configuration: Literal['min', 'max']
-            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter _does not affect_ the
+            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter *does not affect* the
             output of the function.
 
         Returns
@@ -398,8 +398,8 @@ class CategorySetPattern(ItemSetPattern):
         that are join-irreducible elements of the lattice of all patterns.
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
-        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        every pattern can be represented by an •antichain* of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         assert self.min_pattern is not None, \
@@ -962,7 +962,7 @@ class IntervalPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         if self.value == self.max_pattern.value:
@@ -1279,7 +1279,7 @@ class ClosedIntervalPattern(IntervalPattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__(atom) for atom in super().atomise(atoms_configuration)
@@ -1616,7 +1616,7 @@ class NgramSetPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         if atoms_configuration == 'min':
@@ -1736,16 +1736,16 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-        }
+        ...     DimensionTypes = {
+        ...         'age': IntervalPattern,
+        ...         'name': NgramSetPattern,
+        ...         'personal qualities': ItemSetPattern
+        ...     }
         >>> PersonPattern.preprocess_value({
-            'age': 20,
-            'name': 'Jean-Francois Martin',
-            'personal qualities': ['Ambitious', 'Approachable', 'Articulate']
-        })
+        ...    'age': 20,
+        ...    'name': 'Jean-Francois Martin',
+        ...    'personal qualities': ['Ambitious', 'Approachable', 'Articulate']
+        ... })
         frozendict({
             'age': IntervalPattern((20.0, 20.0)),
             'name': NgramSetPattern({('Jean-Francois',), ('Martin',)}),
@@ -1814,10 +1814,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> p2 = PersonPattern({'age': "[30, 50]", 'name': "Smith"})
         >>> p1 | p2
@@ -1846,10 +1846,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> p2 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"}) 
         >>> p1 - p2
@@ -1886,7 +1886,7 @@ class CartesianPattern(Pattern):
 
         Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
         every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
-        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+        and by an *order ideal* of atomic patterns (when `atoms_configuration` = 'max').
 
         """
         return {self.__class__({k: atom}) for k, pattern in self.value.items()
@@ -1905,14 +1905,14 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> atoms = p1.atomic_patterns
         >>> for atom in atoms:
-            >>> print(atom)
+        ...     print(atom)
         {'name': {'John Smith'}}
         {'name': {'Smith'}}
         {'name': {'John'}}
@@ -1935,10 +1935,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> len(p1)
         3
@@ -2016,18 +2016,18 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-            }
+        ...     DimensionTypes = {
+        ...         'age': IntervalPattern,
+        ...         'name': NgramSetPattern,
+        ...         'personal qualities': ItemSetPattern
+        ...     }
         >>> p = PersonPattern({
-            'age': "[25, 35]",
-            'name': "Alice Johnson",
-            'personal qualities': ['Thoughtful', 'Curious']
-        })
+        ...    'age': "[25, 35]",
+        ...    'name': "Alice Johnson",
+        ...    'personal qualities': ['Thoughtful', 'Curious']
+        ... })
         >>> for atom in p.maximal_atoms:
-            print(atom)
+        ...     print(atom)
         {'age': ø}
         """
         max_atoms = set()
@@ -2054,19 +2054,19 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-            }
+        ...    DimensionTypes = {
+        ...    'age': IntervalPattern,
+        ...    'name': NgramSetPattern,
+        ...    'personal qualities': ItemSetPattern
+        ...    }
         >>> p = PersonPattern({
-            'age': "[25, 35]",
-            'name': "Alice Johnson",
-            'personal qualities': ['Thoughtful', 'Curious']
-        })
+        ...    'age': "[25, 35]",
+        ...    'name': "Alice Johnson",
+        ...    'personal qualities': ['Thoughtful', 'Curious']
+        ... })
         >>> print(p['age'])
         [25.0, 35.0]
-        >>> prin(p['name'])
+        >>> print(p['name'])
         {'Alice Johnson'}
         """
         return self.value[item]
