@@ -1,5 +1,6 @@
 import math
-from typing import Self, Collection, Optional, Sequence, Type
+from builtins import set
+from typing import Self, Collection, Optional, Sequence, Type, Literal
 from numbers import Number
 from frozendict import frozendict
 import re
@@ -16,16 +17,16 @@ class ItemSetPattern(Pattern):
     It supports operations such as union, intersection, and difference.
 
     References
-    ----------
+    ..........
     Agrawal, R., & Srikant, R. (1994). Fast algorithms for mining association rules in large databases.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset.
 
     Properties
-    ----------
+    ..........
     value
         Return the value of the item set pattern
     atomic_patterns
@@ -185,6 +186,37 @@ class ItemSetPattern(Pattern):
         """
         return frozenset(value)
 
+
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. ItemSets containing just one item.
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Specifically for ItemSetPattern, the value of `atoms_configuration` parameter _does not affect_ the output
+            of the function.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__({v}) for v in self.value}
+
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -203,12 +235,12 @@ class ItemSetPattern(Pattern):
         >>> p.atomic_patterns
         {ItemSetPattern({1}), ItemSetPattern({2})}
         """
-        return {self.__class__({v}) for v in self.value}
+        return super().atomic_patterns
 
-    @property
-    def min_pattern(self) -> Self:
+    @classmethod
+    def get_min_pattern(cls) -> Self:
         """
-        Return the minimal possible pattern for the item set pattern.
+        Return the minimal possible pattern, i.e. empty ItemSetPattern
 
         Returns
         -------
@@ -218,11 +250,10 @@ class ItemSetPattern(Pattern):
 
         Examples
         --------
-        >>> p = ItemSetPattern({1})
-        >>> p.min_pattern
+        >>> ItemSetPattern.get_min_pattern()
         ItemSetPattern(frozenset())
         """
-        return self.__class__(frozenset())
+        return cls(frozenset())
 
 
 class CategorySetPattern(ItemSetPattern):
@@ -233,21 +264,20 @@ class CategorySetPattern(ItemSetPattern):
     But it's also an inversion of it, meaning for an object to fall under the ItemSetPattern class, it has to fit the the descriptions of all items in the set. On the other hand for an object to fall under the CategorySetPattern, it needs only fit to one item in the set.
     
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset.
     Universe: Optional[frozenset]
         The set of all possible categories.
     
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern
         Return the minimal possible pattern for the category set pattern.
     max_pattern
         Return the maximal possible pattern for the category set pattern.
-    
     """
     PatternValueType = frozenset
     Universe: Optional[frozenset] = None  # The set of all possible categories
@@ -312,7 +342,7 @@ class CategorySetPattern(ItemSetPattern):
         >>> CategorySetPattern({"A", "B"}).__repr__()
         '{'A', 'B'}'
         """
-        repr_negative = self.Universe is not None and len(self.value) > len(self.Universe) / 2
+        repr_negative = self.Universe is not None and len(self.Universe) / 2 < len(self.value) < len(self.Universe)
         s = set(self.Universe) - self.value if repr_negative else self.value
         s = repr(set(s))
         if repr_negative:
@@ -345,6 +375,41 @@ class CategorySetPattern(ItemSetPattern):
             return self.min_pattern
         return self.__class__(self.value)
 
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. CategorySets that exclude just one category from the minimal pattern
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Specifically for CategorySetPattern, the value of `atoms_configuration` parameter _does not affect_ the
+            output of the function.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        assert self.min_pattern is not None, \
+            f"Pattern of  {self.__class__} class cannot be splitted without predefined min_pattern value. " \
+            f"The proposed solution is to inherit a new class from the current class and " \
+            f"explicitly specify the value of min_pattern."
+
+        leftout_vals = self.min_pattern.value - self.value
+        return {self.__class__(self.min_pattern.value - {v}) for v in leftout_vals}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -372,14 +437,12 @@ class CategorySetPattern(ItemSetPattern):
             f"Atomic patterns of {self.__class__} class cannot be computed without predefined min_pattern value. " \
             f"The proposed solution is to inherit a new class from the current class and " \
             f"explicitly specify the value of min_pattern."
+        return super().atomic_patterns
 
-        leftout_vals = self.min_pattern.value - self.value
-        return {self.__class__(self.min_pattern.value-{v}) for v in leftout_vals}
-
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the category set pattern.
+        Return the minimal possible pattern for the category set pattern, i.e. CategorySet containing all categories
 
         Returns
         -------
@@ -389,31 +452,30 @@ class CategorySetPattern(ItemSetPattern):
         Examples
         --------
         >>> CategorySetPattern.Universe = {"A", "B", "C"}
-        >>> p = CategorySetPattern({"A"})
-        >>> p.min_pattern
+        >>> CategorySetPattern.get_min_pattern()
         CategorySetPattern({'A', 'B', 'C'})
         """
-        if self.Universe is None:
-            return None
-        return self.__class__(self.Universe)
+        return cls(cls.Universe) if cls.Universe is not None else None
 
-    @property
-    def max_pattern(self) -> Self:
+    @classmethod
+    def get_max_pattern(cls) -> Self:
         """
-        Return the maximal possible pattern for the category set pattern.
+        Return the maximal possible pattern for the category set pattern, i.e. empty CategorySet
+
+        Empty CategorySet is the maximal possible pattern, because it does not allow for any category.
+        That is, it is so maximal and so precise, that it should never occur in the data.
 
         Returns
         -------
         max: Self
-            The maximal category set pattern, which is an empty frozenset.
+            The maximal category set pattern, which is an empty CategorySet
 
         Examples
         --------
-        >>> p = CategorySetPattern({"A"})
-        >>> p.max_pattern
+        >>> CategorySetPattern.get_max_pattern()
         CategorySetPattern(frozenset())
         """
-        return self.__class__(frozenset())
+        return cls(frozenset())
 
     def __len__(self) -> int:
         """
@@ -450,14 +512,14 @@ class IntervalPattern(Pattern):
     including operations such as intersection, union, and difference.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a tuple of bounds.
     BoundsUniverse: list[float]
         A list representing the universe of bounds for the interval.
     
     Properties
-    ----------
+    ..........
     lower_bound
         Return the lower bound of the interval.
     is_lower_bound_closed
@@ -875,6 +937,66 @@ class IntervalPattern(Pattern):
         # subtraction is impossible
         return self.__class__(self.value)
 
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of one-sided intervals
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If equals to 'min', return up to 2 atomic patterns each representing a bound of the original interval.
+            If equals to 'max', return _all_ less precise one-sided intervals, where the bounds are defined by
+            `BoundUniverse` class attribute.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        if self.value == self.max_pattern.value:
+            return {self.max_pattern}
+
+        if atoms_configuration == 'min':
+            atoms = []
+            if not (self.lower_bound == -math.inf and self.is_lower_bound_closed):
+                atoms.append( ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True)) )
+            if not (self.upper_bound == math.inf and self.is_upper_bound_closed):
+                atoms.append( ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)) )
+            return {self.__class__(v) for v in atoms}
+
+        # atoms_configuration == 'max'
+        assert self.BoundsUniverse is not None, ("Please define BoundsUniverse class attribute in order to "
+                                                 "be able to compute all atomic patterns for a specified pattern.")
+
+
+        atoms = []
+        for bound in self.BoundsUniverse:
+            for is_bound_closed in [False, True]:
+                if bound >= self.upper_bound:
+                    atoms.append( ((-math.inf, True), (bound, is_bound_closed)) )
+                if bound <= self.lower_bound:
+                    atoms.append( ((bound, is_bound_closed), (math.inf, True))  )
+        if self.is_upper_bound_closed:
+            excessive_atom = ((-math.inf, True), (self.upper_bound, False))
+            if excessive_atom in atoms: atoms.remove(excessive_atom)
+        if self.is_lower_bound_closed:
+            excessive_atom = ((self.lower_bound, False), (math.inf, True))
+            if excessive_atom in atoms: atoms.remove(excessive_atom)
+
+        return {self.__class__(v) for v in atoms}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -892,43 +1014,54 @@ class IntervalPattern(Pattern):
         >>> IntervalPattern( "[1, 5]" )atomic_patterns
         {IntervalPattern("[-∞, ∞]"), IntervalPattern(">=1"), IntervalPattern("<=5") }
         """
-        if self.value == self.max_pattern.value:
-            return {self.max_pattern}
-
-        atoms = [
-            ((-math.inf, True), (math.inf, True)),
-            ((-math.inf, True), (self.upper_bound, self.is_upper_bound_closed)),
-            ((self.lower_bound, self.is_lower_bound_closed), (math.inf, True))
-        ]
-        if not self.is_upper_bound_closed:
-            atoms.append(tuple([(-math.inf, True), (self.upper_bound, True)]))
-        if not self.is_lower_bound_closed:
-            atoms.append(tuple([(self.lower_bound, True), (math.inf, True)]))
-
-        return {self.__class__(v) for v in atoms}
+        return super().atomic_patterns
 
     @property
-    def min_pattern(self) -> Self:
+    def atomisable(self) -> bool:
         """
-        Return the minimal possible pattern for the interval pattern.
+        Check if the pattern can be atomized. IntervalPattern can only be atomised when `BoundsUniverse` is defined
+
+        Returns
+        -------
+        flag: bool
+            True if the pattern can be atomized, False otherwise.
+
+        Examples
+        --------
+        >>> p = Pattern("example")
+        >>> p.atomisable
+        True
+
+        """
+        if self.BoundsUniverse is None:
+            return False
+
+        return super().atomisable
+
+    @classmethod
+    def get_min_pattern(cls) -> Self:
+        """
+        Return the minimal possible pattern for the interval pattern, i.e. interval [-inf, +inf]
 
         Returns
         -------
         min: Self
-            The minimal interval pattern, which is defined as (-inf, inf).
-            `None` if undefined
+            The minimal interval pattern, which is defined as [-inf, inf].
 
         Examples
         --------
-        >>> IntervalPattern.min_pattern
-        (-inf, inf)
+        >>> IntervalPattern.get_min_pattern()
+        IntervalPattern('[-inf, +inf]')
         """
-        return self.__class__(((-math.inf, True), (math.inf, True)))
+        return cls(((-math.inf, True), (math.inf, True)))
 
-    @property
-    def max_pattern(self) -> Self:
+    @classmethod
+    def get_max_pattern(cls) -> Self:
         """
-        Return the maximal possible pattern for the interval pattern.
+        Return the maximal possible pattern for the interval pattern, i.e. the empty interval.
+
+        Empty interval is the maximal pattern, because it does not cover any other interval. So it describes no objects.
+
 
         Returns
         -------
@@ -937,10 +1070,10 @@ class IntervalPattern(Pattern):
 
         Examples
         --------
-        >>> IntervalPattern.max_pattern
-        'ø'
+        >>> IntervalPattern.get_max_pattern()
+        IntervalPattern('ø')
         """
-        return self.__class__("ø")
+        return cls("ø")
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:
@@ -967,12 +1100,12 @@ class ClosedIntervalPattern(IntervalPattern):
     This class extends IntervalPattern to specifically handle closed intervals.
 
     Attributes
-    ----------
+    ..........
     PatternValueType :
         The type of the pattern's value, which is a tuple of two floats.
     
     Properties
-    ----------
+    ..........
     lower_bound
         Return the lower bound of the closed interval.
     upper_bound
@@ -1121,13 +1254,44 @@ class ClosedIntervalPattern(IntervalPattern):
 
         raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
 
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the set of one-sided intervals
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If equals to 'min', return up to 2 atomic patterns each representing a bound of the original interval.
+            If equals to 'max', return _all_ less precise one-sided intervals, where the bounds are defined by
+            `BoundUniverse` class attribute.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__(atom) for atom in super().atomise(atoms_configuration)
+                if atom.is_lower_bound_closed and atom.is_upper_bound_closed}
+
 
 class NgramSetPattern(Pattern):
     """
     A class representing a set of n-grams as a pattern.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozenset of tuples.
     StopWords: set[str]
@@ -1135,7 +1299,7 @@ class NgramSetPattern(Pattern):
         But if a set has both stop words and non stop words it is kept in the analysis
 
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern
@@ -1427,6 +1591,46 @@ class NgramSetPattern(Pattern):
             i += 1
         return frozenset(ngrams)
 
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the singleton sets of ngrams
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            If set to 'min', then return the set of individual ngrams from the value of the original pattern.
+            If set to 'max', the return all sub-ngrams that can only be found in the original pattern.
+            Defaults to 'min'.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        if atoms_configuration == 'min':
+            return {self.__class__([ngram]) for ngram in self.value}
+
+        # atoms_configuration == 'max':
+        atoms = set()
+        for ngram in self.value:
+            for atom_size in range(1, len(ngram)+1):
+                atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
+
+        return {self.__class__([v]) for v in atoms}
+
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -1448,31 +1652,24 @@ class NgramSetPattern(Pattern):
         >>> p2.atomic_patterns
         {{'hello world !'}, {'foo'}, {'hello'}, {'!'}, {'hello world'}, {'world !'}, {'world'}}
         """
-        atoms = set()
+        return super().atomic_patterns
 
-        for ngram in self.value:
-            for atom_size in range(1, len(ngram)+1):
-                atoms |= {ngram[i:i+atom_size] for i in range(len(ngram)-atom_size+1)}
-
-        return {self.__class__([v]) for v in atoms}
-
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the n-gram set pattern.
+        Return the minimal possible pattern for the n-gram set pattern, i.e. empty NgramSet
 
         Returns
         -------
         min: Optional[Self]
-            The minimal n-gram set pattern, which is an empty frozenset.
-            `None` if undefined
+            The minimal n-gram set pattern, which is an empty NgramSet
         
         Examples
         --------
-        >>> NgramSetPattern({}).min_pattern
-        {''}
+        >>> NgramSetPattern.get_min_pattern
+        NgramSetPattern(set())
         """
-        return self.__class__([])
+        return cls([])
 
 
 class CartesianPattern(Pattern):
@@ -1480,14 +1677,14 @@ class CartesianPattern(Pattern):
     A class representing a Cartesian product of multiple dimensions as a pattern.
 
     Attributes
-    ----------
+    ..........
     PatternValueType:
         The type of the pattern's value, which is a frozendict mapping dimension names to Pattern instances.
     DimensionTypes: dict[str, Type[Pattern]]
         Optional mapping from dimension names to specific Pattern types for parsing.
     
     Properties
-    ----------
+    ..........
     atomic_patterns
         Return the set of all less precise patterns that cannot be obtained by intersection of other patterns.
     min_pattern
@@ -1663,6 +1860,38 @@ class CartesianPattern(Pattern):
 
         return self.__class__({k: (v - other.value[k]) if k in other.value else v for k, v in self.value.items()})
 
+
+    def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
+        """
+        Split the pattern into atomic patterns, i.e. the union of atomic patterns computed for each dimension
+
+        Parameters
+        ----------
+        atoms_configuration: Literal['min', 'max']
+            Whether to output the maximal set of atomic patterns for each dimension (if set to 'max') or
+            the minimal set of atomic patterns for each dimension (if set to 'min').
+            Defaults to 'min'.
+
+        Returns
+        -------
+        atomic_patterns: set[Self]
+            The set of atomic patterns, i.e. the set of unsplittable patterns whose join equals to the pattern.
+
+
+        Notes
+        -----
+        Speaking in terms of Ordered Set Theory:
+        We say that every pattern can be represented as the join of a subset of atomic patterns,
+        that are join-irreducible elements of the lattice of all patterns.
+
+        Considering the set of atomic patterns as a partially ordered set (where the order follows the order on patterns),
+        every pattern can be represented by an _antichain_ of atomic patterns (when `atoms_configuration` = 'min'),
+        and by an _order ideal_ of atomic patterns (when `atoms_configuration` = 'max').
+
+        """
+        return {self.__class__({k: atom}) for k, pattern in self.value.items()
+                for atom in pattern.atomise(atoms_configuration)}
+
     @property
     def atomic_patterns(self) -> set[Self]:
         """
@@ -1692,7 +1921,7 @@ class CartesianPattern(Pattern):
         {}
         {'name': {'John Smith'}}
         """
-        return {self.__class__({k: atom}) for k, pattern in self.value.items() for atom in pattern.atomic_patterns}
+        return super().atomic_patterns
 
     def __len__(self) -> int:
         """
@@ -1716,10 +1945,10 @@ class CartesianPattern(Pattern):
         """
         return sum(len(subpattern) for subpattern in self.value.values())
 
-    @property
-    def min_pattern(self) -> Optional[Self]:
+    @classmethod
+    def get_min_pattern(cls) -> Optional[Self]:
         """
-        Return the minimal possible pattern for the Cartesian pattern.
+        Return the minimal possible pattern for the Cartesian pattern that contains min patterns per every dimension.
 
         Returns
         -------
@@ -1729,23 +1958,26 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
-        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
-        >>> p1.min_pattern
-        {}
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ... }
+        >>> PersonPattern.get_min_pattern()
+        {}  # Stands for `PersonPattern({'age': '[-inf, +inf]', 'name': set()})`
         """
-        if any(p.min_pattern is None for p in self.value.values()):
+        if cls.DimensionTypes is None:
             return None
 
-        return self.__class__({k: pattern.min_pattern for k, pattern in self.value.items()})
+        min_patterns = {dim: dtype.get_min_pattern() for dim, dtype in cls.DimensionTypes.items()}
+        if any(v is None for v in min_patterns.values()):
+            return None
 
-    @property
-    def max_pattern(self) -> Optional[Self]:
+        return cls(min_patterns)
+
+    @classmethod
+    def get_max_pattern(cls) -> Optional[Self]:
         """
-        Return the maximal possible pattern for the Cartesian pattern.
+        Return the maximal possible pattern for the Cartesian pattern that contains max patterns per every dimension
 
         Returns
         -------
@@ -1755,18 +1987,21 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
-        >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
-        >>> p1.min_pattern
-        None
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
+        >>> PersonPattern.get_max_pattern()
+        None  # because max_pattern for dimension 'name' is not defined
         """
-        if any(p.max_pattern is None for p in self.value.values()):
+        if cls.DimensionTypes is None:
+            return None
+        max_patterns_per_dim = {dimension: dtype.get_max_pattern() for dimension, dtype in cls.DimensionTypes.items()}
+        if any(max_pattern is None for max_pattern in max_patterns_per_dim.values()):
             return None
 
-        return self.__class__({k: pattern.max_pattern for k, pattern in self.value.items()})
+        return cls(max_patterns_per_dim)
+
 
     @property
     def maximal_atoms(self) -> Optional[set[Self]]:

@@ -4,7 +4,8 @@ from functools import reduce
 from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
-from bitarray.util import zeros as bazeros
+from bitarray.util import zeros as bazeros, subset as basubset
+from caspailleur import inverse_order
 
 from caspailleur.io import to_absolute_number
 from tqdm.auto import tqdm
@@ -14,8 +15,6 @@ from .pattern import Pattern
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 
 
-"""Most of the changes that appear are merely a change of alignment for either the parameters of functions or the parameters of the expected return of the functions (after ->) done only to faciliate the reading of them in the functions and the usage of the collapse/expand arrows in VS code
-"""
 class PatternStructure:
     """
     A class to process complex datasets where every row (called object) is described by one pattern.
@@ -23,16 +22,16 @@ class PatternStructure:
     All patterns should be of the same class defined by PatternType attribute.
 
     References
-    ----------
+    ..........
     Ganter, B., & Kuznetsov, S. O. (2001, July). Pattern structures and their projections. In International conference on conceptual structures (pp. 129-142). Berlin, Heidelberg: Springer Berlin Heidelberg.
     
     Attributes
-    ----------
+    ..........
     PatternType: TypeVar
         A type variable bound to the Pattern class.
     
     Private Attributes
-    ------------------
+    ..................
     _object_irreducibles: Optional[dict[PatternType, fbarray]]
         Patterns introduced by objects.
     _object_names: Optional[list[str]]
@@ -44,10 +43,8 @@ class PatternStructure:
         _atomic_patterns_order[i][j] == True would mean that i-th atomic pattern is less precise than j-th atomic pattern.
         _atomic_patterns_order[i][j] == False can mean both that j-th atomic pattern is less precise than i-th atomic pattern and that i-th and j-th atomic patterns can not be compared.
 
-
-
     Properties
-    ----------
+    ..........
     premaximal_patterns
         Return the premaximal patterns in the structure.
     atomic_patterns_order
@@ -65,7 +62,7 @@ class PatternStructure:
     """
     PatternType = TypeVar('PatternType', bound=Pattern)
 
-    def __init__(self, pattern_type: Type[Pattern] = Pattern):
+    def __init__(self, pattern_type: Type[Pattern] = None):
         """
         Initialize the PatternStructure with a specific pattern class.
 
@@ -118,7 +115,13 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        extent = bfuncs.extension(pattern, self._object_irreducibles)
+        extent = None
+        if pattern.atomisable and self._atomic_patterns is not None:
+            atoms = pattern.atomise('min')
+            if all(atom in self._atomic_patterns for atom in atoms):
+                total_extent = ~bazeros(len(self._object_names))
+                extent = reduce(fbarray.__and__, (self._atomic_patterns[atom] for atom in atoms), total_extent)
+        extent = bfuncs.extension(pattern, self._object_irreducibles) if extent is None else extent
 
         if return_bitarray:
             return fbarray(extent)
@@ -153,13 +156,22 @@ class PatternStructure:
         if not self._object_irreducibles or not self._object_names:
             raise ValueError('The data is unknown. Fit the PatternStructure to your data using .fit(...) method')
 
-        objects_ba = objects
-        if not isinstance(objects_ba, bitarray):
-            objects_ba = bazeros(len(self._object_names))
-            for object_name in objects:
-                objects_ba[self._object_names.index(object_name)] = True
 
-        return bfuncs.intention(objects_ba, self._object_irreducibles)
+        if isinstance(objects, bitarray):
+            objects_ba = objects
+        else:  # not isinstance(objects_ba, bitarray):
+            objects = set(objects)
+            objects_ba = bitarray([obj in objects for obj in self._object_names])
+
+        if self._atomic_patterns is None:
+            return bfuncs.intention(objects_ba, self._object_irreducibles)
+
+        selected_atoms = {i: atom for i, (atom, aextent) in enumerate(self._atomic_patterns.items())
+                          if basubset(objects_ba, aextent)}
+
+        if not selected_atoms:
+            return self.PatternType.get_min_pattern()
+        return reduce(self.PatternType.__or__, selected_atoms.values())
 
     ###########################################
     # Initialisation of the Pattern Structure #
@@ -168,7 +180,7 @@ class PatternStructure:
             self,
             object_descriptions: dict[str, PatternType],
             compute_atomic_patterns: bool = None, min_atom_support: Union[int, float] = 0,
-            use_tqdm: bool = True
+            use_tqdm: bool = False
         ):
         """
         Initialize the PatternStructure with object descriptions.
@@ -196,19 +208,33 @@ class PatternStructure:
         >>> ps.fit(data)
         """
         object_names, objects_patterns = zip(*object_descriptions.items())
+        if self.PatternType is None:  # try to automatically identify the PatternType
+            PatternTypes = {pattern.__class__ for pattern in objects_patterns if isinstance(pattern, Pattern)}
+            if len(PatternTypes) > 1:
+                raise ValueError(
+                    f'PatternType of the PatternStructure cannot be identified as `object_descriptions` provided into '
+                    f'`PatternStructure.fit()` function have multiple pattern types: {PatternTypes}. '
+                    f'Convert all objects descriptions to a single pattern type and run fit() function once again.')
+            self.PatternType = next(iter(PatternTypes))
+
+        objects_patterns = list(objects_patterns)
+        for i in range(len(objects_patterns)):
+            if isinstance(objects_patterns[i], self.PatternType): continue
+
+            try:
+                objects_patterns[i] = self.PatternType(objects_patterns[i])
+            except Exception as e:
+                raise ValueError(f"Value of object '{object_names[i]}' cannot be converted to "
+                                 f"PatternType '{self.PatternType}'. The raised error is: {e}.")
+
+
         object_irreducibles = bfuncs.group_objects_by_patterns(objects_patterns)
 
         self._object_names = list(object_names)
         self._object_irreducibles = {k: fbarray(v) for k, v in object_irreducibles.items()}
 
         if compute_atomic_patterns is None:
-            # Set to True if the values can be computed
-            pattern = list(object_irreducibles)[0]
-            try:
-                _ = pattern.atomic_patterns
-                compute_atomic_patterns = True
-            except NotImplementedError:
-                compute_atomic_patterns = False
+            compute_atomic_patterns = objects_patterns[0].atomisable
 
         if compute_atomic_patterns:
             self.init_atomic_patterns(use_tqdm=use_tqdm, min_support=min_atom_support)
@@ -241,22 +267,24 @@ class PatternStructure:
         """
         min_support = to_absolute_number(min_support, len(self._object_names))
 
-        atomic_patterns = reduce(set.__or__, (p.atomic_patterns for p in self._object_irreducibles), set())
-        atomic_patterns |= self.max_atoms
+        atomic_patterns: dict[Pattern, bitarray] = {}
+        object_irreducibles_iterator = tqdm(self._object_irreducibles.items(), total=len(self._object_irreducibles),
+                                            desc='Compute atomic extents', disable=not use_tqdm)
+        for oi_pattern, oi_extent in object_irreducibles_iterator:
+            for atomic_pattern in oi_pattern.atomise(atoms_configuration='max'):
+                if atomic_pattern not in atomic_patterns:
+                    atomic_patterns[atomic_pattern] = bitarray(len(oi_extent))
+                atomic_patterns[atomic_pattern] |= oi_extent
 
-        atoms_iterator = atomic_patterns
-        if use_tqdm:
-            atoms_iterator = tqdm(atoms_iterator, total=len(atomic_patterns), desc='Compute atomic extents')
+        for max_atom in self.max_atoms:
+            atomic_patterns[max_atom] = self.extent(max_atom, return_bitarray=True)
 
-        atoms_extents: list[tuple[Pattern, fbarray]] = []
-        for atom in atoms_iterator:
-            extent = self.extent(atom, return_bitarray=True)
-            if extent.count() < min_support:
-                continue
-            atoms_extents.append((atom, extent))
+        atoms_extents: list[tuple[Pattern, fbarray]] = [
+            (atom, fbarray(extent)) for atom, extent in atomic_patterns.items()
+            if extent.count() >= min_support
+        ]
 
         atoms_order = bfuncs.order_patterns_via_extents(atoms_extents, use_tqdm=use_tqdm)
-        assert all(not ba[i] for i, ba in enumerate(atoms_order)), 'Something went wrong during the run of the programm. Ask the developer'
 
         def topological_key(atom_idx):
             extent: fbarray = atoms_extents[atom_idx][1]
@@ -371,7 +399,7 @@ class PatternStructure:
         >>> ps.atomic_patterns
         OrderedDict({Pattern("A"): {"obj1", "obj3"}, Pattern("B"): {"obj2"}})
         """
-        return OrderedDict(self.iter_atomic_patterns(return_extents=True, return_bitarrays=False))
+        return OrderedDict(self.iter_atomic_patterns(return_bitarrays=False))
 
     @property
     def n_atomic_patterns(self) -> int:
@@ -388,7 +416,7 @@ class PatternStructure:
         >>> ps.n_atomic_patterns
         5
         """
-        return sum(1 for _ in self.iter_atomic_patterns(return_extents=False, return_bitarrays=False))
+        return sum(1 for _ in self.iter_atomic_patterns(return_bitarrays=True))
 
     @property
     def atomic_patterns_order(self) -> dict[PatternType, set[PatternType]]:
@@ -442,39 +470,81 @@ class PatternStructure:
     #####################
     # Pattern Iterators #
     #####################
+    def _filter_atomic_patterns_by_support(self, support_characteristic: Literal["any", "maximal", "minimal"])\
+            -> tuple[OrderedDict[PatternType, fbarray], list[bitarray]]:
+        if support_characteristic not in {'maximal', 'minimal', 'any'}:
+            raise ValueError(f"Unsupported value for `support_characteristic`: {support_characteristic}. "
+                             f"The only accepted values are 'any`, 'maximal', and 'minimal'.")
+
+        atomic_patterns, atomic_patterns_order = self._atomic_patterns, self._atomic_patterns_order
+        if support_characteristic == 'any':
+            return atomic_patterns, atomic_patterns_order
+
+        atomic_supports = [extent.count() for extent in self._atomic_patterns.values()]
+        if support_characteristic == 'maximal':
+            atoms_to_iterate = [i for i, superatoms in enumerate(self._atomic_patterns_order)
+                                if not any(atomic_supports[i] == atomic_supports[j] for j in superatoms.search(True))]
+        else:  # if support_characteristic == 'minimal':
+            subatoms_order = inverse_order(self._atomic_patterns_order)
+            atoms_to_iterate = [i for i, subatoms in enumerate(subatoms_order)
+                                if not any(atomic_supports[i] == atomic_supports[j] for j in subatoms.search(True))]
+
+        atomic_order = [bitarray([atomic_patterns_order[i][j] for j in atoms_to_iterate]) for i in atoms_to_iterate]
+        atoms_to_iterate = set(atoms_to_iterate)
+        atomic_patterns = OrderedDict([(atom, extent) for idx, (atom, extent) in enumerate(atomic_patterns.items())
+                                        if idx in atoms_to_iterate])
+        return atomic_patterns, atomic_order
+
     def iter_atomic_patterns(
         self,
-        return_extents: bool = True, return_bitarrays: bool = False,
-        kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce'
-        ) -> Union[
-        Generator[PatternType, bool, None],
-        Generator[tuple[PatternType, set[str]], bool, None],
-        Generator[tuple[PatternType, fbarray], bool, None]]:
+        return_bitarrays: bool = False,
+        kind: Literal["bruteforce", "ascending", "ascending controlled"] = 'bruteforce',
+        support_characteristic: Literal["any", "maximal", "minimal"] = "any",
+    ) -> Generator[tuple[PatternType, Union[set[str], fbarray]], Union[bool, None], None]:
         """
-        Iterate over atomic patterns in the structure.
+        Iterate over atomic patterns in the pattern structure.
+
+        If `controlled` is False, then the function works as a generator that can be directly put into for-in loop,
+        If `controlled` is True, then patterns' navigation can be controleld by `pattern_iterator.send()` function.
+        After receiving pattern `p`,
+        send `True` to the iterator in order to continue iterating over atomic patterns more precise than `p`,
+        and send `False` to "early stop" the iteration.
+
+        Important:
+        When `controlled` is set to `True`,
+        initialise the generator using `next(pattern_generator)` before generating any atomic patterns.
+
 
         Parameters
         ----------
-        return_extents: bool, optional
-            If True, returns extents along with patterns (default is True).
         return_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
         kind: Literal, optional
             Iteration strategy: 'bruteforce', 'ascending', or 'ascending controlled' (default is 'bruteforce').
+        support_characteristic: Literal, optional
+            Defines what type of atomic patterns to output.
+            If 'any' (which is the default), then output all the atomic patterns.
+            If 'maximal' then output the most precise atomic patterns w.r.t. their support.
+            (i.e. if atomic pattern is support-maximal, then any more precise atomic pattern would describe fewer objects).
+            If 'minimal' then output the least precise atomic patterns w.r.t. their support.
+            (i.e. if atomic pattern is support-minimal, then any less precise atomic pattern would describe more objects).
 
         Yields
         ------
-        pattern_data: Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
-            Patterns optionally paired with their extent as a set of object names or bitarray.
+        pattern_generator: Generator[tuple[PatternType, Union[set[str], fbarray]], Union[bool, None], None]
+            Generator of pairs of atomic patterns and their extents (either as a set of objects' names or as a bitarray).
+            When `controlled` parameter is set to `True`, one can send boolean `refine_atomic_pattern` parameter
+            to the generator in order to control the patterns' navigation.
 
         Examples
         --------
         >>> for atom, extent in ps.iter_atomic_patterns():
             print(atom, extent)
         """
-        assert self._atomic_patterns is not None
+        assert self._atomic_patterns is not None, \
+            "Please initialise atomic patterns first using `ps.init_atomic_patterns()` function."
 
-        def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray):
+        def form_yielded_value(ptrn: PatternStructure.PatternType, ext: bitarray) -> tuple[Pattern, Union[set[str], fbarray]]:
             """
             Format the yielded result based on configuration.
 
@@ -489,25 +559,30 @@ class PatternStructure:
             -------
             Union[PatternType, tuple[PatternType, set[str]], tuple[PatternType, fbarray]]
             """
-            if not return_extents:
-                return ptrn
-            if not return_bitarrays:
-                return ptrn, {self._object_names[g] for g in ext.search(True)}
-            return ptrn, ext
+            return ptrn, self.verbalise_extent(ext) if not return_bitarrays else ext
+
+        if kind == 'bruteforce' and support_characteristic == 'any':
+            for pattern, extent in self._atomic_patterns.items():
+                yield form_yielded_value(pattern, extent)
+            return
+
+        assert self._atomic_patterns_order is not None, \
+            ("Please initialise the order of atomic patterns (together with the atomic patterns themselves) "
+             "using `ps.init_atomic_patterns()` function.")
+
+        atomic_patterns, atomic_order = self._filter_atomic_patterns_by_support(support_characteristic)
 
         if kind == 'bruteforce':
-            for pattern, extent in self._atomic_patterns.items():
+            for pattern, extent in atomic_patterns.items():
                 yield form_yielded_value(pattern, extent)
 
         if kind == 'ascending':
-            assert self._atomic_patterns_order is not None
-            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, False)
+            iterator = bfuncs.iter_patterns_ascending(atomic_patterns, atomic_order, False)
             for pattern, extent in iterator:
                 yield form_yielded_value(pattern, extent)
 
         if kind == 'ascending controlled':
-            assert self._atomic_patterns_order is not None
-            iterator = bfuncs.iter_patterns_ascending(self._atomic_patterns, self._atomic_patterns_order, True)
+            iterator = bfuncs.iter_patterns_ascending(atomic_patterns, atomic_order, True)
             next(iterator)  # initialise
             yield
             go_more_precise = True
@@ -642,8 +717,9 @@ class PatternStructure:
     def iter_keys(
             self,
             patterns: Union[PatternType, Iterable[PatternType]],
-            max_length: Optional[int] = None
-        ) -> Union[
+            max_length: Optional[int] = None,
+            use_tqdm: bool = False
+    ) -> Union[
             Iterator[PatternType], 
             Iterator[tuple[PatternType, PatternType]]]:
         """
@@ -661,6 +737,8 @@ class PatternStructure:
             A pattern or list of patterns to decompose into atomic keys.
         max_length: Optional[int], optional
             Maximum length of key combinations (default is None).
+        use_tqdm: bool, default = False
+            Flag whether to show tqdm progress bar or not.
 
         Yields
         ------
@@ -672,13 +750,22 @@ class PatternStructure:
         >>> for key in ps.iter_keys(Pattern("A | B")):
             print(key)
         """
-        if isinstance(patterns, self.PatternType):
-            return mec.iter_keys_of_pattern(patterns, self._atomic_patterns, max_length=max_length)
+        sup_min_atoms, sup_min_order = self._filter_atomic_patterns_by_support("minimal")
+        descending_pattern_order = inverse_order(sup_min_order)
 
-        # `patterns` is a collection of patterns
-        patterns = list(patterns)
-        iterator = mec.iter_keys_of_patterns(patterns, self._atomic_patterns, max_length=max_length)
-        return ((key, patterns[pattern_i]) for key, pattern_i in iterator)
+        is_single_pattern = isinstance(patterns, self.PatternType)
+        patterns = [patterns] if is_single_pattern else patterns
+        patterns_extents = [(pattern, self.extent(pattern, return_bitarray=True)) for pattern in patterns]
+
+        keys_iterator = mec.iter_keys_of_patterns_via_atoms(
+            patterns_extents,
+            sup_min_atoms, descending_pattern_order, max_length, use_tqdm=use_tqdm,
+        )
+
+        if is_single_pattern:
+            return (key for key, _ in keys_iterator)
+        return ((key, patterns_extents[pattern_i][0]) for key, pattern_i in keys_iterator)
+
 
     def iter_subgroups(
             self,
@@ -687,7 +774,10 @@ class PatternStructure:
             quality_threshold: float,
             kind: Literal["bruteforce"] = 'bruteforce',
             max_length: Optional[int] = None,
-            return_objects_as_bitarrays: bool = False
+            min_support: Optional[Union[int, float]] = 0,
+            return_objects_as_bitarrays: bool = False,
+            use_tqdm: bool = False,
+            atomic_support_characteristic: Literal["maximal", "minimal"] = "maximal",
         ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
         """
         Iterate over subgroups that satisfy a quality threshold.
@@ -711,8 +801,20 @@ class PatternStructure:
             Subgroup mining strategy (currently only 'bruteforce' supported).
         max_length: Optional[int], optional
             Maximum length of subgroups (default is None).
+        min_support: Union[int, float], optional
+            The minimal amount of objects that a subgroup should describe. Defaults to 0.
         return_objects_as_bitarrays: bool, optional
             If True, extents are returned as bitarrays (default is False).
+        use_tqdm: bool, optional
+            Flag whether to show tqdm progress bar to visualise the number of passed subgroup candidates.
+            Defaults to False.
+        atomic_support_characteristic: Literal["maximal", "minimal"], optional
+            What type of atomic patterns to use to find subgroups.
+            If "maximal" (the default) then prefer more precise atomic patterns (called support-maximal),
+            and if "minimal" then prefer less precise atomic patterns (called support-minimal).
+            For example, say there are two interval patterns "Age >= 20" and "Age > 10" that describe _the same_ objects.
+            Then the former pattern is support-maximal (as it is more precise) and the latter is support-minimal
+            (as it is less precise).
 
         Yields
         ------
@@ -728,14 +830,21 @@ class PatternStructure:
             goal_objects = set(goal_objects)
             goal_objects = bitarray([obj_name in goal_objects for obj_name in self._object_names])
 
+        min_support = to_absolute_number(min_support, len(self._object_names))
+
         quality_func, tp_min, fp_max = msubg.setup_quality_measure_function(
             quality_measure, quality_threshold, goal_objects.count(), len(goal_objects)
         )
 
+        atomic_patterns, atomic_order = self._filter_atomic_patterns_by_support(atomic_support_characteristic)
+
         subgroups_iterator: Optional[Iterator[tuple[Pattern, bitarray, float]]] = None
         if kind == 'bruteforce':
-            subgroups_iterator = msubg.iter_subgroups_bruteforce(
-                self, goal_objects, quality_threshold, quality_func, tp_min, fp_max, max_length)
+            subgroups_iterator = msubg.iter_subgroups_via_atoms(
+                atomic_patterns, goal_objects, quality_threshold, quality_func, max(tp_min, min_support), max_length,
+                inverse_order(atomic_order),
+                use_tqdm=use_tqdm
+            )
 
         if subgroups_iterator is None:
             raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
@@ -743,8 +852,7 @@ class PatternStructure:
 
         if return_objects_as_bitarrays:
             return subgroups_iterator
-        return ((pattern, self.verbalise_extent(extent_ba), quality)
-                for pattern, extent_ba, quality in subgroups_iterator)
+        return ((pattern, self.verbalise_extent(extent), score) for pattern, extent, score in subgroups_iterator)
 
     ######################
     # High-level FCA API #
@@ -813,15 +921,15 @@ class PatternStructure:
                                                             concepts_generator}
 
         if algorithm == 'gSofia':
-            atomic_patterns_iterator = self.iter_atomic_patterns(
-                return_extents=True, return_bitarrays=True, kind='ascending controlled'
-            )
+            atomic_patterns_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled',
+                                                                 support_characteristic='maximal')
+            n_atomic_patterns = len(self._filter_atomic_patterns_by_support('maximal')[0]) if self._atomic_patterns_order is not None else None
             extents_ba = mec.list_stable_extents_via_gsofia(
                 atomic_patterns_iterator,
                 min_delta_stability=min_delta_stability,
                 min_supp=min_support,
                 use_tqdm=use_tqdm,
-                n_atomic_patterns=len(self._atomic_patterns)
+                n_atomic_patterns=n_atomic_patterns
             )
             extents_intents_dict: dict[fbarray, Pattern] = dict()
             for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
@@ -992,7 +1100,7 @@ class PatternStructure:
         >>> ps.next_patterns(Pattern("A"))
         {Pattern("A & B")}
         """
-        atom_iterator = self.iter_atomic_patterns(return_extents=True, return_bitarrays=True, kind='ascending controlled')
+        atom_iterator = self.iter_atomic_patterns(return_bitarrays=True, kind='ascending controlled')
         extent = self.extent(pattern, return_bitarray=True)
         next(atom_iterator)  # initialise iterator
 
@@ -1132,3 +1240,8 @@ class PatternStructure:
         if not isinstance(extent, bitarray):
             return extent
         return {self._object_names[g] for g in extent.search(True)}
+
+    @property
+    def objects(self) -> set[str]:
+        """Return the names of objects in the Pattern Structure"""
+        return set(self._object_names)

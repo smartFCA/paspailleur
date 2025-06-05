@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.abspath('..'))
 project = 'Paspailleur'
 copyright = '2025, SmartFCA/LORIA'
 author = 'Egor Dudyrev'
-release = '0.2'
+release = '0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -23,11 +23,13 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    'sphinx_design',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
+autodoc_member_order = 'bysource'
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -35,3 +37,14 @@ exclude_patterns = []
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+
+html_sidebars = { # this is for the primary sidebar (the one on the left)
+    "**": ["sidebar-nav-bs", "page-toc"],
+    "index": [],
+}
+
+html_theme_options = { # this is for the secondary sidebar (the one on the right side)
+    "show_toc_level": 3,
+    "github_url": "https://github.com/smartFCA/paspailleur.git",
+    "secondary_sidebar_items": ["page-toc", "sourcelink"]
+}
