@@ -1,3 +1,5 @@
+.. _algorithms_api:
+
 Algorithms API
 ==============
 
