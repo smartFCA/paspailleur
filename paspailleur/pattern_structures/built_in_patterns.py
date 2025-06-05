@@ -1736,16 +1736,16 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-        }
+        ...     DimensionTypes = {
+        ...         'age': IntervalPattern,
+        ...         'name': NgramSetPattern,
+        ...         'personal qualities': ItemSetPattern
+        ...     }
         >>> PersonPattern.preprocess_value({
-            'age': 20,
-            'name': 'Jean-Francois Martin',
-            'personal qualities': ['Ambitious', 'Approachable', 'Articulate']
-        })
+        ...    'age': 20,
+        ...    'name': 'Jean-Francois Martin',
+        ...    'personal qualities': ['Ambitious', 'Approachable', 'Articulate']
+        ... })
         frozendict({
             'age': IntervalPattern((20.0, 20.0)),
             'name': NgramSetPattern({('Jean-Francois',), ('Martin',)}),
@@ -1814,10 +1814,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> p2 = PersonPattern({'age': "[30, 50]", 'name': "Smith"})
         >>> p1 | p2
@@ -1846,10 +1846,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> p2 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"}) 
         >>> p1 - p2
@@ -1905,14 +1905,14 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> atoms = p1.atomic_patterns
         >>> for atom in atoms:
-            >>> print(atom)
+        ...     print(atom)
         {'name': {'John Smith'}}
         {'name': {'Smith'}}
         {'name': {'John'}}
@@ -1935,10 +1935,10 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-                'age': IntervalPattern,
-                'name': NgramSetPattern
-            }
+        ...    DimensionTypes = {
+        ...        'age': IntervalPattern,
+        ...        'name': NgramSetPattern
+        ...    }
         >>> p1 = PersonPattern({'age': "[20, 40]", 'name': "John Smith"})
         >>> len(p1)
         3
@@ -2016,18 +2016,18 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-            }
+        ...     DimensionTypes = {
+        ...         'age': IntervalPattern,
+        ...         'name': NgramSetPattern,
+        ...         'personal qualities': ItemSetPattern
+        ...     }
         >>> p = PersonPattern({
-            'age': "[25, 35]",
-            'name': "Alice Johnson",
-            'personal qualities': ['Thoughtful', 'Curious']
-        })
+        ...    'age': "[25, 35]",
+        ...    'name': "Alice Johnson",
+        ...    'personal qualities': ['Thoughtful', 'Curious']
+        ... })
         >>> for atom in p.maximal_atoms:
-            print(atom)
+        ...     print(atom)
         {'age': ø}
         """
         max_atoms = set()
@@ -2054,19 +2054,19 @@ class CartesianPattern(Pattern):
         Examples
         --------
         >>> class PersonPattern(CartesianPattern):
-            DimensionTypes = {
-            'age': IntervalPattern,
-            'name': NgramSetPattern,
-            'personal qualities': ItemSetPattern
-            }
+        ...    DimensionTypes = {
+        ...    'age': IntervalPattern,
+        ...    'name': NgramSetPattern,
+        ...    'personal qualities': ItemSetPattern
+        ...    }
         >>> p = PersonPattern({
-            'age': "[25, 35]",
-            'name': "Alice Johnson",
-            'personal qualities': ['Thoughtful', 'Curious']
-        })
+        ...    'age': "[25, 35]",
+        ...    'name': "Alice Johnson",
+        ...    'personal qualities': ['Thoughtful', 'Curious']
+        ... })
         >>> print(p['age'])
         [25.0, 35.0]
-        >>> prin(p['name'])
+        >>> print(p['name'])
         {'Alice Johnson'}
         """
         return self.value[item]
