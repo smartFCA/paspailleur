@@ -228,12 +228,12 @@ def iter_all_patterns_ascending(
     --- Controlled iteration ---
     >>> gen = mec.iter_all_patterns_ascending(atomic_patterns_extents, controlled_iteration=True)
     >>> next(gen)  # initialize
+    >>> refine_pattern = True
     >>> while True:
-        try:
-            pattern, extent = gen.send(True)  # control exploration
-            print(pattern, extent)
-    except StopIteration:
-        pass
+    ...     try:
+    ...         pattern, extent = gen.send(refine_pattern)  # control exploration
+    ...     except StopIteration:
+    ...         break
     """
     # The algo is inspired by CloseByOne
     # For the start, let us just rewrite CloseByOne algorithm
