@@ -255,23 +255,41 @@ def test_CartesianPattern():
     join = a | b
     assert join == join_true
 
+    class AgePattern(bip.ClosedIntervalPattern):
+        BoundsUniverse = (1, 10)  # for the sake of computing atomic_patterns
+    a = bip.CartesianPattern({'age': AgePattern('[1, 10]'), 'name': bip.NgramSetPattern(['Harry'])})
     atoms_true = {
-        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, inf]')}),
-        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, 10]')}),
-        bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, inf]')}),
-        bip.CartesianPattern({'name': bip.NgramSetPattern([])}),
+        bip.CartesianPattern({'age': AgePattern('[1, inf]')}),
+        bip.CartesianPattern({'age': AgePattern('[-inf, 10]')}),
         bip.CartesianPattern({'name': bip.NgramSetPattern(['Harry'])})
     }
     atoms = a.atomic_patterns
     assert atoms == atoms_true
 
-    min_true = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[-inf, inf]'), 'name': bip.NgramSetPattern([])})
     min_ = a.min_pattern
-    assert min_ == min_true
+    assert min_ is None  # because min_pattern depends on the class and not on the specific value of the pattern
+
+    class HPPattern(bip.CartesianPattern):
+        DimensionTypes = {'age': bip.ClosedIntervalPattern, 'name': bip.NgramSetPattern}
+
+    min_true = HPPattern({})
+    assert HPPattern.get_min_pattern() == min_true
+    a = HPPattern({'age': '[1, 10]', 'name': 'Harry'})
+
+    assert a.min_pattern == min_true
 
     assert a.max_pattern is None
 
     x = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('[1, 10]')})
-    max_true = bip.CartesianPattern({'age': bip.ClosedIntervalPattern('ø')})
     max_ = x.max_pattern
-    assert max_ == max_true
+    assert max_ is None  # because max_pattern depends on the class and not on the specific value of the pattern
+
+    x = HPPattern({'age': '[1, 10]'})
+
+    assert x.max_pattern is None  # because max_pattern for 'name' dimension is not known
+
+    class HPPattern2(bip.CartesianPattern):
+        DimensionTypes = {'age': bip.ClosedIntervalPattern}
+    max_true = HPPattern2({'age': 'ø'})
+    assert HPPattern2.get_max_pattern() == max_true
+
