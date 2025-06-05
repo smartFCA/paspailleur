@@ -1,3 +1,5 @@
+.. _patterns_api:
+
 Patterns API
 ============
 
