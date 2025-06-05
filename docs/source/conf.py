@@ -39,7 +39,7 @@ html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 
 html_sidebars = { # this is for the primary sidebar (the one on the left)
-    "**": ["sidebar-nav-bs", "page-toc"],
+    "**": ["sidebar-nav-bs"],
     "index": [],
 }
 
