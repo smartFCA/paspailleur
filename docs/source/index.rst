@@ -83,7 +83,7 @@ SmartFCA (https://www.smartfca.org/) is a big platform that will contain many ex
     :hidden:
     :maxdepth: 3
     :caption: Contents
-
+    
     usage
-    patterns_api
+    patterns_api/index
     algorithms_api
