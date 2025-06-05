@@ -19,7 +19,7 @@ Patterns' Order
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.issubpattern
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issupersubpattern
+.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issuperpattern
 
 .. automethod:: paspailleur.pattern_structures.pattern.Pattern.min_pattern
 

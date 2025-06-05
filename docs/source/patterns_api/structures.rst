@@ -59,7 +59,7 @@ High-level FCA API
 
 .. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications_from_premises
 
-.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.next_pattern
+.. automethod:: paspailleur.pattern_structures.pattern_structure.PatternStructure.next_patterns
 
 
 Measures of Patterns
