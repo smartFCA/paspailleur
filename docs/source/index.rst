@@ -19,8 +19,8 @@ Pattern Mining with Pattern Structures.
       Learn the basics of Paspailleur in a single page.
 
       +++
-      .. button-ref:: getting_started
-         :ref-type: ref
+      .. button-ref:: example_from_titanic
+         :ref-type: doc
          :click-parent:
          :color: secondary
          :expand:

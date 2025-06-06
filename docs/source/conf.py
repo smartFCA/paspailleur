@@ -24,7 +24,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx_design',
-    'nbsphinx',       # this one for Jupyter Notebooks!
+    'myst_nb'
 ]
 
 templates_path = ['_templates']
@@ -42,6 +42,7 @@ html_static_path = ['_static']
 html_sidebars = { # this is for the primary sidebar (the one on the left)
     "**": ["sidebar-nav-bs"],
     "index": [],
+    "example_from_titanic": [],
 }
 
 html_theme_options = { # this is for the secondary sidebar (the one on the right side)
@@ -49,3 +50,6 @@ html_theme_options = { # this is for the secondary sidebar (the one on the right
     "github_url": "https://github.com/smartFCA/paspailleur.git",
     "secondary_sidebar_items": ["page-toc", "sourcelink"]
 }
+
+nb_execution_timeout = 60 * 10
+nb_execution_mode = 'cache'
