@@ -14,7 +14,7 @@ Pattern Mining with Pattern Structures.
 
 .. grid::
 
-   .. grid-item-card:: 🚀 Getting started
+   .. grid-item-card:: 🚢Getting started
 
       Learn the basics of Paspailleur in a single page.
 
