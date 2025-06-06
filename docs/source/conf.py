@@ -42,6 +42,7 @@ html_static_path = ['_static']
 html_sidebars = { # this is for the primary sidebar (the one on the left)
     "**": ["sidebar-nav-bs"],
     "index": [],
+    "example_from_titanic": [],
 }
 
 html_theme_options = { # this is for the secondary sidebar (the one on the right side)
