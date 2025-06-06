@@ -84,6 +84,6 @@ SmartFCA (https://www.smartfca.org/) is a big platform that will contain many ex
     :maxdepth: 3
     :caption: Contents
     
-    usage
+    example_from_titanic  
     patterns_api/index
     algorithms_api
