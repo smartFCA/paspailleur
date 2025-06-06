@@ -1,5 +1,4 @@
 sphinx
 pydata-sphinx-theme
 sphinx_design
-nbsphinx
-pandoc
+myst-nb

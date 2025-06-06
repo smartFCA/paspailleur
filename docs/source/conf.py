@@ -49,3 +49,6 @@ html_theme_options = { # this is for the secondary sidebar (the one on the right
     "github_url": "https://github.com/smartFCA/paspailleur.git",
     "secondary_sidebar_items": ["page-toc", "sourcelink"]
 }
+
+nb_execution_timeout = 60 * 10
+nb_execution_mode = 'cache'
