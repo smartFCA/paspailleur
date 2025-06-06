@@ -24,6 +24,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx_design',
+    'nbsphinx',       # this one for Jupyter Notebooks!
 ]
 
 templates_path = ['_templates']
