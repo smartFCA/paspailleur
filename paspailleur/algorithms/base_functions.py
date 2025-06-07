@@ -475,7 +475,9 @@ def order_patterns_via_extents(patterns_extents: list[tuple[Pattern, fbarray]], 
     return patterns_order
 
 
-def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int, ...], bool, None]:
+def iterate_antichains(
+        descending_order: list[bitarray], max_length: int = None
+) -> Generator[tuple[int, ...], bool, None]:
     """
     Iterate antichains of indices whose partial order is defined by `descending_order` parameter.
 
@@ -493,6 +495,8 @@ def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int,
     descending_order: list[bitarray]
         Defined the partial order of indices.
         Value `descending_order[i][j]==True` indicates that i-th element is greater than the j-th element.
+    max_length: int, default = len(descending_order)
+        Maximal length of an antichain to yield.
 
     Yields
     ------
@@ -528,7 +532,11 @@ def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int,
     assert not any(greaters[i+1:].any() for i, greaters in enumerate(descending_order)), \
         "`descending_order` should be lexicographically ordered."
 
-    def ba_from_indices(indices: tuple[int, ...], default: bitarray = bazeros(len(descending_order))) -> fbarray:
+    n_elements = len(descending_order)
+    max_length = max_length if max_length is not None else n_elements
+
+
+    def ba_from_indices(indices: tuple[int, ...], default: bitarray = bazeros(n_elements)) -> fbarray:
         ba = bitarray(default)
         for i in indices:
             ba[i] = True
@@ -537,9 +545,8 @@ def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int,
     descending_order = [ba_from_indices((i,), ba) for i, ba in enumerate(descending_order)]
 
     refine_antichain = yield tuple()
-    if refine_antichain == False:
+    if refine_antichain == False or max_length == 0:
         return
-
     forbidden_antichains: set[fbarray] = set()
 
     queue: list[tuple[tuple[int, ...], bitarray]] = [((i,), lesser) for i, lesser in enumerate(descending_order)][::-1]
@@ -551,6 +558,9 @@ def iterate_antichains(descending_order: list[bitarray]) -> Generator[tuple[int,
         refine_antichain = yield antichain
         if refine_antichain == False:
             forbidden_antichains.add(ba_from_indices(antichain))
+            continue
+
+        if len(antichain) == max_length:
             continue
 
         next_elements = [next_i for next_i in (~sub_elements).search(True, 0, min(antichain))]
