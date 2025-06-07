@@ -630,7 +630,7 @@ def iter_keys_of_patterns_via_atoms(
         patterns: list[tuple[Pattern, fbarray]],
         atomic_patterns: OrderedDict[Pattern, fbarray],
         subatoms_order: list[fbarray] = None,
-        max_length: Optional[int] = None,
+        max_length: int = None,
         use_tqdm: bool = False
 ) -> Iterator[tuple[Pattern, int]]:
     """
@@ -646,7 +646,7 @@ def iter_keys_of_patterns_via_atoms(
         Partial order of `atomic_patterns` represented with list of frozenbitarrays.
         The value `subatoms_order[i][j] == True` means that j-th atomic pattern is less precise than i-th atomic pattern.
         If the value is not provided (i.e. equals to `None`), then the partial order will be computed inside this function.
-    max_length: Optional[int], optional
+    max_length: Optional[int], default = len(atomic_patterns)
         Maximum number of atomic pattern that a key can consist of.
         This parameter can be used for "early-stopping" to avoid generating too complex keys.
     use_tqdm: bool, default = False
@@ -698,7 +698,7 @@ def iter_keys_of_patterns_via_atoms(
     global_extent = subatom_extents[0] | ~subatom_extents[0]
 
     # now subatoms, subatom_extents, and subatoms_order are fully established
-    antichain_iterator = iterate_antichains(subatoms_order)
+    antichain_iterator = iterate_antichains(subatoms_order, max_length=max_length)
     refine_antichain = None
     found_closures: list[list[fbarray]] = [[] for _ in patterns]
     pbar = tqdm(total=None, disable=not use_tqdm, desc="Iterate key candidates", unit_scale=True)
@@ -708,10 +708,6 @@ def iter_keys_of_patterns_via_atoms(
         except StopIteration:
             break
         pbar.update(1)
-
-        if max_length is not None and len(antichain) > max_length:
-            refine_antichain = False
-            continue
 
         superpatterns = reduce(fbarray.__and__, (patterns_per_subatom[i] for i in antichain), ~bazeros(len(patterns)))
         if not superpatterns.any():
