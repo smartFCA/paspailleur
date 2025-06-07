@@ -1,6 +1,6 @@
 import warnings
 from collections import OrderedDict
-from functools import reduce
+from functools import reduce, partial
 from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
@@ -970,10 +970,16 @@ class PatternStructure:
 
             concepts_generator = mec.iter_intents_via_cboi(
                 self._atomic_patterns, self._atomic_patterns_order,
-                min_support=min_support, yield_pattern_intents=True
+                min_support=min_support, yield_pattern_intents=False
             )
-            concepts_generator = tqdm(concepts_generator, disable=not use_tqdm, desc='Compute concepts')
-            extents_intents_dict: dict[fbarray, Pattern] = {extent: intent for intent, extent in concepts_generator}
+            concepts_generator = tqdm(concepts_generator, disable=not use_tqdm, desc='Compute binarised concepts')
+            if use_tqdm:
+                concepts_generator = list(concepts_generator)
+            pattern_intent = partial(bfuncs.patternise_description,
+                                     atomic_patterns=self._atomic_patterns, subatoms_order=..., trusted_input=True)
+            concepts_generator = tqdm(((pattern_intent(intent), extent) for intent, extent in concepts_generator),
+                                      disable=not use_tqdm, desc='Compute pattern concepts')
+            extents_intents_dict: dict[fbarray, Pattern] = {extent: intent  for intent, extent in concepts_generator}
 
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
         concepts = [(
