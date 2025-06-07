@@ -716,8 +716,9 @@ class PatternStructure:
 
     def iter_keys(
             self,
-            patterns: Union[PatternType, Iterable[PatternType]],
-            max_length: Optional[int] = None,
+            patterns: Union[PatternType, Iterable[PatternType]] = None,
+            max_length: int = None,
+            min_support: Union[int, float] = 1,
             use_tqdm: bool = False
     ) -> Union[
             Iterator[PatternType], 
@@ -737,6 +738,8 @@ class PatternStructure:
             A pattern or list of patterns to decompose into atomic keys.
         max_length: Optional[int], optional
             Maximum length of key combinations (default is None).
+        min_support: int, default = 0
+            Minimal number of objects described by a key. Only used when `patterns` is set to `None`.
         use_tqdm: bool, default = False
             Flag whether to show tqdm progress bar or not.
 
@@ -748,16 +751,38 @@ class PatternStructure:
         Examples
         --------
         >>> for key in ps.iter_keys(Pattern("A | B")):
-            print(key)
+        ...    print(key)
         """
+        min_support = to_absolute_number(min_support, len(self._object_names))
         sup_min_atoms, sup_min_order = self._filter_atomic_patterns_by_support("minimal")
         descending_pattern_order = inverse_order(sup_min_order)
+
+        if patterns is None:
+            keys_iterator: Iterator[tuple[Pattern, fbarray]] = mec.iter_keys_via_talky_gi(
+                sup_min_atoms, sup_min_order,
+                min_support=min_support, yield_pattern_keys=False, max_key_length=max_length, test_subsets=True
+            )
+            if use_tqdm:
+                keys_iterator = list(tqdm(keys_iterator, desc="Compute binarised keys", unit_scale=True))
+
+            def key_intent_iterator(keys_iterator_) -> Iterator[tuple[Pattern, Pattern]]:
+                extent_intent_map = dict()
+                for key, extent in tqdm(keys_iterator_, desc="Compute pattern keys", disable=not use_tqdm, unit_scale=True):
+                    pattern_key = bfuncs.patternise_description(key, list(sup_min_atoms), descending_pattern_order,
+                                                                trusted_input=True)
+
+                    if extent not in extent_intent_map:
+                        extent_intent_map[extent] = self.intent(extent)
+                    intent = extent_intent_map[extent]
+                    yield pattern_key, intent
+
+            return key_intent_iterator(keys_iterator)
 
         is_single_pattern = isinstance(patterns, self.PatternType)
         patterns = [patterns] if is_single_pattern else patterns
         patterns_extents = [(pattern, self.extent(pattern, return_bitarray=True)) for pattern in patterns]
 
-        keys_iterator = mec.iter_keys_of_patterns_via_atoms(
+        keys_iterator: Iterator[tuple[Pattern, int]] = mec.iter_keys_of_patterns_via_atoms(
             patterns_extents,
             sup_min_atoms, descending_pattern_order, max_length, use_tqdm=use_tqdm,
         )
