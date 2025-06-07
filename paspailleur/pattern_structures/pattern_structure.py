@@ -860,7 +860,7 @@ class PatternStructure:
     def mine_concepts(
             self,
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
-            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia', 'CbOI'] = None,
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False
         ) -> Union[
@@ -876,7 +876,7 @@ class PatternStructure:
         min_delta_stability: Union[int, float], optional
             Minimum delta stability for concept filtering (default is 0).
         algorithm: Literal, optional
-            Algorithm used for mining: 'CloseByOne object-wise' or 'gSofia' (default selects automatically).
+            Algorithm used for mining: 'CloseByOne object-wise', 'gSofia', and 'CbOI'.
         return_objects_as_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
         use_tqdm: bool, optional
@@ -892,7 +892,7 @@ class PatternStructure:
         >>> ps.mine_concepts(min_support=1)
         [({"obj1", "obj2"}, Pattern("A"))]
         """
-        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia'}
+        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia', 'CbOI'}
         assert algorithm is None or algorithm in SUPPORTED_ALGOS, \
             f"Only the following algorithms are supported: {SUPPORTED_ALGOS}. " \
             f"Either choose of the supported algorithm or set algorithm=None " \
@@ -934,6 +934,21 @@ class PatternStructure:
             extents_intents_dict: dict[fbarray, Pattern] = dict()
             for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
                 extents_intents_dict[fbarray(extent)] = self.intent(extent)
+
+        if algorithm == 'CbOI':
+            unused_parameters = []
+            if min_delta_stability > 0:
+                unused_parameters.append(f"{min_delta_stability=}")
+            if unused_parameters:
+                warnings.warn(UserWarning(
+                    f'The following parameters {", ".join(unused_parameters)} do not affect algorithm {algorithm}'))
+
+            concepts_generator = mec.iter_intents_via_cboi(
+                self._atomic_patterns, self._atomic_patterns_order,
+                min_support=min_support, yield_pattern_intents=True
+            )
+            concepts_generator = tqdm(concepts_generator, disable=not use_tqdm, desc='Compute concepts')
+            extents_intents_dict: dict[fbarray, Pattern] = {extent: intent for intent, extent in concepts_generator}
 
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
         concepts = [(

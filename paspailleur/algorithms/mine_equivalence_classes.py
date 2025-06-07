@@ -1,11 +1,11 @@
 import heapq
 from functools import reduce
 from itertools import takewhile
-from collections import OrderedDict
+from collections import OrderedDict, deque
 
 from caspailleur import inverse_order
 from tqdm.auto import tqdm
-from typing import Iterator, Generator, Collection, Iterable, Optional
+from typing import Iterator, Generator, Collection, Iterable, Optional, Union
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 
@@ -743,3 +743,123 @@ def iter_keys_of_patterns_via_atoms(
 
         refine_antichain = superpatterns.count() > len(same_extent_patterns)
     pbar.close()
+
+
+def iter_intents_via_cboi(
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        superatoms_order: list[fbarray],
+        min_support: int = 0,
+        yield_pattern_intents: bool = True
+) -> Iterator[tuple[Union[Pattern, fbarray], fbarray]]:
+    """
+    Iterate pattern concepts using algorithm Close-by-One-with-Implications
+
+    The original CbOI algorithm was described in the language of attribute implications in (Belfodil et al., 2019).
+    This implementation describes essentially the same algorithm, but uses the language of partial order on attributes.
+
+    Parameters
+    ----------
+    atomic_patterns: OrderedDict[Pattern, frozenbitarray]
+        Mapping from atomic patterns to what objects they describe.
+        The latter is represented with its characteristic vector stored as a frozenbitarray.
+        So `atomic_patterns[p][i] == True` means that atomic pattern `p` describes `i`-th object.
+    superatoms_order: list[frozenbitarray]
+        Partial order on atomic patterns.
+        For every i-th atomic pattern, it shows the indices of all greater atomic patterns.
+        The partial order should be topologically sorted:
+        for every i-th atomic pattern, all greater patterns should have greater indices.
+    min_support: int, default = 0
+        Minimal number of objects that a concept should describe.
+    yield_pattern_intents: bool, default = True
+        Flag whether to yield concept's intent as Pattern or as a frozenbitarray,
+        whose True elements corresponds to atomic patterns of the Pattern.
+
+    Yields
+    ------
+    extent: fbarray
+        Concept's extent, i.e. the maximal subset of objects described by concept's intent.
+    intent: Pattern or fbarray
+        Concept's intent.
+        If `yield_pattern_intents == True` then represent intent as the actual Pattern.
+        If `yield_pattern_intents == False` then represent intent with frozenbitarray
+        describing indices of all atomic patterns that are less precise than the pattern.
+        (Then the actual pattern can be obtained as a Pattern.join of all listed atomic patterns).
+
+    References
+    ----------
+    Belfodil, A., Belfodil, A., & Kaytoue, M. (2019, May).
+    Mining Formal Concepts using Implications between Items.
+    In International Conference on Formal Concept Analysis (pp. 173-190). Cham: Springer International Publishing.
+
+    """
+    assert all(not superatoms[:i].any() for i, superatoms in enumerate(superatoms_order)), \
+        ("The value in `superatoms_order` should be topologically sorted. "
+         "That is, for every i-th element, all greater elements should have greater indices.")
+
+    #############################
+    # Initialise all the values #
+    #############################
+    atomic_patterns, atomic_extents = zip(*atomic_patterns.items())
+    subatoms_order = inverse_order(superatoms_order)
+
+    def filter_next_atoms(superatoms_order_: list[fbarray]) -> Iterator[fbarray]:
+        for superatoms in superatoms_order_:
+            nexts = bitarray(superatoms)
+            i = 0
+            while nexts[i:].any():
+                i = nexts.find(True, i)
+                nexts &= ~superatoms_order_[i]
+                i += 1
+            yield nexts
+
+    def pattern_intent(
+            intent: bitarray,
+            atomic_patterns_: list[Pattern] = atomic_patterns, subatoms_order_: list[fbarray] = subatoms_order
+    ) -> Pattern:
+        min_pattern = atomic_patterns_[0].get_min_pattern()
+        if not intent.any():
+            return min_pattern
+
+        intent_reduced = bitarray(intent)
+        i = len(intent_reduced)
+        while i > 0 and intent_reduced[:i].any():
+            i = intent_reduced.find(True, 0, i, right=True)
+            intent_reduced &= ~subatoms_order_[i]
+
+        return reduce(atomic_patterns_[0].__class__.join, (atomic_patterns_[i] for i in intent_reduced.search(True)))
+
+
+    min_atoms = bitarray([not subs.any() for subs in subatoms_order])
+    nextatoms = list(filter_next_atoms(superatoms_order))
+    top_intent = bitarray([aextent.all() for aextent in atomic_extents])
+    top_next_candidates = reduce(fbarray.__or__, (nextatoms[i] for i in top_intent.search(True)), min_atoms)
+    n_objects, n_atoms = len(atomic_extents[0]), len(atomic_extents)
+    top_extent, top_banned = ~bazeros(n_objects), bazeros(n_atoms)
+
+    #################
+    # The main loop #
+    #################
+    stack = deque([(top_extent, top_intent, top_banned, top_next_candidates)])
+    while stack:
+        ext, descr, banned, all_next_candidates = stack.pop()
+        yield pattern_intent(descr) if yield_pattern_intents else descr, fbarray(ext)
+
+        next_candidates = [i for i in (all_next_candidates & ~descr).search(True, right=True)
+                           if basubset(subatoms_order[i], descr)]  # only add i-th atom when having all its subatoms
+        for m in next_candidates:
+            ext_new = ext & atomic_extents[m]
+            if ext_new.count() < min_support:
+                continue
+
+            intent, next_next_candidates = bitarray(descr), bitarray(all_next_candidates)
+            for i in descr.search(False):
+                if not basubset(ext_new, atomic_extents[i]):  # i-th atom is not in the intent
+                    continue
+                if banned[i]:
+                    break
+                intent[i] = True
+                next_next_candidates |= nextatoms[i]
+            else:  # no break, i.e. no banned atom found
+                stack.append((ext_new, intent, bitarray(banned), next_next_candidates))
+
+            banned[m] = True
