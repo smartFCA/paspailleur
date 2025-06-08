@@ -111,3 +111,85 @@ def iter_proper_premises_from_atomised_premises(
             yield pattern_premise(premise_full), pattern_conclusion(conclusion_final)
         else:
             yield premise_full, conclusion_final
+
+
+def iter_pseudo_intents_from_atomised_premises(
+        premises: Iterable[bitarray],
+        atomic_patterns: OrderedDict[Pattern, bitarray],
+        subatoms_order: list[bitarray],
+        yield_patterns: bool = True,
+        reduce_conclusions: bool = False,
+) -> Iterator[Union[tuple[Pattern, Pattern], tuple[bitarray, bitarray]]]:
+    """
+    Iterate pseudo intents and their conclusion based on the premise candidates represented with indices of their atoms
+
+    Important:
+    The sets of `atomic_patterns`, have to be topologically sorted.
+    That is, the greater the atomic pattern, the greater index it should have.
+
+
+    Parameters
+    ----------
+    premises: Iterable[bitarray]
+        List of premises to convert into pseudo-intents.
+        The indices of True elements in premise candidates correspond to atomic patterns in `atomic_patterns`.
+    atomic_patterns: OrderedDict[Pattern, bitarray]
+        Atomic patterns and their extents. Dictionary should contain both support-minimal and support-maximal patterns..
+    subatoms_order: list[bitarray]
+        Partial order on atomic patterns.
+        Value `subatoms_order[i][j]` is True when j-th atomic pattern is smaller than the i-th one.
+        The order should be topologically sorted, that is the greater patterns should have greater indices.
+    yield_patterns: bool, default True
+        Flag whether to output proper premises and their conclusions as Patterns, or a bitarrays.
+    reduce_conclusions: bool, default False
+        Flag whether to output the reduced conclusion for each premise (to not repeat the conclusions of other premises)
+        or the full conclusion.
+
+    Returns
+    -------
+    premise: Pattern or bitarray
+        Proper premise represented as Pattern (when `yield_patterns` is True)
+        or as a bitarray that references `minsup_atomic_patterns`.
+    conclusion: Pattern or bitarray
+        Conclusion represented as Pattern (when `yield_patterns` is True)
+        or as a bitarray that references `maxsup_atomic_patterns`.
+        When `reduce_conclusions` is True, output only the part of the conclusion
+        that cannot be deduced from other implications.
+
+    """
+    assert all(not subatoms[i:].any() for i, subatoms in enumerate(subatoms_order)), \
+        ("The dict of `subatoms_order` should be topologically sorted. "
+         "That is, for every pattern, all its smaller patterns should have smaller indices.")
+
+    atomic_patterns, atomic_extents = zip(*atomic_patterns.items())
+    top_extent = atomic_extents[0] | ~atomic_extents[0]
+
+    paternise = partial(bfuncs.patternise_description, atomic_patterns=atomic_patterns, subatoms_order=subatoms_order)
+
+    conclusions = []
+    for premise in premises:
+        extent = reduce(fbarray.__and__, (atomic_extents[i] for i in premise.search(True)), top_extent)
+
+        premise_full = reduce(fbarray.__or__, (subatoms_order[i] for i in premise.search(True)), premise)
+        conclusion_full = bitarray(premise_full)
+        for i in premise_full.search(False): conclusion_full[i] = basubset(extent, atomic_extents[i])
+        conclusions.append(conclusion_full)
+
+    for premise, conclusion_full in zip(premises, conclusions):
+        premise_saturated = bitarray(premise)
+        for other_premise, other_conclusion in zip(premises, conclusions):
+            if other_premise == premise:
+                continue
+
+            if basubset(other_premise, premise_saturated) and other_premise != premise_saturated:
+                premise_saturated = premise_saturated | other_conclusion
+            if premise_saturated == conclusion_full:
+                break
+        if premise_saturated == conclusion_full:
+            continue
+
+        conclusion = (conclusion_full & ~premise_saturated) if reduce_conclusions else conclusion_full
+        if yield_patterns:
+            yield paternise(premise), paternise(conclusion)
+        else:
+            yield premise, conclusion
