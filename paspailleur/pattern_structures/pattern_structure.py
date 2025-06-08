@@ -13,6 +13,7 @@ from tqdm.auto import tqdm
 from .pattern import Pattern
 
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
+from paspailleur.algorithms import mine_implication_bases as mib
 
 
 class PatternStructure:
@@ -998,7 +999,7 @@ class PatternStructure:
             basis_name: Literal["Canonical", "Canonical Direct"] = "Canonical Direct",
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
             max_key_length: Optional[int] = None,
-            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia', 'Talky-GI'] = None,
             reduce_conclusions: bool = False,
             use_tqdm: bool = False,
         ) -> dict[PatternType, PatternType]:
@@ -1032,17 +1033,66 @@ class PatternStructure:
         >>> ps.mine_implications(min_support=2)
         {Pattern("A"): Pattern("B")}
         """
-        concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
-            min_support=min_support, min_delta_stability=min_delta_stability,
-            algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
-        )
-        intents = map(itemgetter(1), concepts)
-        if not concepts[0][0].all():
-            intents = [self.intent(concepts[0][0]|~concepts[0][0])] + list(intents)
+        if algorithm == 'Talky-GI':
+            supmin_atoms, supmin_order = self._filter_atomic_patterns_by_support('minimal')
+            supmax_atoms, supmax_order = self._filter_atomic_patterns_by_support('maximal')
+            supmin_order_dim, supmax_order_dim = inverse_order(supmin_order), inverse_order(supmax_order)
 
-        PType = PatternStructure.PatternType
-        keys: Iterator[PType] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
-        keys = list(tqdm(keys, desc="Mine premise candidates", disable=not use_tqdm))
+            keys_extent_iterator = mec.iter_keys_via_talky_gi(
+                supmin_atoms, supmin_order,
+                min_support=min_support, yield_pattern_keys=False, max_key_length=max_key_length
+            )
+            keys_extent_iterator = tqdm(keys_extent_iterator, disable=not use_tqdm, desc='Iter premise candidates')
+            ppremise_iterator = mib.iter_proper_premises_from_atomised_premises(
+                keys_extent_iterator,
+                supmin_atoms, supmin_order_dim, supmax_atoms, supmax_order_dim,
+                yield_patterns=False, reduce_conclusions=reduce_conclusions
+            )
+            if use_tqdm:
+                ppremise_iterator = list(tqdm(ppremise_iterator, desc='Iter atomised premises'))
+
+            supmin_atoms, supmax_atoms = list(supmin_atoms), list(supmax_atoms)
+
+            if basis_name == 'Canonical Direct':
+                ppremise_iterator = tqdm(ppremise_iterator, disable=not use_tqdm, desc='Iter pattern premises')
+                return OrderedDict([
+                    (bfuncs.patternise_description(premise, supmin_atoms, supmin_order_dim),
+                     bfuncs.patternise_description(conclusion, supmax_atoms, supmax_order_dim))
+                    for premise, conclusion in ppremise_iterator])
+
+            # basis_name == 'Canonical'
+            atoms, superatoms_order = self._filter_atomic_patterns_by_support('any')
+            subatoms_order = inverse_order(superatoms_order)
+
+            atom_to_idx = {atom: i for i, atom in enumerate(atoms)}
+            n_atoms = len(atoms)
+            premises: list[bitarray] = []
+            for premise_minsup, _ in ppremise_iterator:
+                premise = bazeros(n_atoms)
+                for i_minsup in premise_minsup: premise[atom_to_idx[supmin_atoms[i_minsup]]] = True
+                premises.append(premise)
+
+            pseudo_intents = mib.iter_pseudo_intents_from_atomised_premises(
+                premises, atoms, subatoms_order, yield_patterns=False, reduce_conclusions=reduce_conclusions)
+            atoms = list(atoms)
+            if use_tqdm:
+                pseudo_intents = list(tqdm(pseudo_intents, desc='Iter atomised p.intents'))
+            return {
+                bfuncs.patternise_description(premise, atoms, subatoms_order):
+                    bfuncs.patternise_description(conclusion, atoms, subatoms_order)
+                for premise, conclusion in pseudo_intents}
+
+        else:
+            concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
+                min_support=min_support, min_delta_stability=min_delta_stability,
+                algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
+            )
+            intents = map(itemgetter(1), concepts)
+            if not concepts[0][0].all():
+                intents = [self.intent(concepts[0][0]|~concepts[0][0])] + list(intents)
+
+            keys: Iterator[Pattern] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
+        keys: list[Pattern] = list(tqdm(keys, desc="Mine premise candidates", disable=not use_tqdm))
 
         pseudo_close_premises = basis_name == 'Canonical'
         return self.mine_implications_from_premises(

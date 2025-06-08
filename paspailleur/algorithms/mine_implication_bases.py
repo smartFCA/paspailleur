@@ -15,7 +15,7 @@ def iter_proper_premises_from_atomised_premises(
         maxsup_atomic_patterns: OrderedDict[Pattern, bitarray],
         maxsup_subatoms_order: list[bitarray] = None,
         yield_patterns: bool = True,
-        reduce_conclusion: bool = False,
+        reduce_conclusions: bool = False,
 ) -> Iterator[Union[tuple[Pattern, Pattern], tuple[bitarray, bitarray]]]:
     """
     Iterate proper premises and their conclusion based on the premise candidates represented with indices of their atoms
@@ -45,7 +45,7 @@ def iter_proper_premises_from_atomised_premises(
         Partial order on support-maximal atomic patterns.
     yield_patterns: bool, default True
         Flag whether to output proper premises and their conclusions as Patterns, or a bitarrays.
-    reduce_conclusion: bool, default False
+    reduce_conclusions: bool, default False
         Flag whether to output the reduced conclusion for each premise (to not repeat the conclusions of other premises)
         or the full conclusion.
 
@@ -57,7 +57,7 @@ def iter_proper_premises_from_atomised_premises(
     conclusion: Pattern or bitarray
         Conclusion represented as Pattern (when `yield_patterns` is True)
         or as a bitarray that references `maxsup_atomic_patterns`.
-        When `reduce_conclusion` is True, output only the part of the conclusion
+        When `reduce_conclusions` is True, output only the part of the conclusion
         that cannot be deduced from other implications.
 
     """
@@ -106,7 +106,7 @@ def iter_proper_premises_from_atomised_premises(
             continue
 
         proper_premises.append((premise_full, conclusion_full))
-        conclusion_final = nontrivial_added_conclusion if reduce_conclusion else conclusion_full
+        conclusion_final = nontrivial_added_conclusion if reduce_conclusions else conclusion_full
         if yield_patterns:
             yield pattern_premise(premise_full), pattern_conclusion(conclusion_final)
         else:
