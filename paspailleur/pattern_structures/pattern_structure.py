@@ -1054,11 +1054,13 @@ class PatternStructure:
             supmin_atoms, supmax_atoms = list(supmin_atoms), list(supmax_atoms)
 
             if basis_name == 'Canonical Direct':
-                ppremise_iterator = tqdm(ppremise_iterator, disable=not use_tqdm, desc='Iter pattern premises')
-                return OrderedDict([
+                pattern_premise_iterator = (
                     (bfuncs.patternise_description(premise, supmin_atoms, supmin_order_dim),
                      bfuncs.patternise_description(conclusion, supmax_atoms, supmax_order_dim))
-                    for premise, conclusion in ppremise_iterator])
+                    for premise, conclusion in ppremise_iterator
+                )
+                pattern_premise_iterator = tqdm(pattern_premise_iterator, disable=not use_tqdm, desc='Iter pattern premises')
+                return OrderedDict(list(pattern_premise_iterator))
 
             # basis_name == 'Canonical'
             atoms, superatoms_order = self._filter_atomic_patterns_by_support('any')
@@ -1069,7 +1071,7 @@ class PatternStructure:
             premises: list[bitarray] = []
             for premise_minsup, _ in ppremise_iterator:
                 premise = bazeros(n_atoms)
-                for i_minsup in premise_minsup: premise[atom_to_idx[supmin_atoms[i_minsup]]] = True
+                for i_minsup in premise_minsup.search(True): premise[atom_to_idx[supmin_atoms[i_minsup]]] = True
                 premises.append(premise)
 
             pseudo_intents = mib.iter_pseudo_intents_from_atomised_premises(
@@ -1077,10 +1079,12 @@ class PatternStructure:
             atoms = list(atoms)
             if use_tqdm:
                 pseudo_intents = list(tqdm(pseudo_intents, desc='Iter atomised p.intents'))
-            return {
-                bfuncs.patternise_description(premise, atoms, subatoms_order):
-                    bfuncs.patternise_description(conclusion, atoms, subatoms_order)
-                for premise, conclusion in pseudo_intents}
+            pattern_pintents_iterator = (
+                (bfuncs.patternise_description(premise, atoms, subatoms_order),
+                 bfuncs.patternise_description(conclusion, atoms, subatoms_order))
+                for premise, conclusion in pseudo_intents
+            )
+            return dict(tqdm(pattern_pintents_iterator, desc='Iter pattern p.intents', disable=not use_tqdm))
 
         else:
             concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
