@@ -277,9 +277,6 @@ class PatternStructure:
                     atomic_patterns[atomic_pattern] = bitarray(len(oi_extent))
                 atomic_patterns[atomic_pattern] |= oi_extent
 
-        for max_atom in self.max_atoms:
-            atomic_patterns[max_atom] = self.extent(max_atom, return_bitarray=True)
-
         atoms_extents: list[tuple[Pattern, fbarray]] = [
             (atom, fbarray(extent)) for atom, extent in atomic_patterns.items()
             if extent.count() >= min_support
