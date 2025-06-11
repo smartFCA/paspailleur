@@ -1,6 +1,5 @@
 [![PyPi](https://img.shields.io/pypi/v/paspailleur)](https://pypi.org/project/paspailleur)
-[![Docs](https://img.shields.io/badge/Docs-61acdf)](https://smartfca.github.io/paspailleur)
-![GitHub deployments](https://img.shields.io/github/deployments/smartFCA/paspailleur/documentation.yml)
+[![Documentation](https://img.shields.io/github/actions/workflow/status/smartFCA/paspailleur/documentation.yml?logo=github&label=Documentation)](https://smartfca.github.io/paspailleur)
 [![Licence](https://img.shields.io/github/license/EgorDudyrev/FCApy)](https://github.com/EgorDudyrev/paspailleur/blob/main/LICENSE)
 [![LORIA](https://img.shields.io/badge/Made_in-LORIA-61acdf)](https://www.loria.fr/)
 [![SmartFCA](https://img.shields.io/badge/Funded_by-SmartFCA-537cbb)](https://www.smartfca.org)
@@ -15,5 +14,6 @@ For example, if `D` is a set of ngrams then ngram `(hello,)` is less precise the
 that is every ngram that contains `(hello, world)` contains `(hello,)`.
 
 
-> [!WARNING]
-> The new version of the package will be published soon. And the README file will be greatly updated
+> [!IMPORTANT]
+> The latest version v0.1 is fully functioning but published without proper README.md in order to meet the submission deadlines of CONCEPTS'25 conference.
+> README.md and some Quality-of-Life improvements will come soon.
