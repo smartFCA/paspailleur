@@ -1,13 +1,13 @@
 import heapq
-from functools import reduce
+from functools import reduce, partial
 from itertools import takewhile
-from collections import OrderedDict
+from collections import OrderedDict, deque
 
 from caspailleur import inverse_order
 from tqdm.auto import tqdm
-from typing import Iterator, Generator, Collection, Iterable, Optional
+from typing import Iterator, Generator, Collection, Iterable, Optional, Union
 from bitarray import bitarray, frozenbitarray as fbarray
-from bitarray.util import zeros as bazeros, subset as basubset
+from bitarray.util import zeros as bazeros, subset as basubset, count_and
 
 from paspailleur.algorithms import base_functions as bfuncs
 from paspailleur.algorithms.base_functions import iterate_antichains
@@ -630,7 +630,7 @@ def iter_keys_of_patterns_via_atoms(
         patterns: list[tuple[Pattern, fbarray]],
         atomic_patterns: OrderedDict[Pattern, fbarray],
         subatoms_order: list[fbarray] = None,
-        max_length: Optional[int] = None,
+        max_length: int = None,
         use_tqdm: bool = False
 ) -> Iterator[tuple[Pattern, int]]:
     """
@@ -646,7 +646,7 @@ def iter_keys_of_patterns_via_atoms(
         Partial order of `atomic_patterns` represented with list of frozenbitarrays.
         The value `subatoms_order[i][j] == True` means that j-th atomic pattern is less precise than i-th atomic pattern.
         If the value is not provided (i.e. equals to `None`), then the partial order will be computed inside this function.
-    max_length: Optional[int], optional
+    max_length: Optional[int], default = len(atomic_patterns)
         Maximum number of atomic pattern that a key can consist of.
         This parameter can be used for "early-stopping" to avoid generating too complex keys.
     use_tqdm: bool, default = False
@@ -698,7 +698,7 @@ def iter_keys_of_patterns_via_atoms(
     global_extent = subatom_extents[0] | ~subatom_extents[0]
 
     # now subatoms, subatom_extents, and subatoms_order are fully established
-    antichain_iterator = iterate_antichains(subatoms_order)
+    antichain_iterator = iterate_antichains(subatoms_order, max_length=max_length)
     refine_antichain = None
     found_closures: list[list[fbarray]] = [[] for _ in patterns]
     pbar = tqdm(total=None, disable=not use_tqdm, desc="Iterate key candidates", unit_scale=True)
@@ -708,10 +708,6 @@ def iter_keys_of_patterns_via_atoms(
         except StopIteration:
             break
         pbar.update(1)
-
-        if max_length is not None and len(antichain) > max_length:
-            refine_antichain = False
-            continue
 
         superpatterns = reduce(fbarray.__and__, (patterns_per_subatom[i] for i in antichain), ~bazeros(len(patterns)))
         if not superpatterns.any():
@@ -743,3 +739,179 @@ def iter_keys_of_patterns_via_atoms(
 
         refine_antichain = superpatterns.count() > len(same_extent_patterns)
     pbar.close()
+
+
+def iter_intents_via_cboi(
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        superatoms_order: list[fbarray],
+        min_support: int = 0,
+        yield_pattern_intents: bool = True
+) -> Iterator[tuple[Union[Pattern, fbarray], fbarray]]:
+    """
+    Iterate pattern concepts using algorithm Close-by-One-with-Implications
+
+    The original CbOI algorithm was described in the language of attribute implications in (Belfodil et al., 2019).
+    This implementation describes essentially the same algorithm, but uses the language of partial order on attributes.
+
+    Parameters
+    ----------
+    atomic_patterns: OrderedDict[Pattern, frozenbitarray]
+        Mapping from atomic patterns to what objects they describe.
+        The latter is represented with its characteristic vector stored as a frozenbitarray.
+        So `atomic_patterns[p][i] == True` means that atomic pattern `p` describes `i`-th object.
+    superatoms_order: list[frozenbitarray]
+        Partial order on atomic patterns.
+        For every i-th atomic pattern, it shows the indices of all greater atomic patterns.
+        The partial order should be topologically sorted:
+        for every i-th atomic pattern, all greater patterns should have greater indices.
+    min_support: int, default = 0
+        Minimal number of objects that a concept should describe.
+    yield_pattern_intents: bool, default = True
+        Flag whether to yield concept's intent as Pattern or as a frozenbitarray,
+        whose True elements corresponds to atomic patterns of the Pattern.
+
+    Yields
+    ------
+    extent: fbarray
+        Concept's extent, i.e. the maximal subset of objects described by concept's intent.
+    intent: Pattern or fbarray
+        Concept's intent.
+        If `yield_pattern_intents == True` then represent intent as the actual Pattern.
+        If `yield_pattern_intents == False` then represent intent with frozenbitarray
+        describing indices of all atomic patterns that are less precise than the pattern.
+        (Then the actual pattern can be obtained as a Pattern.join of all listed atomic patterns).
+
+    References
+    ----------
+    Belfodil, A., Belfodil, A., & Kaytoue, M. (2019, May).
+    Mining Formal Concepts using Implications between Items.
+    In International Conference on Formal Concept Analysis (pp. 173-190). Cham: Springer International Publishing.
+
+    """
+    assert all(not superatoms[:i].any() for i, superatoms in enumerate(superatoms_order)), \
+        ("The value in `superatoms_order` should be topologically sorted. "
+         "That is, for every i-th element, all greater elements should have greater indices.")
+
+    #############################
+    # Initialise all the values #
+    #############################
+    def filter_next_atoms(superatoms_order_: list[fbarray]) -> Iterator[fbarray]:
+        for superatoms in superatoms_order_:
+            nexts = bitarray(superatoms)
+            i = 0
+            while nexts[i:].any():
+                i = nexts.find(True, i)
+                nexts &= ~superatoms_order_[i]
+                i += 1
+            yield nexts
+
+    atomic_patterns, atomic_extents = zip(*atomic_patterns.items())
+    subatoms_order = inverse_order(superatoms_order)
+    pattern_intent = partial(bfuncs.patternise_description,
+                             atomic_patterns=atomic_patterns, subatoms_order=subatoms_order, trusted_input=True)
+
+    min_atoms = bitarray([not subs.any() for subs in subatoms_order])
+    nextatoms = list(filter_next_atoms(superatoms_order))
+    top_intent = bitarray([aextent.all() for aextent in atomic_extents])
+    top_next_candidates = reduce(fbarray.__or__, (nextatoms[i] for i in top_intent.search(True)), min_atoms)
+    n_objects, n_atoms = len(atomic_extents[0]), len(atomic_extents)
+    top_extent, top_banned = ~bazeros(n_objects), bazeros(n_atoms)
+
+    #################
+    # The main loop #
+    #################
+    stack = deque([(top_extent, top_intent, top_banned, top_next_candidates)])
+    while stack:
+        ext, descr, banned, all_next_candidates = stack.pop()
+        yield pattern_intent(descr) if yield_pattern_intents else descr, fbarray(ext)
+
+        next_candidates = [i for i in (all_next_candidates & ~descr).search(True, right=True)
+                           if basubset(subatoms_order[i], descr)]  # only add i-th atom when having all its subatoms
+        for m in next_candidates:
+            ext_new = ext & atomic_extents[m]
+            if ext_new.count() < min_support:
+                continue
+
+            intent, next_next_candidates = bitarray(descr), bitarray(all_next_candidates)
+            for i in descr.search(False):
+                if not basubset(ext_new, atomic_extents[i]):  # i-th atom is not in the intent
+                    continue
+                if banned[i]:
+                    break
+                intent[i] = True
+                next_next_candidates |= nextatoms[i]
+            else:  # no break, i.e. no banned atom found
+                stack.append((ext_new, intent, bitarray(banned), next_next_candidates))
+
+            banned[m] = True
+
+
+def iter_keys_via_talky_gi(
+        atomic_patterns: OrderedDict[Pattern, fbarray],
+        superatoms_order: list[fbarray],
+        min_support: int = 0,
+        yield_pattern_keys: bool = True,
+        max_key_length: int = None,
+        test_subsets: bool = True
+) -> Iterator[tuple[Union[Pattern, fbarray], fbarray]]:
+    assert all(not superatoms[:i].any() for i, superatoms in enumerate(superatoms_order)), \
+        ("The value in `superatoms_order` should be topologically sorted. "
+         "That is, all greater elements should have greater indices.")
+
+    max_key_length = max_key_length if max_key_length is not None else len(atomic_patterns)
+
+    subatoms_order = inverse_order(superatoms_order)
+    atomic_patterns, atomic_extents = zip(*atomic_patterns.items())
+    pattern_key = partial(bfuncs.patternise_description,
+                          atomic_patterns=atomic_patterns, subatoms_order=subatoms_order, trusted_input=True)
+
+    n_objects, n_attrs = len(atomic_extents[0]), len(atomic_extents)
+
+    singletons = [bazeros(n_attrs) for _ in range(n_attrs)]
+    for i in range(n_attrs): singletons[i][i] = True
+
+    total_extent = atomic_extents[0] | ~atomic_extents[0]
+
+    min_gens_per_extent: dict[fbarray, list[fbarray]] = dict()  # extent => atomic antichains
+    min_gen_supports: dict[fbarray, int] = dict()  # atomic antichain => support
+    stack = deque([(fbarray(bazeros(n_attrs)), total_extent)])
+    while stack:
+        descr, extent = stack.pop()
+        support = extent.count()
+        atomic_closure = reduce(fbarray.__or__, (subatoms_order[i] for i in descr.search(True)), descr)
+
+        if extent not in min_gens_per_extent:
+            min_gens_per_extent[extent] = list()
+
+        equiv_subpatterns_found = any(basubset(found_mg, atomic_closure) for found_mg in min_gens_per_extent[extent])
+        if equiv_subpatterns_found:
+            continue
+
+        yield pattern_key(descr) if yield_pattern_keys else descr, fbarray(extent)
+        min_gens_per_extent[extent].append(descr)
+        min_gen_supports[descr] = support
+
+        if descr.count() == max_key_length:
+            continue
+
+        next_atoms = atomic_closure.search(False, 0, descr.find(True) if descr.any() else len(descr), right=True)
+        for next_atom in next_atoms:
+            next_support = count_and(extent, atomic_extents[next_atom])
+            if next_support < min_support:
+                continue
+
+            next_antichain = descr | singletons[next_atom]
+            if test_subsets:
+                for old_atom in descr.search(True):
+                    old_descr = next_antichain & ~singletons[old_atom]
+                    if old_descr not in min_gen_supports or min_gen_supports[old_descr] == next_support:
+                        all_subsets_are_not_equiv_mingens = False
+                        break
+                else:  # no break, that is all subsets of `new_antichain` are minimal generators
+                    all_subsets_are_not_equiv_mingens = True
+
+                if not all_subsets_are_not_equiv_mingens:
+                    continue
+
+            next_extent = extent & atomic_extents[next_atom]
+            stack.append((next_antichain, next_extent))

@@ -309,11 +309,10 @@ def iter_subgroups_via_atoms(
         Minimal number of true positives that a pattern should describe.
         When provided, this value helps to leave out patterns with too small extents.
         When not provided, it is considered to be 0.
-    max_subgroup_length: int, optional
+    max_subgroup_length: int, default = len(atomic_patterns)
         The maximal number of atomic patterns that can be joined together to form a pattern.
         When provided, this value helps to leave out patterns that consist of too many atomic patterns,
         so the patterns that are deemed to be "too complex".
-        When not provided, it is considered to be infinite.
     subatoms_order: list[bitarray], optional
         Subatoms order on atomic patterns from `atomic_patterns` represented with list of bitarrays.
         The value `subatoms_order[i][j]` should equal True when j-th atomic pattern is less precise than
@@ -369,7 +368,7 @@ def iter_subgroups_via_atoms(
     atoms, atom_extents, subatoms_order = extract_subatoms_data(goal_objects, atomic_patterns, subatoms_order, tp_min)
 
     # now subatoms, subatom_extents, and subatoms_order are fully established
-    antichain_iterator = bfuncs.iterate_antichains(subatoms_order)
+    antichain_iterator = bfuncs.iterate_antichains(subatoms_order, max_length=max_subgroup_length)
     refine_antichain = None
     found_closures: list[fbarray] = []
     pbar = tqdm(total=None, disable=not use_tqdm, desc="Iterate subgroup candidates", unit_scale=True)
@@ -379,10 +378,6 @@ def iter_subgroups_via_atoms(
         except StopIteration:
             break
         pbar.update(1)
-
-        if max_subgroup_length is not None and len(antichain) > max_subgroup_length:
-            refine_antichain = False
-            continue
 
         ac_extent = reduce(fbarray.__and__, (atom_extents[i] for i in antichain), global_extent)
         tp = count_and(ac_extent, goal_objects)

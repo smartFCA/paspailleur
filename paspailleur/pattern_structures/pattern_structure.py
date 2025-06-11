@@ -1,6 +1,6 @@
 import warnings
 from collections import OrderedDict
-from functools import reduce
+from functools import reduce, partial
 from operator import itemgetter
 from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
 from bitarray import bitarray, frozenbitarray as fbarray
@@ -13,6 +13,7 @@ from tqdm.auto import tqdm
 from .pattern import Pattern
 
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
+from paspailleur.algorithms import mine_implication_bases as mib
 
 
 class PatternStructure:
@@ -275,9 +276,6 @@ class PatternStructure:
                 if atomic_pattern not in atomic_patterns:
                     atomic_patterns[atomic_pattern] = bitarray(len(oi_extent))
                 atomic_patterns[atomic_pattern] |= oi_extent
-
-        for max_atom in self.max_atoms:
-            atomic_patterns[max_atom] = self.extent(max_atom, return_bitarray=True)
 
         atoms_extents: list[tuple[Pattern, fbarray]] = [
             (atom, fbarray(extent)) for atom, extent in atomic_patterns.items()
@@ -716,8 +714,9 @@ class PatternStructure:
 
     def iter_keys(
             self,
-            patterns: Union[PatternType, Iterable[PatternType]],
-            max_length: Optional[int] = None,
+            patterns: Union[PatternType, Iterable[PatternType]] = None,
+            max_length: int = None,
+            min_support: Union[int, float] = 1,
             use_tqdm: bool = False
     ) -> Union[
             Iterator[PatternType], 
@@ -737,6 +736,8 @@ class PatternStructure:
             A pattern or list of patterns to decompose into atomic keys.
         max_length: Optional[int], optional
             Maximum length of key combinations (default is None).
+        min_support: int, default = 0
+            Minimal number of objects described by a key. Only used when `patterns` is set to `None`.
         use_tqdm: bool, default = False
             Flag whether to show tqdm progress bar or not.
 
@@ -748,16 +749,38 @@ class PatternStructure:
         Examples
         --------
         >>> for key in ps.iter_keys(Pattern("A | B")):
-            print(key)
+        ...    print(key)
         """
+        min_support = to_absolute_number(min_support, len(self._object_names))
         sup_min_atoms, sup_min_order = self._filter_atomic_patterns_by_support("minimal")
         descending_pattern_order = inverse_order(sup_min_order)
+
+        if patterns is None:
+            keys_iterator: Iterator[tuple[Pattern, fbarray]] = mec.iter_keys_via_talky_gi(
+                sup_min_atoms, sup_min_order,
+                min_support=min_support, yield_pattern_keys=False, max_key_length=max_length, test_subsets=True
+            )
+            if use_tqdm:
+                keys_iterator = list(tqdm(keys_iterator, desc="Compute binarised keys", unit_scale=True))
+
+            def key_intent_iterator(keys_iterator_) -> Iterator[tuple[Pattern, Pattern]]:
+                extent_intent_map = dict()
+                for key, extent in tqdm(keys_iterator_, desc="Compute pattern keys", disable=not use_tqdm, unit_scale=True):
+                    pattern_key = bfuncs.patternise_description(key, list(sup_min_atoms), descending_pattern_order,
+                                                                trusted_input=True)
+
+                    if extent not in extent_intent_map:
+                        extent_intent_map[extent] = self.intent(extent)
+                    intent = extent_intent_map[extent]
+                    yield pattern_key, intent
+
+            return key_intent_iterator(keys_iterator)
 
         is_single_pattern = isinstance(patterns, self.PatternType)
         patterns = [patterns] if is_single_pattern else patterns
         patterns_extents = [(pattern, self.extent(pattern, return_bitarray=True)) for pattern in patterns]
 
-        keys_iterator = mec.iter_keys_of_patterns_via_atoms(
+        keys_iterator: Iterator[tuple[Pattern, int]] = mec.iter_keys_of_patterns_via_atoms(
             patterns_extents,
             sup_min_atoms, descending_pattern_order, max_length, use_tqdm=use_tqdm,
         )
@@ -860,7 +883,7 @@ class PatternStructure:
     def mine_concepts(
             self,
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
-            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia', 'CbOI'] = None,
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False
         ) -> Union[
@@ -876,7 +899,7 @@ class PatternStructure:
         min_delta_stability: Union[int, float], optional
             Minimum delta stability for concept filtering (default is 0).
         algorithm: Literal, optional
-            Algorithm used for mining: 'CloseByOne object-wise' or 'gSofia' (default selects automatically).
+            Algorithm used for mining: 'CloseByOne object-wise', 'gSofia', and 'CbOI'.
         return_objects_as_bitarrays: bool, optional
             If True, returns extents as bitarrays (default is False).
         use_tqdm: bool, optional
@@ -892,7 +915,7 @@ class PatternStructure:
         >>> ps.mine_concepts(min_support=1)
         [({"obj1", "obj2"}, Pattern("A"))]
         """
-        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia'}
+        SUPPORTED_ALGOS = {'CloseByOne object-wise', 'gSofia', 'CbOI'}
         assert algorithm is None or algorithm in SUPPORTED_ALGOS, \
             f"Only the following algorithms are supported: {SUPPORTED_ALGOS}. " \
             f"Either choose of the supported algorithm or set algorithm=None " \
@@ -935,6 +958,32 @@ class PatternStructure:
             for extent in tqdm(extents_ba, disable=not use_tqdm, desc='Compute intents'):
                 extents_intents_dict[fbarray(extent)] = self.intent(extent)
 
+        if algorithm == 'CbOI':
+            unused_parameters = []
+            if min_delta_stability > 0:
+                unused_parameters.append(f"{min_delta_stability=}")
+            if unused_parameters:
+                warnings.warn(UserWarning(
+                    f'The following parameters {", ".join(unused_parameters)} do not affect algorithm {algorithm}'))
+
+            sup_max_patterns, sup_max_order = self._filter_atomic_patterns_by_support('maximal')
+            sup_max_subpattern_order = inverse_order(sup_max_order)
+
+            concepts_generator = mec.iter_intents_via_cboi(
+                sup_max_patterns, sup_max_order, min_support=min_support, yield_pattern_intents=False
+            )
+            concepts_generator = tqdm(concepts_generator, disable=not use_tqdm, desc='Compute binarised concepts')
+            if use_tqdm:
+                concepts_generator = list(concepts_generator)
+
+            pattern_intent = partial(
+                bfuncs.patternise_description,
+                atomic_patterns=list(sup_max_patterns), subatoms_order=sup_max_subpattern_order, trusted_input=True)
+            concepts_generator = ((pattern_intent(intent), extent) for intent, extent in
+                                  tqdm(concepts_generator, disable=not use_tqdm, desc='Compute pattern concepts'))
+
+            extents_intents_dict: dict[fbarray, Pattern] = {extent: intent  for intent, extent in concepts_generator}
+
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
         concepts = [(
             extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
@@ -947,7 +996,7 @@ class PatternStructure:
             basis_name: Literal["Canonical", "Canonical Direct"] = "Canonical Direct",
             min_support: Union[int, float] = 0, min_delta_stability: Union[int, float] = 0,
             max_key_length: Optional[int] = None,
-            algorithm: Literal['CloseByOne object-wise', 'gSofia'] = None,
+            algorithm: Literal['CloseByOne object-wise', 'gSofia', 'Talky-GI'] = None,
             reduce_conclusions: bool = False,
             use_tqdm: bool = False,
         ) -> dict[PatternType, PatternType]:
@@ -981,17 +1030,70 @@ class PatternStructure:
         >>> ps.mine_implications(min_support=2)
         {Pattern("A"): Pattern("B")}
         """
-        concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
-            min_support=min_support, min_delta_stability=min_delta_stability,
-            algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
-        )
-        intents = map(itemgetter(1), concepts)
-        if not concepts[0][0].all():
-            intents = [self.intent(concepts[0][0]|~concepts[0][0])] + list(intents)
+        if algorithm == 'Talky-GI':
+            supmin_atoms, supmin_order = self._filter_atomic_patterns_by_support('minimal')
+            supmax_atoms, supmax_order = self._filter_atomic_patterns_by_support('maximal')
+            supmin_order_dim, supmax_order_dim = inverse_order(supmin_order), inverse_order(supmax_order)
 
-        PType = PatternStructure.PatternType
-        keys: Iterator[PType] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
-        keys = list(tqdm(keys, desc="Mine premise candidates", disable=not use_tqdm))
+            keys_extent_iterator = mec.iter_keys_via_talky_gi(
+                supmin_atoms, supmin_order,
+                min_support=min_support, yield_pattern_keys=False, max_key_length=max_key_length
+            )
+            keys_extent_iterator = tqdm(keys_extent_iterator, disable=not use_tqdm, desc='Iter premise candidates')
+            ppremise_iterator = mib.iter_proper_premises_from_atomised_premises(
+                keys_extent_iterator,
+                supmin_atoms, supmin_order_dim, supmax_atoms, supmax_order_dim,
+                yield_patterns=False, reduce_conclusions=reduce_conclusions
+            )
+            if use_tqdm:
+                ppremise_iterator = list(tqdm(ppremise_iterator, desc='Iter atomised premises'))
+
+            supmin_atoms, supmax_atoms = list(supmin_atoms), list(supmax_atoms)
+
+            if basis_name == 'Canonical Direct':
+                pattern_premise_iterator = (
+                    (bfuncs.patternise_description(premise, supmin_atoms, supmin_order_dim),
+                     bfuncs.patternise_description(conclusion, supmax_atoms, supmax_order_dim))
+                    for premise, conclusion in ppremise_iterator
+                )
+                pattern_premise_iterator = tqdm(pattern_premise_iterator, disable=not use_tqdm, desc='Iter pattern premises')
+                return OrderedDict(list(pattern_premise_iterator))
+
+            # basis_name == 'Canonical'
+            atoms, superatoms_order = self._filter_atomic_patterns_by_support('any')
+            subatoms_order = inverse_order(superatoms_order)
+
+            atom_to_idx = {atom: i for i, atom in enumerate(atoms)}
+            n_atoms = len(atoms)
+            premises: list[bitarray] = []
+            for premise_minsup, _ in ppremise_iterator:
+                premise = bazeros(n_atoms)
+                for i_minsup in premise_minsup.search(True): premise[atom_to_idx[supmin_atoms[i_minsup]]] = True
+                premises.append(premise)
+
+            pseudo_intents = mib.iter_pseudo_intents_from_atomised_premises(
+                premises, atoms, subatoms_order, yield_patterns=False, reduce_conclusions=reduce_conclusions)
+            atoms = list(atoms)
+            if use_tqdm:
+                pseudo_intents = list(tqdm(pseudo_intents, desc='Iter atomised p.intents'))
+            pattern_pintents_iterator = (
+                (bfuncs.patternise_description(premise, atoms, subatoms_order),
+                 bfuncs.patternise_description(conclusion, atoms, subatoms_order))
+                for premise, conclusion in pseudo_intents
+            )
+            return dict(tqdm(pattern_pintents_iterator, desc='Iter pattern p.intents', disable=not use_tqdm))
+
+        else:
+            concepts: list[tuple[fbarray, PatternStructure.PatternType]] = self.mine_concepts(
+                min_support=min_support, min_delta_stability=min_delta_stability,
+                algorithm=algorithm, return_objects_as_bitarrays=True, use_tqdm=use_tqdm
+            )
+            intents = map(itemgetter(1), concepts)
+            if not concepts[0][0].all():
+                intents = [self.intent(concepts[0][0]|~concepts[0][0])] + list(intents)
+
+            keys: Iterator[Pattern] = map(itemgetter(0), self.iter_keys(intents, max_length=max_key_length))
+        keys: list[Pattern] = list(tqdm(keys, desc="Mine premise candidates", disable=not use_tqdm))
 
         pseudo_close_premises = basis_name == 'Canonical'
         return self.mine_implications_from_premises(

@@ -20,3 +20,9 @@ Mine subgroups
 
 .. automodule:: paspailleur.algorithms.mine_subgroups
     :members:
+
+Mine implications
+.................
+
+.. automodule:: paspailleur.algorithms.mine_implication_bases
+    :members:
