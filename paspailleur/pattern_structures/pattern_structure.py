@@ -17,6 +17,8 @@ from paspailleur.algorithms import mine_implication_bases as mib
 
 
 PatternConcept = NamedTuple('PatternConcept', [('extent', Union[set[str], fbarray]), ('intent', Pattern)])
+SubgroupData = NamedTuple('SubgroupData', [('pattern', Pattern), ('extent', Union[set[str], fbarray]),
+                                           ('quality_value', float), ('quality_name', str)])
 
 
 class PatternStructure:
@@ -804,7 +806,7 @@ class PatternStructure:
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False,
             atomic_support_characteristic: Literal["maximal", "minimal"] = "maximal",
-        ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
+        ) -> Iterator[SubgroupData]:
         """
         Iterate over subgroups that satisfy a quality threshold.
 
@@ -844,8 +846,8 @@ class PatternStructure:
 
         Yields
         ------
-        subs: Iterator[tuple[Pattern, Union[set[str], bitarray], float]]
-            Tuples of (pattern, extent, quality).
+        subs: Iterator[SubgroupData]
+            Named Tuples of (pattern, extent, quality_value, quality_name).
 
         Examples
         --------
@@ -876,9 +878,11 @@ class PatternStructure:
             raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
                              f'The only supported type for the moment is "bruteforce"')
 
-        if return_objects_as_bitarrays:
-            return subgroups_iterator
-        return ((pattern, self.verbalise_extent(extent), score) for pattern, extent, score in subgroups_iterator)
+        return (SubgroupData(
+            pattern, self.verbalise_extent(extent) if not return_objects_as_bitarrays else extent,
+            score, quality_measure
+        ) for pattern, extent, score in subgroups_iterator)
+
 
     ######################
     # High-level FCA API #
