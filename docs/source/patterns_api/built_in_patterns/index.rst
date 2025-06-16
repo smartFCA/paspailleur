@@ -12,4 +12,4 @@ Built In Patterns
    ClosedIntervalPattern
    NgramSetPattern
    CartesianPattern
-   
+   PatternFactory
