@@ -2,7 +2,7 @@ import warnings
 from collections import OrderedDict
 from functools import reduce, partial
 from operator import itemgetter
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized, NamedTuple
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 from caspailleur import inverse_order
@@ -14,6 +14,9 @@ from .pattern import Pattern
 
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 from paspailleur.algorithms import mine_implication_bases as mib
+
+
+PatternConcept = NamedTuple('PatternConcept', [('extent', Union[set[str], fbarray]), ('intent', Pattern)])
 
 
 class PatternStructure:
@@ -886,9 +889,7 @@ class PatternStructure:
             algorithm: Literal['CloseByOne object-wise', 'gSofia', 'CbOI'] = None,
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False
-        ) -> Union[
-            list[tuple[set[str], PatternType]], 
-            list[tuple[fbarray, PatternType]]]:
+        ) -> list[PatternConcept]:
         """
         Mine pattern concepts (extent-intent pairs) from the pattern structure.
 
@@ -907,8 +908,9 @@ class PatternStructure:
 
         Returns
         -------
-        concepts: Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]
-            A list of concept tuples, each containing an extent and its corresponding intent.
+        concepts:
+            A list of named tuples, each containing an extent and its corresponding intent.
+            Extent representation of each concept depends on `return_objects_as_bitarrays` parameter.
         
         Examples
         --------
@@ -985,7 +987,7 @@ class PatternStructure:
             extents_intents_dict: dict[fbarray, Pattern] = {extent: intent  for intent, extent in concepts_generator}
 
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
-        concepts = [(
+        concepts = [PatternConcept(
             extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
             extents_intents_dict[extent_ba]
         ) for extent_ba in extents_order]
