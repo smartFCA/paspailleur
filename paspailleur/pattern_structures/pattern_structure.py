@@ -1032,6 +1032,9 @@ class PatternStructure:
         >>> ps.mine_implications(min_support=2)
         {Pattern("A"): Pattern("B")}
         """
+        min_support = to_absolute_number(min_support, len(self.objects))
+        min_delta_stability = to_absolute_number(min_delta_stability, len(self.objects))
+
         if algorithm == 'Talky-GI':
             supmin_atoms, supmin_order = self._filter_atomic_patterns_by_support('minimal')
             supmax_atoms, supmax_order = self._filter_atomic_patterns_by_support('maximal')
