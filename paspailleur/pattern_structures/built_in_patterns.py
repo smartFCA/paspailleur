@@ -1765,8 +1765,16 @@ class CartesianPattern(Pattern):
         })
         """
         if cls.DimensionTypes is not None:
-            value = {k: v if isinstance(v, cls.DimensionTypes[k]) else cls.DimensionTypes[k](v)
-                     for k, v in value.items()}
+            value_new = {}
+            for k, v in value.items():
+                if isinstance(v, cls.DimensionTypes[k]):
+                    value_new[k] = v
+                    continue
+                try:
+                    value_new[k] = cls.DimensionTypes[k](v)
+                except ValueError as e:
+                    raise ValueError(f"Error when initialising value {v} for dimension {k}: {e}")
+            value = value_new
         else:  # cls.DimensionTypes are not defined
             non_processed_dimensions = {k for k, v in value.items() if not isinstance(v, Pattern)}
             assert not non_processed_dimensions, \
