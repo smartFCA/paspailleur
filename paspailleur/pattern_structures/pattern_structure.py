@@ -1356,3 +1356,12 @@ class PatternStructure:
     def objects(self) -> set[str]:
         """Return the names of objects in the Pattern Structure"""
         return set(self._object_names)
+
+    def __len__(self) -> int:
+        """Return the number of objects in the Pattern Structure"""
+        return len(self._object_names)
+
+    @property
+    def shape(self) -> tuple[int, Optional[int]]:
+        """Return the shape of the Pattern Structure, i.e. the number of objects x the number of atomic patterns"""
+        return len(self._object_names), len(self._atomic_patterns) if self._atomic_patterns is not None else None
