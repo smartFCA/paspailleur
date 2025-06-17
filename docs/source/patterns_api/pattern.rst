@@ -1,56 +1,56 @@
 Pattern Class
 =============
 
-.. autoclass:: paspailleur.pattern_structures.pattern.Pattern
+.. autoclass:: paspailleur.Pattern
 
 
 Values' Encapsulation
 .....................
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.value
+.. autoproperty:: paspailleur.Pattern.value
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.parse_string_description
+.. automethod:: paspailleur.Pattern.parse_string_description
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.preprocess_value
+.. automethod:: paspailleur.Pattern.preprocess_value
 
 
 Patterns' Order
 ...............
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issubpattern
+.. automethod:: paspailleur.Pattern.issubpattern
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.issuperpattern
+.. automethod:: paspailleur.Pattern.issuperpattern
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.min_pattern
+.. autoproperty:: paspailleur.Pattern.min_pattern
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.max_pattern
+.. autoproperty:: paspailleur.Pattern.max_pattern
 
 
 Patterns' Merge
 ...............
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.meet
+.. automethod:: paspailleur.Pattern.meet
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.join
+.. automethod:: paspailleur.Pattern.join
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.intersection
+.. automethod:: paspailleur.Pattern.intersection
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.union
+.. automethod:: paspailleur.Pattern.union
 
-.. automethod:: paspailleur.pattern_structures.pattern.Pattern.difference
+.. automethod:: paspailleur.Pattern.difference
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.meetable
+.. autoproperty:: paspailleur.Pattern.meetable
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.joinable
+.. autoproperty:: paspailleur.Pattern.joinable
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.substractable
+.. autoproperty:: paspailleur.Pattern.substractable
 
 
 Atomic Representations
 ......................
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.atomic_patterns
+.. autoproperty:: paspailleur.Pattern.atomic_patterns
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.maximal_atoms
+.. autoproperty:: paspailleur.Pattern.maximal_atoms
 
-.. autoproperty:: paspailleur.pattern_structures.pattern.Pattern.atomisable
+.. autoproperty:: paspailleur.Pattern.atomisable

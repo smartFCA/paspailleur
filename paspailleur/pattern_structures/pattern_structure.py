@@ -2,7 +2,7 @@ import warnings
 from collections import OrderedDict
 from functools import reduce, partial
 from operator import itemgetter
-from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized
+from typing import Type, TypeVar, Union, Collection, Optional, Iterator, Generator, Literal, Iterable, Sized, NamedTuple
 from bitarray import bitarray, frozenbitarray as fbarray
 from bitarray.util import zeros as bazeros, subset as basubset
 from caspailleur import inverse_order
@@ -14,6 +14,11 @@ from .pattern import Pattern
 
 from paspailleur.algorithms import base_functions as bfuncs, mine_equivalence_classes as mec, mine_subgroups as msubg
 from paspailleur.algorithms import mine_implication_bases as mib
+
+
+PatternConcept = NamedTuple('PatternConcept', [('extent', Union[set[str], fbarray]), ('intent', Pattern)])
+SubgroupData = NamedTuple('SubgroupData', [('pattern', Pattern), ('extent', Union[set[str], fbarray]),
+                                           ('quality_value', float), ('quality_name', str)])
 
 
 class PatternStructure:
@@ -801,7 +806,7 @@ class PatternStructure:
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False,
             atomic_support_characteristic: Literal["maximal", "minimal"] = "maximal",
-        ) -> Iterator[tuple[Pattern, Union[set[str], bitarray], float]]:
+        ) -> Iterator[SubgroupData]:
         """
         Iterate over subgroups that satisfy a quality threshold.
 
@@ -841,8 +846,8 @@ class PatternStructure:
 
         Yields
         ------
-        subs: Iterator[tuple[Pattern, Union[set[str], bitarray], float]]
-            Tuples of (pattern, extent, quality).
+        subs: Iterator[SubgroupData]
+            Named Tuples of (pattern, extent, quality_value, quality_name).
 
         Examples
         --------
@@ -873,9 +878,11 @@ class PatternStructure:
             raise ValueError(f'Submitted kind of iterator {kind=} is not supported. '
                              f'The only supported type for the moment is "bruteforce"')
 
-        if return_objects_as_bitarrays:
-            return subgroups_iterator
-        return ((pattern, self.verbalise_extent(extent), score) for pattern, extent, score in subgroups_iterator)
+        return (SubgroupData(
+            pattern, self.verbalise_extent(extent) if not return_objects_as_bitarrays else extent,
+            score, quality_measure
+        ) for pattern, extent, score in subgroups_iterator)
+
 
     ######################
     # High-level FCA API #
@@ -886,9 +893,7 @@ class PatternStructure:
             algorithm: Literal['CloseByOne object-wise', 'gSofia', 'CbOI'] = None,
             return_objects_as_bitarrays: bool = False,
             use_tqdm: bool = False
-        ) -> Union[
-            list[tuple[set[str], PatternType]], 
-            list[tuple[fbarray, PatternType]]]:
+        ) -> list[PatternConcept]:
         """
         Mine pattern concepts (extent-intent pairs) from the pattern structure.
 
@@ -907,8 +912,9 @@ class PatternStructure:
 
         Returns
         -------
-        concepts: Union[list[tuple[set[str], PatternType]], list[tuple[fbarray, PatternType]]]
-            A list of concept tuples, each containing an extent and its corresponding intent.
+        concepts:
+            A list of named tuples, each containing an extent and its corresponding intent.
+            Extent representation of each concept depends on `return_objects_as_bitarrays` parameter.
         
         Examples
         --------
@@ -985,7 +991,7 @@ class PatternStructure:
             extents_intents_dict: dict[fbarray, Pattern] = {extent: intent  for intent, extent in concepts_generator}
 
         extents_order = sorted(extents_intents_dict, key=lambda extent: (-extent.count(), tuple(extent.search(True))))
-        concepts = [(
+        concepts = [PatternConcept(
             extent_ba if return_objects_as_bitarrays else self.verbalise_extent(extent_ba),
             extents_intents_dict[extent_ba]
         ) for extent_ba in extents_order]
@@ -1030,6 +1036,9 @@ class PatternStructure:
         >>> ps.mine_implications(min_support=2)
         {Pattern("A"): Pattern("B")}
         """
+        min_support = to_absolute_number(min_support, len(self.objects))
+        min_delta_stability = to_absolute_number(min_delta_stability, len(self.objects))
+
         if algorithm == 'Talky-GI':
             supmin_atoms, supmin_order = self._filter_atomic_patterns_by_support('minimal')
             supmax_atoms, supmax_order = self._filter_atomic_patterns_by_support('maximal')
@@ -1347,3 +1356,36 @@ class PatternStructure:
     def objects(self) -> set[str]:
         """Return the names of objects in the Pattern Structure"""
         return set(self._object_names)
+
+    def __len__(self) -> int:
+        """Return the number of objects in the Pattern Structure"""
+        return len(self._object_names)
+
+    @property
+    def shape(self) -> tuple[int, Optional[int]]:
+        """Return the shape of the Pattern Structure, i.e. the number of objects x the number of atomic patterns"""
+        return len(self._object_names), len(self._atomic_patterns) if self._atomic_patterns is not None else None
+
+    def filter_minimal(self, patterns: set[PatternType]) -> set[PatternType]:
+        """Return only the smallest (the least precise) `patterns`. Use extents to optimise the filtering."""
+        extents = {p: self.extent(p, return_bitarray=True) for p in patterns}
+        patterns = sorted(patterns, key=lambda pattern: extents[pattern].count(), reverse=True)
+        i = 0
+        while i < len(patterns):
+            pattern = patterns[i]
+            patterns[i+1:] = [other for other in patterns[i+1:]
+                              if not (basubset(extents[other], extents[pattern]) and pattern <= other)]
+            i += 1
+        return set(patterns)
+
+    def filter_maximal(self, patterns: set[PatternType]) -> set[PatternType]:
+        """Return only the greatest (the most precise) `patterns`. Use extents to optimise the filtering."""
+        extents = {p: self.extent(p, return_bitarray=True) for p in patterns}
+        patterns = sorted(patterns, key=lambda pattern: extents[pattern].count())
+        i = 0
+        while i < len(patterns):
+            pattern = patterns[i]
+            patterns[i+1:] = [other for other in patterns[i+1:]
+                              if not (basubset(extents[pattern], extents[other]) and other <= pattern)]
+            i += 1
+        return set(patterns)

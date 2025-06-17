@@ -741,6 +741,7 @@ class IntervalPattern(Pattern):
         >>> IntervalPattern.preprocess_value((1, 5))
         ((1.0, True), (5.0, True))
         """
+        given_value = value  # save for possible future errors
         if isinstance(value, Number):
             value = (value, value)
 
@@ -755,6 +756,17 @@ class IntervalPattern(Pattern):
             lb, rb = 0, 0
 
         if cls.BoundsUniverse is not None and not is_contradictive:
+            if -math.inf < lb < min(cls.BoundsUniverse):
+                raise ValueError(
+                    f'The lower bound of initialised value {given_value} is smaller than the smallest bound in '
+                    f'cls.BoundsUniverse (i.e. {min(cls.BoundsUniverse)}).'
+                )
+            if max(cls.BoundsUniverse) < rb < math.inf:
+                raise ValueError(
+                    f'The upper bound of intialised value {given_value} is greater than the largest bound in '
+                    f'cls.BoundsUniverse (i.e. {max(cls.BoundsUniverse)}).'
+                )
+
             lb = max(b for b in cls.BoundsUniverse if b <= lb) if lb > -math.inf else lb
             rb = min(b for b in cls.BoundsUniverse if rb <= b) if rb < math.inf else rb
 
@@ -1753,8 +1765,16 @@ class CartesianPattern(Pattern):
         })
         """
         if cls.DimensionTypes is not None:
-            value = {k: v if isinstance(v, cls.DimensionTypes[k]) else cls.DimensionTypes[k](v)
-                     for k, v in value.items()}
+            value_new = {}
+            for k, v in value.items():
+                if isinstance(v, cls.DimensionTypes[k]):
+                    value_new[k] = v
+                    continue
+                try:
+                    value_new[k] = cls.DimensionTypes[k](v)
+                except ValueError as e:
+                    raise ValueError(f"Error when initialising value {v} for dimension {k}: {e}")
+            value = value_new
         else:  # cls.DimensionTypes are not defined
             non_processed_dimensions = {k for k, v in value.items() if not isinstance(v, Pattern)}
             assert not non_processed_dimensions, \
