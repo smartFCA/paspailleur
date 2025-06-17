@@ -1365,3 +1365,27 @@ class PatternStructure:
     def shape(self) -> tuple[int, Optional[int]]:
         """Return the shape of the Pattern Structure, i.e. the number of objects x the number of atomic patterns"""
         return len(self._object_names), len(self._atomic_patterns) if self._atomic_patterns is not None else None
+
+    def filter_minimal(self, patterns: set[PatternType]) -> set[PatternType]:
+        """Return only the smallest (the least precise) `patterns`. Use extents to optimise the filtering."""
+        extents = {p: self.extent(p, return_bitarray=True) for p in patterns}
+        patterns = sorted(patterns, key=lambda pattern: extents[pattern].count(), reverse=True)
+        i = 0
+        while i < len(patterns):
+            pattern = patterns[i]
+            patterns[i+1:] = [other for other in patterns[i+1:]
+                              if not (basubset(extents[other], extents[pattern]) and pattern <= other)]
+            i += 1
+        return set(patterns)
+
+    def filter_maximal(self, patterns: set[PatternType]) -> set[PatternType]:
+        """Return only the greatest (the most precise) `patterns`. Use extents to optimise the filtering."""
+        extents = {p: self.extent(p, return_bitarray=True) for p in patterns}
+        patterns = sorted(patterns, key=lambda pattern: extents[pattern].count())
+        i = 0
+        while i < len(patterns):
+            pattern = patterns[i]
+            patterns[i+1:] = [other for other in patterns[i+1:]
+                              if not (basubset(extents[pattern], extents[other]) and other <= pattern)]
+            i += 1
+        return set(patterns)
