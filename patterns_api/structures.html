@@ -1,0 +1,1242 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Pattern Structure &#8212; Paspailleur 0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'patterns_api/structures';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Algorithms API" href="../algorithms_api.html" />
+    <link rel="prev" title="Cartesian Pattern" href="built_in_patterns/CartesianPattern.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Paspailleur 0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_from_titanic.html">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../example_from_titanic.html">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Pattern API Sections</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="pattern.html">Pattern Class</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="built_in_patterns/index.html">Built In Patterns</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/ItemSetPattern.html">ItemSet Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/CategorySetPattern.html">CategorySet Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/IntervalPattern.html">Interval Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/ClosedIntervalPattern.html">ClosedInterval Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/NgramSetPattern.html">NgramSet Pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="built_in_patterns/CartesianPattern.html">Cartesian Pattern</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Pattern Structure</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Patterns API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Pattern Structure</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="pattern-structure">
+<h1>Pattern Structure<a class="headerlink" href="#pattern-structure" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">paspailleur.pattern_structures.pattern_structure.</span></span><span class="sig-name descname"><span class="pre">PatternStructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.pattern_structures.pattern.Pattern"><span class="pre">Pattern</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure" title="Link to this definition">#</a></dt>
+<dd><p>A class to process complex datasets where every row (called object) is described by one pattern.</p>
+<p>All patterns should be of the same class defined by PatternType attribute.</p>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Ganter, B., &amp; Kuznetsov, S. O. (2001, July). Pattern structures and their projections. In International conference on conceptual structures (pp. 129-142). Berlin, Heidelberg: Springer Berlin Heidelberg.</p>
+</section>
+<section id="attributes">
+<h2>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>PatternType: TypeVar</dt><dd><p>A type variable bound to the Pattern class.</p>
+</dd>
+</dl>
+</section>
+<section id="private-attributes">
+<h2>Private Attributes<a class="headerlink" href="#private-attributes" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>_object_irreducibles: Optional[dict[PatternType, fbarray]]</dt><dd><p>Patterns introduced by objects.</p>
+</dd>
+<dt>_object_names: Optional[list[str]]</dt><dd><p>Names of the objects.</p>
+</dd>
+<dt>_atomic_patterns: Optional[OrderedDict[PatternType, fbarray]]</dt><dd><p>Smallest nontrivial patterns.</p>
+</dd>
+<dt>_atomic_patterns_order: Optional[list[fbarray]]</dt><dd><p>Partial order on atomic patterns meaning that some atomic patterns can be incomparable.
+_atomic_patterns_order[i][j] == True would mean that i-th atomic pattern is less precise than j-th atomic pattern.
+_atomic_patterns_order[i][j] == False can mean both that j-th atomic pattern is less precise than i-th atomic pattern and that i-th and j-th atomic patterns can not be compared.</p>
+</dd>
+</dl>
+</section>
+<section id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>premaximal_patterns</dt><dd><p>Return the premaximal patterns in the structure.</p>
+</dd>
+<dt>atomic_patterns_order</dt><dd><p>Return the partial order of atomic patterns by extent inclusion.</p>
+</dd>
+<dt>n_atomic_patterns</dt><dd><p>Return the number of atomic patterns in the structure.</p>
+</dd>
+<dt>atomic_patterns</dt><dd><p>Return the atomic patterns in the structure.</p>
+</dd>
+<dt>max_atoms</dt><dd><p>Return the maximal atomic patterns in the structure.</p>
+</dd>
+<dt>max_pattern</dt><dd><p>Return the maximal pattern in the structure.</p>
+</dd>
+<dt>min_pattern</dt><dd><p>Return the minimal pattern in the structure.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<section id="basic-operations-on-a-context">
+<h2>Basic operations on a context<a class="headerlink" href="#basic-operations-on-a-context" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.extent">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PatternType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_bitarray</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">frozenbitarray</span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.extent" title="Link to this definition">#</a></dt>
+<dd><p>Compute the extent of a given pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> (<em>PatternType</em>) – The pattern for which to compute the extent.</p></li>
+<li><p><strong>return_bitarray</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns the extent as a bitarray (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>extent</strong> – The extent of the pattern, either as a set of object names or a bitarray.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[set[str], fbarray]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the data is unknown (i.e., not fitted).</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># Assume this fits the structure with object data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">extent</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">{&#39;obj1&#39;, &#39;obj2&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.intent">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">intent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Collection</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">frozenbitarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">PatternType</span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.intent" title="Link to this definition">#</a></dt>
+<dd><p>Compute the intent of a given set of objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>objects</strong> (<em>Union</em><em>[</em><em>Collection</em><em>[</em><em>str</em><em>]</em><em>, </em><em>fbarray</em><em>]</em>) – The objects for which to compute the intent.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>intent</strong> – The intent of the given objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PatternType</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the data is unknown (i.e., not fitted).</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># Assume this fits the structure with object data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">intent</span><span class="p">([</span><span class="s1">&#39;obj1&#39;</span><span class="p">,</span> <span class="s1">&#39;obj2&#39;</span><span class="p">])</span>
+<span class="go">Pattern(&#39;A&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="initialisation-of-the-pattern-structure">
+<h2>Initialisation of the Pattern Structure<a class="headerlink" href="#initialisation-of-the-pattern-structure" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.fit">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_descriptions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_atomic_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_atom_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.fit" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the PatternStructure with object descriptions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>object_descriptions</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>PatternType</em><em>]</em>) – A dictionary mapping object names to their corresponding patterns.</p></li>
+<li><p><strong>compute_atomic_patterns</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, computes atomic patterns. If None, tries to infer whether computation is possible (default is None).</p></li>
+<li><p><strong>min_atom_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum support threshold for an atomic pattern to be retained (default is 0).
+If a float between 0 and 1, it is interpreted as a proportion of total objects.</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays a progress bar when computing atomic patterns (default is True).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">    &quot;obj1&quot;: Pattern(&quot;A&quot;),</span>
+<span class="go">    &quot;obj2&quot;: Pattern(&quot;A &amp; B&quot;),</span>
+<span class="go">    &quot;obj3&quot;: Pattern(&quot;B&quot;)</span>
+<span class="go">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.init_atomic_patterns">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">init_atomic_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.init_atomic_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Compute the set of all patterns that cannot be obtained by join of other patterns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum number or proportion of objects a pattern must describe to be considered atomic (default is 0).</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays a progress bar during computation (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>AssertionError</strong> – If the internal atomic pattern ordering check fails.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">({</span>
+<span class="go">    &quot;obj1&quot;: Pattern(&quot;A&quot;),</span>
+<span class="go">    &quot;obj2&quot;: Pattern(&quot;B&quot;),</span>
+<span class="go">    &quot;obj3&quot;: Pattern(&quot;A &amp; B&quot;)</span>
+<span class="go">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">init_atomic_patterns</span><span class="p">(</span><span class="n">min_support</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="properties-that-are-easy-to-compute">
+<h2>Properties that are easy to compute<a class="headerlink" href="#properties-that-are-easy-to-compute" title="Link to this heading">#</a></h2>
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">min_pattern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PatternType</span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern" title="Link to this definition">#</a></dt>
+<dd><p>Return the minimal pattern in the structure.</p>
+<p>This is the least precise pattern that describes all objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>min</strong> – The minimal pattern found in the structure.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>PatternType</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the data is unknown (i.e., the structure has not been fitted yet).</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">({</span><span class="s2">&quot;obj1&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">),</span> <span class="s2">&quot;obj2&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">min_pattern</span>
+<span class="go">Pattern(&quot;...&quot;)  # minimal pattern across objects</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.max_pattern">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">max_pattern</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PatternType</span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.max_pattern" title="Link to this definition">#</a></dt>
+<dd><p>Return the maximal pattern in the structure.</p>
+<p>This is the most precise pattern that includes all patterns in the structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max</strong> – The maximal pattern found in the structure.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>PatternType</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the data is unknown (i.e., the structure has not been fitted yet).</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">({</span><span class="s2">&quot;obj1&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">),</span> <span class="s2">&quot;obj2&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">max_pattern</span>
+<span class="go">Pattern(&quot;A | B&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.max_atoms">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">max_atoms</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.max_atoms" title="Link to this definition">#</a></dt>
+<dd><p>Return the maximal atomic patterns in the structure.</p>
+<p>Maximal atoms are those atomic patterns that cannot be subsumed by any other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_atoms</strong> – A set of maximal atomic patterns.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>set[PatternType]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">({</span><span class="s2">&quot;obj1&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">),</span> <span class="s2">&quot;obj2&quot;</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A &amp; B&quot;</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">max_atoms</span>
+<span class="go">{Pattern(&quot;A&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">atomic_patterns</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Return the atomic patterns in the structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>atoms</strong> – An ordered dictionary mapping atomic patterns to their extents (object names).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>OrderedDict[PatternType, set[str]]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">atomic_patterns</span>
+<span class="go">OrderedDict({Pattern(&quot;A&quot;): {&quot;obj1&quot;, &quot;obj3&quot;}, Pattern(&quot;B&quot;): {&quot;obj2&quot;}})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.n_atomic_patterns">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">n_atomic_patterns</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.n_atomic_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Return the number of atomic patterns in the structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>count</strong> – The number of atomic patterns.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">n_atomic_patterns</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns_order">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">atomic_patterns_order</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns_order" title="Link to this definition">#</a></dt>
+<dd><p>Return the partial order of atomic patterns, i.e. for every atomic pattern show all its atomic super-patterns.</p>
+<p>Each pattern maps to the set of patterns that strictly subsume it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>order</strong> – A dictionary representing the ordering of atomic patterns.
+Keys are atomic patterns, values are sets of greater atomic patterns.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[PatternType, set[PatternType]]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">atomic_patterns_order</span>
+<span class="go">{</span>
+<span class="go">    Pattern(&quot;A&quot;): {Pattern(&quot;A | B&quot;)},</span>
+<span class="go">    Pattern(&quot;B&quot;): set()</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.premaximal_patterns">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">premaximal_patterns</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.premaximal_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Return the premaximal patterns in the structure.</p>
+<p>Premaximal patterns are those just below the maximal pattern in precision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>premaximals</strong> – A dictionary mapping premaximal patterns to their extents.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict[PatternType, set[str]]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">premaximal_patterns</span>
+<span class="go">{</span>
+<span class="go">    Pattern(&quot;A &amp; B&quot;): {&quot;obj1&quot;, &quot;obj3&quot;},</span>
+<span class="go">    Pattern(&quot;B &amp; C&quot;): {&quot;obj2&quot;}</span>
+<span class="go">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="pattern-iterators">
+<h2>Pattern Iterators<a class="headerlink" href="#pattern-iterators" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_atomic_patterns">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">iter_atomic_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_bitarrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'bruteforce'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ascending'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ascending</span> <span class="pre">controlled'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bruteforce'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">support_characteristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'any'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'maximal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'minimal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'any'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">frozenbitarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_atomic_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Iterate over atomic patterns in the pattern structure.</p>
+<p>If <cite>controlled</cite> is False, then the function works as a generator that can be directly put into for-in loop,
+If <cite>controlled</cite> is True, then patterns’ navigation can be controleld by <cite>pattern_iterator.send()</cite> function.
+After receiving pattern <cite>p</cite>,
+send <cite>True</cite> to the iterator in order to continue iterating over atomic patterns more precise than <cite>p</cite>,
+and send <cite>False</cite> to “early stop” the iteration.</p>
+<p>Important:
+When <cite>controlled</cite> is set to <cite>True</cite>,
+initialise the generator using <cite>next(pattern_generator)</cite> before generating any atomic patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>return_bitarrays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns extents as bitarrays (default is False).</p></li>
+<li><p><strong>kind</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Iteration strategy: ‘bruteforce’, ‘ascending’, or ‘ascending controlled’ (default is ‘bruteforce’).</p></li>
+<li><p><strong>support_characteristic</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Defines what type of atomic patterns to output.
+If ‘any’ (which is the default), then output all the atomic patterns.
+If ‘maximal’ then output the most precise atomic patterns w.r.t. their support.
+(i.e. if atomic pattern is support-maximal, then any more precise atomic pattern would describe fewer objects).
+If ‘minimal’ then output the least precise atomic patterns w.r.t. their support.
+(i.e. if atomic pattern is support-minimal, then any less precise atomic pattern would describe more objects).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pattern_generator</strong> (<em>Generator[tuple[PatternType, Union[set[str], fbarray]], Union[bool, None], None]</em>) – Generator of pairs of atomic patterns and their extents (either as a set of objects’ names or as a bitarray).
+When <cite>controlled</cite> parameter is set to <cite>True</cite>, one can send boolean <cite>refine_atomic_pattern</cite> parameter
+to the generator in order to control the patterns’ navigation.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">atom</span><span class="p">,</span> <span class="n">extent</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">iter_atomic_patterns</span><span class="p">():</span>
+<span class="go">    print(atom, extent)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_patterns">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">iter_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ascending'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'ascending</span> <span class="pre">controlled'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ascending'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_first</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_objects_as_bitarrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bitarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bitarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Iterate through all patterns based on selected criteria.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Strategy for traversal: ‘ascending’ or ‘ascending controlled’ (default is ‘ascending’).</p></li>
+<li><p><strong>min_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum support required for a pattern to be yielded (default is 0).</p></li>
+<li><p><strong>depth_first</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, performs a depth-first traversal (default is True).</p></li>
+<li><p><strong>return_objects_as_bitarrays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, extents are returned as bitarrays; otherwise as sets (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pattern_info</strong> (<em>Iterator or Generator</em>) – Yields patterns and their extents.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">extent</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">iter_patterns</span><span class="p">(</span><span class="n">min_support</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="go">    print(pattern, extent)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_keys">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">iter_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PatternType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_keys" title="Link to this definition">#</a></dt>
+<dd><p>Iterate over the keys that describe given patterns.</p>
+<p>Keys (also known as minimal generators) of a pattern are the least precise subpatterns that describe the very same objects as the pattern.</p>
+<section id="reference">
+<h3>Reference<a class="headerlink" href="#reference" title="Link to this heading">#</a></h3>
+<p>Buzmakov, A., Dudyrev, E., Kuznetsov, S. O., Makhalova, T., &amp; Napoli, A. (2024). Data complexity: An FCA-based approach. International Journal of Approximate Reasoning, 165, 109084.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param patterns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A pattern or list of patterns to decompose into atomic keys.</p>
+</dd>
+<dt class="field-even">type patterns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[PatternType, Iterable[PatternType]]</p>
+</dd>
+<dt class="field-odd">param max_length<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Maximum length of key combinations (default is None).</p>
+</dd>
+<dt class="field-even">type max_length<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[int], optional</p>
+</dd>
+<dt class="field-odd">param min_support<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Minimal number of objects described by a key. Only used when <cite>patterns</cite> is set to <cite>None</cite>.</p>
+</dd>
+<dt class="field-even">type min_support<span class="colon">:</span></dt>
+<dd class="field-even"><p>int, default = 0</p>
+</dd>
+<dt class="field-odd">param use_tqdm<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Flag whether to show tqdm progress bar or not.</p>
+</dd>
+<dt class="field-even">type use_tqdm<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool, default = False</p>
+</dd>
+<dt class="field-odd">Yields<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>keys</strong> (<em>Union[PatternType, tuple[PatternType, PatternType]]</em>) – Keys of the input patterns or (key, original pattern) pairs.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">iter_keys</span><span class="p">(</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A | B&quot;</span><span class="p">)):</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_subgroups">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">iter_subgroups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">goal_objects</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bitarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_measure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Accuracy'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Precision'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Recall'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Jaccard'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'F1'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'WRAcc'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'bruteforce'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bruteforce'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_objects_as_bitarrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_support_characteristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'maximal'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'minimal'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'maximal'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">SubgroupData</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_subgroups" title="Link to this definition">#</a></dt>
+<dd><p>Iterate over subgroups that satisfy a quality threshold.</p>
+<p>A subgroup is a pattern whose extent is very similar to the set of goal_objects.
+The similarity is measured by quality_measure and is lower-bounded by qulity_threshold.</p>
+<p class="rubric">References</p>
+<p>Atzmueller, M. (2015). Subgroup discovery. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery, 5(1), 35-49.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>goal_objects</strong> (<em>Union</em><em>[</em><em>set</em><em>[</em><em>str</em><em>]</em><em>, </em><em>bitarray</em><em>]</em>) – Set or bitarray of target objects.</p></li>
+<li><p><strong>quality_measure</strong> (<em>Literal</em>) – Metric to evaluate subgroups (e.g., ‘Accuracy’, ‘F1’, ‘WRAcc’).</p></li>
+<li><p><strong>quality_threshold</strong> (<em>float</em>) – Minimum value for the selected quality measure.</p></li>
+<li><p><strong>kind</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Subgroup mining strategy (currently only ‘bruteforce’ supported).</p></li>
+<li><p><strong>max_length</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Maximum length of subgroups (default is None).</p></li>
+<li><p><strong>min_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – The minimal amount of objects that a subgroup should describe. Defaults to 0.</p></li>
+<li><p><strong>return_objects_as_bitarrays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, extents are returned as bitarrays (default is False).</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag whether to show tqdm progress bar to visualise the number of passed subgroup candidates.
+Defaults to False.</p></li>
+<li><p><strong>atomic_support_characteristic</strong> (<em>Literal</em><em>[</em><em>&quot;maximal&quot;</em><em>, </em><em>&quot;minimal&quot;</em><em>]</em><em>, </em><em>optional</em>) – What type of atomic patterns to use to find subgroups.
+If “maximal” (the default) then prefer more precise atomic patterns (called support-maximal),
+and if “minimal” then prefer less precise atomic patterns (called support-minimal).
+For example, say there are two interval patterns “Age &gt;= 20” and “Age &gt; 10” that describe <em>the same</em> objects.
+Then the former pattern is support-maximal (as it is more precise) and the latter is support-minimal
+(as it is less precise).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>subs</strong> (<em>Iterator[SubgroupData]</em>) – Named Tuples of (pattern, extent, quality_value, quality_name).</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">iter_subgroups</span><span class="p">({</span><span class="s2">&quot;obj1&quot;</span><span class="p">,</span> <span class="s2">&quot;obj2&quot;</span><span class="p">},</span> <span class="s2">&quot;Precision&quot;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">):</span>
+<span class="go">    print(p, o, q)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="high-level-fca-api">
+<h2>High-level FCA API<a class="headerlink" href="#high-level-fca-api" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_concepts">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">mine_concepts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta_stability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'CloseByOne</span> <span class="pre">object-wise'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gSofia'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'CbOI'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_objects_as_bitarrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternConcept</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_concepts" title="Link to this definition">#</a></dt>
+<dd><p>Mine pattern concepts (extent-intent pairs) from the pattern structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum support required for concepts (default is 0).</p></li>
+<li><p><strong>min_delta_stability</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum delta stability for concept filtering (default is 0).</p></li>
+<li><p><strong>algorithm</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Algorithm used for mining: ‘CloseByOne object-wise’, ‘gSofia’, and ‘CbOI’.</p></li>
+<li><p><strong>return_objects_as_bitarrays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns extents as bitarrays (default is False).</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays a progress bar (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of named tuples, each containing an extent and its corresponding intent.
+Extent representation of each concept depends on <cite>return_objects_as_bitarrays</cite> parameter.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>concepts</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">mine_concepts</span><span class="p">(</span><span class="n">min_support</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[({&quot;obj1&quot;, &quot;obj2&quot;}, Pattern(&quot;A&quot;))]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">mine_implications</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">basis_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Canonical'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Canonical</span> <span class="pre">Direct'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Canonical</span> <span class="pre">Direct'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_support</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta_stability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_key_length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'CloseByOne</span> <span class="pre">object-wise'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'gSofia'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'Talky-GI'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_conclusions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications" title="Link to this definition">#</a></dt>
+<dd><p>Mine implications from the pattern structure using a selected basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>basis_name</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Type of basis used for implications (default is “Canonical Direct”).</p></li>
+<li><p><strong>min_support</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum support for implications (default is 0).</p></li>
+<li><p><strong>min_delta_stability</strong> (<em>Union</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em><em>, </em><em>optional</em>) – Minimum delta stability (default is 0).</p></li>
+<li><p><strong>max_key_length</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Maximum length of keys (default is None).</p></li>
+<li><p><strong>algorithm</strong> (<em>Literal</em><em>, </em><em>optional</em>) – Concept mining algorithm to use (default is None).</p></li>
+<li><p><strong>reduce_conclusions</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, reduces the size of implication conclusions (default is False).</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays a progress bar (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>implications</strong> – A dictionary mapping premises to conclusions in the implication basis.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[PatternType, PatternType]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">mine_implications</span><span class="p">(</span><span class="n">min_support</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">{Pattern(&quot;A&quot;): Pattern(&quot;B&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications_from_premises">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">mine_implications_from_premises</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">premises</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pseudo_close_premises</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_conclusions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tqdm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">OrderedDict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications_from_premises" title="Link to this definition">#</a></dt>
+<dd><p>Construct implications from a set of given premises.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>premises</strong> (<em>Iterable</em><em>[</em><em>PatternType</em><em>]</em>) – The premises to base implications on.</p></li>
+<li><p><strong>pseudo_close_premises</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to pseudo-close the premises (default is False).</p></li>
+<li><p><strong>reduce_conclusions</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, reduces conclusions to minimal additions (default is False).</p></li>
+<li><p><strong>use_tqdm</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, displays progress bars (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>premises</strong> – A mapping from premises to conclusions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[dict[PatternType, PatternType], OrderedDict[PatternType, PatternType]]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">premises</span> <span class="o">=</span> <span class="p">[</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">mine_implications_from_premises</span><span class="p">(</span><span class="n">premises</span><span class="p">)</span>
+<span class="go">{Pattern(&quot;A&quot;): Pattern(&quot;B&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.next_patterns">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">next_patterns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">PatternType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_extents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_objects_as_bitarrays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">PatternType</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">frozenbitarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.next_patterns" title="Link to this definition">#</a></dt>
+<dd><p>Compute the immediate successor patterns of a given pattern.</p>
+<p>The immediate successor patternsare the next more precise patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pattern</strong> (<em>PatternType</em>) – The pattern to compute successors for.</p></li>
+<li><p><strong>return_extents</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns extents along with patterns (default is False).</p></li>
+<li><p><strong>return_objects_as_bitarrays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, extents are returned as bitarrays instead of sets (default is False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>next_patterns</strong> – Either a set of successor patterns or a mapping of successors to extents.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[set[PatternType], dict[PatternType, set[str]], dict[PatternType, fbarray]]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">next_patterns</span><span class="p">(</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">))</span>
+<span class="go">{Pattern(&quot;A &amp; B&quot;)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="measures-of-patterns">
+<h2>Measures of Patterns<a class="headerlink" href="#measures-of-patterns" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_support">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">measure_support</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.pattern_structures.pattern.Pattern"><span class="pre">Pattern</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_support" title="Link to this definition">#</a></dt>
+<dd><p>Measure the support (number of objects) of a given pattern.</p>
+<p>Support is the size of the pattern’s extent, i.e., the number of objects that satisfy the pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pattern</strong> (<a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.Pattern"><em>Pattern</em></a>) – The pattern for which to compute support.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>support</strong> – The number of objects (support count) covered by the pattern.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">measure_support</span><span class="p">(</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">))</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_frequency">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">measure_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.pattern_structures.pattern.Pattern"><span class="pre">Pattern</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_frequency" title="Link to this definition">#</a></dt>
+<dd><p>Measure the frequency of a given pattern.</p>
+<p>Frequency is the proportion of objects satisfying the pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pattern</strong> (<a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.Pattern"><em>Pattern</em></a>) – The pattern for which to compute frequency.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>frequency</strong> – The frequency of the pattern as a fraction between 0 and 1.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">measure_frequency</span><span class="p">(</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">))</span>
+<span class="go">0.6</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_delta_stability">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">measure_delta_stability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.pattern_structures.pattern.Pattern"><span class="pre">Pattern</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_delta_stability" title="Link to this definition">#</a></dt>
+<dd><p>Measure the delta stability of a given pattern.</p>
+<p>Delta stability is defined as the difference in support between the pattern and
+its most specific generalization (i.e., next pattern with largest shared extent).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pattern</strong> (<a class="reference internal" href="pattern.html#paspailleur.Pattern" title="paspailleur.Pattern"><em>Pattern</em></a>) – The pattern for which to compute delta stability.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>delta_s</strong> – The delta stability value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">measure_delta_stability</span><span class="p">(</span><span class="n">Pattern</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">))</span>
+<span class="go">2  # pattern support is 5, next largest overlapping pattern support is 3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="helping-functions">
+<h2>Helping Functions<a class="headerlink" href="#helping-functions" title="Link to this heading">#</a></h2>
+<dl class="py method">
+<dt class="sig sig-object py" id="paspailleur.pattern_structures.pattern_structure.PatternStructure.verbalise_extent">
+<span class="sig-prename descclassname"><span class="pre">PatternStructure.</span></span><span class="sig-name descname"><span class="pre">verbalise_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bitarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.verbalise_extent" title="Link to this definition">#</a></dt>
+<dd><p>Convert an extent to a human-readable format (set of object names).</p>
+<p>This function takes an extent represented as a bitarray (internal format) or a set of object names,
+and returns the corresponding object names in a readable form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>extent</strong> (<em>Union</em><em>[</em><em>bitarray</em><em>, </em><em>set</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The extent to convert. If a bitarray is provided, each set bit is mapped to its corresponding object name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>readable</strong> – The human-readable extent as a set of object names.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>set[str]</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ba</span> <span class="o">=</span> <span class="n">bitarray</span><span class="p">(</span><span class="s1">&#39;1010&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">_object_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;obj1&quot;</span><span class="p">,</span> <span class="s2">&quot;obj2&quot;</span><span class="p">,</span> <span class="s2">&quot;obj3&quot;</span><span class="p">,</span> <span class="s2">&quot;obj4&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">verbalise_extent</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span>
+<span class="go">{&#39;obj1&#39;, &#39;obj3&#39;}</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ps</span><span class="o">.</span><span class="n">verbalise_extent</span><span class="p">({</span><span class="s1">&#39;obj2&#39;</span><span class="p">,</span> <span class="s1">&#39;obj4&#39;</span><span class="p">})</span>
+<span class="go">{&#39;obj2&#39;, &#39;obj4&#39;}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="built_in_patterns/CartesianPattern.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Cartesian Pattern</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../algorithms_api.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Algorithms API</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure"><code class="docutils literal notranslate"><span class="pre">PatternStructure</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-operations-on-a-context">Basic operations on a context</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.extent"><code class="docutils literal notranslate"><span class="pre">PatternStructure.extent()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.intent"><code class="docutils literal notranslate"><span class="pre">PatternStructure.intent()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initialisation-of-the-pattern-structure">Initialisation of the Pattern Structure</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.fit"><code class="docutils literal notranslate"><span class="pre">PatternStructure.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.init_atomic_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.init_atomic_patterns()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#properties-that-are-easy-to-compute">Properties that are easy to compute</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.min_pattern"><code class="docutils literal notranslate"><span class="pre">PatternStructure.min_pattern</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.max_pattern"><code class="docutils literal notranslate"><span class="pre">PatternStructure.max_pattern</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.max_atoms"><code class="docutils literal notranslate"><span class="pre">PatternStructure.max_atoms</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.atomic_patterns</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.n_atomic_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.n_atomic_patterns</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.atomic_patterns_order"><code class="docutils literal notranslate"><span class="pre">PatternStructure.atomic_patterns_order</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.premaximal_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.premaximal_patterns</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pattern-iterators">Pattern Iterators</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_atomic_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.iter_atomic_patterns()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.iter_patterns()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_keys"><code class="docutils literal notranslate"><span class="pre">PatternStructure.iter_keys()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.iter_subgroups"><code class="docutils literal notranslate"><span class="pre">PatternStructure.iter_subgroups()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#high-level-fca-api">High-level FCA API</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_concepts"><code class="docutils literal notranslate"><span class="pre">PatternStructure.mine_concepts()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications"><code class="docutils literal notranslate"><span class="pre">PatternStructure.mine_implications()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.mine_implications_from_premises"><code class="docutils literal notranslate"><span class="pre">PatternStructure.mine_implications_from_premises()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.next_patterns"><code class="docutils literal notranslate"><span class="pre">PatternStructure.next_patterns()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#measures-of-patterns">Measures of Patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_support"><code class="docutils literal notranslate"><span class="pre">PatternStructure.measure_support()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_frequency"><code class="docutils literal notranslate"><span class="pre">PatternStructure.measure_frequency()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.measure_delta_stability"><code class="docutils literal notranslate"><span class="pre">PatternStructure.measure_delta_stability()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#helping-functions">Helping Functions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#paspailleur.pattern_structures.pattern_structure.PatternStructure.verbalise_extent"><code class="docutils literal notranslate"><span class="pre">PatternStructure.verbalise_extent()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/patterns_api/structures.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, SmartFCA/LORIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
