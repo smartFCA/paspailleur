@@ -1065,6 +1065,9 @@ class PatternStructure:
                      bfuncs.patternise_description(conclusion, supmax_atoms, supmax_order_dim))
                     for premise, conclusion in ppremise_iterator
                 )
+                # TODO: Find the source of this bug (in case it is a bug)
+                pattern_premise_iterator = ((premise, conclusion) for premise, conclusion in pattern_premise_iterator
+                                            if not conclusion <= premise)  # if conclusion <= premise then it obviously works
                 pattern_premise_iterator = tqdm(pattern_premise_iterator, disable=not use_tqdm, desc='Iter pattern premises')
                 return OrderedDict(list(pattern_premise_iterator))
 
@@ -1090,6 +1093,10 @@ class PatternStructure:
                  bfuncs.patternise_description(conclusion, atoms, subatoms_order))
                 for premise, conclusion in pseudo_intents
             )
+            # TODO: Find the source of this bug (in case this is a bug)
+            pattern_pintents_iterator = (
+                (premise, conclusion) for premise, conclusion in pattern_pintents_iterator
+                if not conclusion <= premise)  # if conclusion <= premise then it obviously works
             return dict(tqdm(pattern_pintents_iterator, desc='Iter pattern p.intents', disable=not use_tqdm))
 
         else:
