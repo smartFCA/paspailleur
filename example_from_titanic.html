@@ -1,0 +1,1116 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Titanic Study &#8212; Paspailleur 0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'example_from_titanic';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Patterns API" href="patterns_api/index.html" />
+    <link rel="prev" title="Paspailleur Python Package" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Paspailleur 0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="patterns_api/index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="patterns_api/index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Titanic Study</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="titanic-study">
+<h1>Titanic Study<a class="headerlink" href="#titanic-study" title="Link to this heading">#</a></h1>
+<p>first thing we need to do is to install paspailleur from git:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>pip<span class="w"> </span>install<span class="w"> </span>--quiet<span class="w"> </span>git+https://github.com/smartFCA/paspailleur.git
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">USE_TQDM</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># set to False when used within documentation</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="before-the-start-download-the-data">
+<h2>Before the start: Download the data<a class="headerlink" href="#before-the-start-download-the-data" title="Link to this heading">#</a></h2>
+<p>Second is to initiate the dataset:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df_full</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;https://raw.githubusercontent.com/datasciencedojo/datasets/refs/heads/master/titanic.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df_orig</span> <span class="o">=</span> <span class="n">df_full</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df_full</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df_full</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(891, 11)
+Index([&#39;Survived&#39;, &#39;Pclass&#39;, &#39;Name&#39;, &#39;Sex&#39;, &#39;Age&#39;, &#39;SibSp&#39;, &#39;Parch&#39;, &#39;Ticket&#39;,
+       &#39;Fare&#39;, &#39;Cabin&#39;, &#39;Embarked&#39;],
+      dtype=&#39;object&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we do some modifications to make the results look better and reorganize the table with only the needed columns:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># change the values of the Embarked column into the full names instead of the letters</span>
+<span class="n">df_full</span><span class="p">[</span><span class="s1">&#39;Embarked&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_full</span><span class="p">[</span><span class="s1">&#39;Embarked&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">({</span><span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="s1">&#39;Southampton&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="s1">&#39;Cherbourg&#39;</span><span class="p">,</span> <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="s1">&#39;Queenstown&#39;</span><span class="p">})</span>
+<span class="c1"># change the values of the Survived column into yes and no instead of 0 1</span>
+<span class="n">df_full</span><span class="p">[</span><span class="s1">&#39;Survived&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_full</span><span class="p">[</span><span class="s1">&#39;Survived&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">([</span><span class="s1">&#39;No&#39;</span><span class="p">,</span> <span class="s1">&#39;Yes&#39;</span><span class="p">]</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">)</span>
+
+<span class="c1"># the removed columns are ticket and cabin since they are not needed for the study</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df_full</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Ticket&#39;</span><span class="p">,</span> <span class="s1">&#39;Cabin&#39;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(891, 9)
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Survived</th>
+      <th>Pclass</th>
+      <th>Name</th>
+      <th>Sex</th>
+      <th>Age</th>
+      <th>SibSp</th>
+      <th>Parch</th>
+      <th>Fare</th>
+      <th>Embarked</th>
+    </tr>
+    <tr>
+      <th>PassengerId</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>No</td>
+      <td>3</td>
+      <td>Braund, Mr. Owen Harris</td>
+      <td>male</td>
+      <td>22.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>7.2500</td>
+      <td>Southampton</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Yes</td>
+      <td>1</td>
+      <td>Cumings, Mrs. John Bradley (Florence Briggs Th...</td>
+      <td>female</td>
+      <td>38.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>71.2833</td>
+      <td>Cherbourg</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Yes</td>
+      <td>3</td>
+      <td>Heikkinen, Miss. Laina</td>
+      <td>female</td>
+      <td>26.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7.9250</td>
+      <td>Southampton</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Yes</td>
+      <td>1</td>
+      <td>Futrelle, Mrs. Jacques Heath (Lily May Peel)</td>
+      <td>female</td>
+      <td>35.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>53.1000</td>
+      <td>Southampton</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>No</td>
+      <td>3</td>
+      <td>Allen, Mr. William Henry</td>
+      <td>male</td>
+      <td>35.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>8.0500</td>
+      <td>Southampton</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="part-one-describe-the-data-with-patterns">
+<h2>Part One: Describe the data with Patterns<a class="headerlink" href="#part-one-describe-the-data-with-patterns" title="Link to this heading">#</a></h2>
+<p>Now we should describe how we treat every column in the data.</p>
+<ul class="simple">
+<li><p><strong>CategorySetPattern</strong> is designed for categorical data. That is, every object is described by a categorical value. Then a pattern would be a subset of categories that covers rows marked by <em>any</em> of the categories of the pattern;</p></li>
+<li><p><strong>IntervalPattern</strong> treats numerical data. Any row (marked by either a number of an interval of numbers) is either lies inside some interval pattern or nor;</p></li>
+<li><p><strong>NgramSetPattern</strong> treats textual data. Every text is represented as an ngram (i.e. a sequence of words). The task here is to find subngrams that can often be found in the data;</p></li>
+<li><p><strong>CartesianPattern</strong> combined independent <em>dimensions</em> in the tabular data. Every dimension represents a column in the data described by its own Pattern.</p></li>
+</ul>
+<p>With this, we’ll be able to initialize and do simple comaprisons between custom patterns</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">paspailleur</span> <span class="k">as</span> <span class="nn">psp</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/home/runner/.local/lib/python3.12/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
+</div>
+<section id="categorical-data">
+<h3>Categorical data<a class="headerlink" href="#categorical-data" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The classical way to inherit a new Pattern class</span>
+<span class="k">class</span> <span class="nc">SurvivedPattern</span><span class="p">(</span><span class="n">psp</span><span class="o">.</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+    <span class="c1"># CategorySetPattern required the definition of the Universe of categories,</span>
+    <span class="c1"># that is the set of all possible categories that can be found in the data</span>
+    <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;No&#39;</span><span class="p">,</span> <span class="s1">&#39;Yes&#39;</span><span class="p">)</span>
+
+<span class="c1"># A simplified way to inherit Pattern classes</span>
+<span class="n">SexPattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="n">psp</span><span class="o">.</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">,</span> <span class="n">Universe</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;female&#39;</span><span class="p">,</span> <span class="s1">&#39;male&#39;</span><span class="p">))</span>
+
+<span class="c1"># Built-in pattern can be called by their names</span>
+<span class="n">EmbarkedPattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="s1">&#39;CategorySetPattern&#39;</span><span class="p">,</span> <span class="n">Universe</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;Southampton&#39;</span><span class="p">,</span> <span class="s1">&#39;Cherbourg&#39;</span><span class="p">,</span> <span class="s1">&#39;Queenstown&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="closed-interval-patterns">
+<h3>(Closed) Interval Patterns<a class="headerlink" href="#closed-interval-patterns" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">PassengerClassPattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="n">psp</span><span class="o">.</span><span class="n">bip</span><span class="o">.</span><span class="n">ClosedIntervalPattern</span><span class="p">,</span> <span class="n">BoundsUniverse</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">AgePattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="s1">&#39;ClosedIntervalPattern&#39;</span><span class="p">,</span> <span class="n">BoundsUniverse</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">80</span><span class="p">))</span>
+<span class="n">NSiblingsPattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="s1">&#39;ClosedIntervalPattern&#39;</span><span class="p">,</span> <span class="n">BoundsUniverse</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">NParentsPattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="s1">&#39;ClosedIntervalPattern&#39;</span><span class="p">,</span> <span class="n">BoundsUniverse</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">FarePattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="s1">&#39;ClosedIntervalPattern&#39;</span><span class="p">,</span> <span class="n">BoundsUniverse</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">515</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="ngram-pattern">
+<h3>Ngram Pattern<a class="headerlink" href="#ngram-pattern" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NamePattern</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">pattern_factory</span><span class="p">(</span><span class="n">psp</span><span class="o">.</span><span class="n">bip</span><span class="o">.</span><span class="n">NgramSetPattern</span><span class="p">,</span> <span class="n">StopWords</span><span class="o">=</span><span class="nb">set</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="cartesian-pattern">
+<h3>Cartesian Pattern<a class="headerlink" href="#cartesian-pattern" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># CartesianPattern combines Patterns for each column in the data</span>
+<span class="k">class</span> <span class="nc">PassengerPattern</span><span class="p">(</span><span class="n">psp</span><span class="o">.</span><span class="n">bip</span><span class="o">.</span><span class="n">CartesianPattern</span><span class="p">):</span>
+    <span class="n">DimensionTypes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Survived&#39;</span><span class="p">:</span> <span class="n">SurvivedPattern</span><span class="p">,</span> 
+        <span class="s1">&#39;Sex&#39;</span><span class="p">:</span> <span class="n">SexPattern</span><span class="p">,</span>
+        <span class="s1">&#39;Embarked&#39;</span><span class="p">:</span> <span class="n">EmbarkedPattern</span><span class="p">,</span>
+        <span class="s1">&#39;Pclass&#39;</span><span class="p">:</span> <span class="n">PassengerClassPattern</span><span class="p">,</span>
+        <span class="s1">&#39;Age&#39;</span><span class="p">:</span> <span class="n">AgePattern</span><span class="p">,</span>
+        <span class="s1">&#39;SibSp&#39;</span><span class="p">:</span> <span class="n">NSiblingsPattern</span><span class="p">,</span>
+        <span class="s1">&#39;Parch&#39;</span><span class="p">:</span> <span class="n">NParentsPattern</span><span class="p">,</span>
+        <span class="s1">&#39;Fare&#39;</span><span class="p">:</span> <span class="n">FarePattern</span><span class="p">,</span>
+        <span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">NamePattern</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="initialise-pattern-structure">
+<h3>Initialise Pattern Structure<a class="headerlink" href="#initialise-pattern-structure" title="Link to this heading">#</a></h3>
+<p>For the moment, <code class="docutils literal notranslate"><span class="pre">paspailleur</span></code> cannot treat <code class="docutils literal notranslate"><span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">NaN</span></code> values in the data. So we manually fill them with the minimal patterns.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">PassengerPattern</span><span class="o">.</span><span class="n">DimensionTypes</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">get_min_pattern</span><span class="p">()</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">f</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found NaN values in dimension </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">. Replace them by pattern: </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Found NaN values in dimension Age. Replace them by pattern: [-inf, inf]
+Found NaN values in dimension Embarked. Replace them by pattern: {&#39;Queenstown&#39;, &#39;Southampton&#39;, &#39;Cherbourg&#39;}
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now, let us create a <em>context</em> dictionary, where the keys of the dictionary are objects (the names of rows in the data) and values are patterns of these objects.</p>
+<p>For every object there should be just one pattern.</p>
+<p>Now we create a <code class="docutils literal notranslate"><span class="pre">PatternStructure</span></code> that will let us analyse the context.</p>
+<p>Every pattern in the pattern structure would be created by joining atomic patterns together. So a pattern would describe objects that are covered by <em>all</em> atomic patterns it consists of.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">ps</span> <span class="o">=</span> <span class="n">psp</span><span class="o">.</span><span class="n">PatternStructure</span><span class="p">(</span><span class="n">PassengerPattern</span><span class="p">)</span>
+<span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">),</span> <span class="n">min_atom_support</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">use_tqdm</span><span class="o">=</span><span class="n">USE_TQDM</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;#objects x #atomic_patterns&#39;</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>#objects x #atomic_patterns (891, 42)
+CPU times: user 879 ms, sys: 6.89 ms, total: 886 ms
+Wall time: 885 ms
+</pre></div>
+</div>
+</div>
+</div>
+<p>Here we mine stable pattern concepts where every concept can be treated as an individual cluster.</p>
+<p>There are two important parameters to the function <code class="docutils literal notranslate"><span class="pre">ps.mine_concepts</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span> <span class="pre">support</span></code> which is the minimum number of objects covered by the concept.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min_delta_stability</span></code> which means that all more precise concepts will cover less objects.</p></li>
+</ul>
+</section>
+</section>
+<section id="part-two-mining-patterns">
+<h2>Part Two: Mining patterns<a class="headerlink" href="#part-two-mining-patterns" title="Link to this heading">#</a></h2>
+<section id="mining-concepts">
+<h3>Mining concepts<a class="headerlink" href="#mining-concepts" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">concepts</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">mine_concepts</span><span class="p">(</span><span class="n">min_delta_stability</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">min_support</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;gSofia&#39;</span><span class="p">,</span> <span class="n">use_tqdm</span><span class="o">=</span><span class="n">USE_TQDM</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 4.5 s, sys: 55.8 ms, total: 4.55 s
+Wall time: 4.55 s
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# concepts: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">concepts</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">extent</span><span class="p">,</span> <span class="n">intent</span> <span class="o">=</span> <span class="n">concepts</span><span class="p">[</span><span class="mi">50</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Concept #50&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* objects in the concept: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">extent</span><span class="p">)[:</span><span class="mi">10</span><span class="p">]</span><span class="si">}</span><span class="s2"> (some of them)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;* pattern of the concept: </span><span class="si">{</span><span class="n">intent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span># concepts: 4,868
+Concept #50
+* objects in the concept: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11] (some of them)
+* pattern of the concept: {&#39;Age&#39;: [0.0, 60.0], &#39;Embarked&#39;: NOT({&#39;Queenstown&#39;}), &#39;Fare&#39;: [0.0, 300.0], &#39;Parch&#39;: [0.0, 6.0], &#39;Pclass&#39;: [1.0, 3.0], &#39;SibSp&#39;: [0.0, 8.0]}
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="mining-implications">
+<h3>Mining implications<a class="headerlink" href="#mining-implications" title="Link to this heading">#</a></h3>
+<p>Now for the implications</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">implications</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">mine_implications</span><span class="p">(</span><span class="n">min_support</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">max_key_length</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> 
+                                    <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;Talky-GI&#39;</span><span class="p">,</span>
+                                    <span class="n">reduce_conclusions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_tqdm</span><span class="o">=</span><span class="n">USE_TQDM</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">implications</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>30
+CPU times: user 61.7 ms, sys: 51 μs, total: 61.7 ms
+Wall time: 61.2 ms
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mined Implications:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">premise</span><span class="p">,</span> <span class="n">conclusion</span> <span class="ow">in</span> <span class="n">implications</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">premise</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;=&gt; (</span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">measure_support</span><span class="p">(</span><span class="n">premise</span><span class="p">)</span><span class="si">}</span><span class="s1"> examples)&#39;</span><span class="p">,</span> <span class="n">conclusion</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Mined Implications:
+{}
+=&gt; (891 examples)
+{&#39;Fare&#39;: [0.0, 515.0], &#39;Parch&#39;: [0.0, 6.0], &#39;Pclass&#39;: [1.0, 3.0], &#39;SibSp&#39;: [0.0, 8.0]}
+
+{&#39;Embarked&#39;: NOT({&#39;Cherbourg&#39;})}
+=&gt; (721 examples)
+{&#39;Fare&#39;: &lt;= 300.0}
+
+{&#39;Age&#39;: &lt;= 80.0}
+=&gt; (714 examples)
+{&#39;Age&#39;: &gt;= 0.0}
+
+{&#39;Age&#39;: &gt;= 0.0}
+=&gt; (714 examples)
+{&#39;Age&#39;: &lt;= 80.0}
+
+{&#39;Pclass&#39;: &gt;= 2.0}
+=&gt; (675 examples)
+{&#39;Fare&#39;: &lt;= 100.0}
+
+{&#39;Parch&#39;: &lt;= 0.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (484 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Sex&#39;: {&#39;male&#39;}, &#39;SibSp&#39;: &lt;= 0.0}
+=&gt; (434 examples)
+{&#39;Parch&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &gt;= 20.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (364 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Survived&#39;: {&#39;No&#39;}}
+=&gt; (549 examples)
+{&#39;Fare&#39;: &lt;= 300.0}
+
+{&#39;Parch&#39;: &lt;= 0.0, &#39;Survived&#39;: {&#39;No&#39;}}
+=&gt; (445 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &gt;= 20.0, &#39;Survived&#39;: {&#39;No&#39;}}
+=&gt; (339 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Name&#39;: {&#39;Mr.&#39;}}
+=&gt; (517 examples)
+{&#39;Sex&#39;: {&#39;male&#39;}}
+
+{&#39;Name&#39;: {&#39;Mr.&#39;}, &#39;Parch&#39;: &lt;= 0.0}
+=&gt; (465 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Fare&#39;: &lt;= 30.0, &#39;Name&#39;: {&#39;Mr.&#39;}}
+=&gt; (421 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Name&#39;: {&#39;Mr.&#39;}, &#39;SibSp&#39;: &lt;= 0.0}
+=&gt; (413 examples)
+{&#39;Parch&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &gt;= 20.0, &#39;Name&#39;: {&#39;Mr.&#39;}}
+=&gt; (345 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &gt;= 20.0, &#39;Pclass&#39;: &gt;= 3.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (190 examples)
+{&#39;Name&#39;: {&#39;Mr.&#39;}}
+
+{&#39;Pclass&#39;: &lt;= 2.0, &#39;SibSp&#39;: &lt;= 0.0}
+=&gt; (257 examples)
+{&#39;Parch&#39;: &lt;= 2.0}
+
+{&#39;Fare&#39;: &lt;= 100.0, &#39;Pclass&#39;: &lt;= 2.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (211 examples)
+{&#39;Parch&#39;: &lt;= 2.0, &#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Parch&#39;: &lt;= 1.0, &#39;Pclass&#39;: &lt;= 2.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (216 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &lt;= 60.0, &#39;Pclass&#39;: &lt;= 2.0, &#39;Sex&#39;: {&#39;male&#39;}}
+=&gt; (185 examples)
+{&#39;Parch&#39;: &lt;= 2.0}
+
+{&#39;Age&#39;: &lt;= 40.0, &#39;Pclass&#39;: &lt;= 2.0, &#39;SibSp&#39;: &lt;= 1.0}
+=&gt; (235 examples)
+{&#39;Parch&#39;: &lt;= 2.0}
+
+{&#39;Name&#39;: {&#39;Mr.&#39;}, &#39;Pclass&#39;: &lt;= 2.0}
+=&gt; (198 examples)
+{&#39;Embarked&#39;: NOT({&#39;Queenstown&#39;})}
+
+{&#39;Fare&#39;: &lt;= 100.0, &#39;Name&#39;: {&#39;Mr.&#39;}, &#39;Pclass&#39;: &lt;= 2.0}
+=&gt; (182 examples)
+{&#39;Parch&#39;: &lt;= 2.0, &#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Name&#39;: {&#39;Mr.&#39;}, &#39;Parch&#39;: &lt;= 1.0, &#39;Pclass&#39;: &lt;= 2.0}
+=&gt; (189 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;SibSp&#39;: &gt;= 1.0}
+=&gt; (283 examples)
+{&#39;Fare&#39;: &lt;= 300.0}
+
+{&#39;Embarked&#39;: NOT({&#39;Southampton&#39;}), &#39;Parch&#39;: &lt;= 0.0}
+=&gt; (192 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Parch&#39;: &lt;= 1.0, &#39;Pclass&#39;: &lt;= 1.0}
+=&gt; (194 examples)
+{&#39;SibSp&#39;: &lt;= 2.0}
+
+{&#39;Name&#39;: {&#39;Miss.&#39;}}
+=&gt; (182 examples)
+{&#39;Parch&#39;: &lt;= 2.0, &#39;Sex&#39;: {&#39;female&#39;}}
+
+{&#39;Age&#39;: &lt;= 20.0}
+=&gt; (179 examples)
+{&#39;Fare&#39;: &lt;= 300.0}
+</pre></div>
+</div>
+</div>
+</div>
+<p>The function gave us implication <code class="docutils literal notranslate"><span class="pre">{'Embarked':</span> <span class="pre">NOT({'Cherbourg'})}</span></code> =&gt; <code class="docutils literal notranslate"><span class="pre">{'Fare':</span> <span class="pre">&lt;=</span> <span class="pre">300.0}</span></code>. Let us check out the inverse implication: “If you paid a lot =&gt; you are from Cherbourg”.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PassengerPattern</span><span class="p">({</span><span class="s1">&#39;Fare&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;= 300&#39;</span><span class="p">})</span>
+<span class="n">intent</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">intent</span><span class="p">(</span><span class="n">ps</span><span class="o">.</span><span class="n">extent</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+<span class="n">intent</span><span class="p">[</span><span class="s1">&#39;Embarked&#39;</span><span class="p">],</span> <span class="n">intent</span><span class="p">[</span><span class="s1">&#39;Fare&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>({&#39;Cherbourg&#39;}, [30.0, 515.0])
+</pre></div>
+</div>
+</div>
+</div>
+<p>Notice that intent of Fare is <code class="docutils literal notranslate"><span class="pre">[30,</span> <span class="pre">515]</span></code> and not <code class="docutils literal notranslate"><span class="pre">[300,</span> <span class="pre">515]</span></code> as expected.</p>
+<p>It might be seemed as a bug, but it might be seen as a feature.
+The reason why the pattern structure does not output description <code class="docutils literal notranslate"><span class="pre">'Fare':</span> <span class="pre">[300,515]</span></code> is because there are simply too few objects whose Fare value is higher than 300.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1"> is a valid atomic pattern: &#39;</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">atomic_patterns</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1"> is an atomic pattern of the pattern structure: &#39;</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">atomic_patterns</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Because </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1"> only describes </span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">measure_support</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="si">}</span><span class="s1"> objects&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; and the minimal support of atomic patterns in the pattern structure is: &#39;</span><span class="p">,</span> 
+      <span class="nb">min</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">extent</span><span class="p">)</span> <span class="k">for</span> <span class="n">extent</span> <span class="ow">in</span> <span class="n">ps</span><span class="o">.</span><span class="n">atomic_patterns</span><span class="o">.</span><span class="n">values</span><span class="p">()]))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;Fare&#39;: &gt;= 300.0} is a valid atomic pattern:  True
+{&#39;Fare&#39;: &gt;= 300.0} is an atomic pattern of the pattern structure:  False
+Because {&#39;Fare&#39;: &gt;= 300.0} only describes 3 objects
+ and the minimal support of atomic patterns in the pattern structure is:  95
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="mining-subgroups">
+<h3>Mining subgroups<a class="headerlink" href="#mining-subgroups" title="Link to this heading">#</a></h3>
+<p>Now for mining subgroups with the goal which is the survivors</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">goal_objects</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Survived&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Yes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">subgroups_iterator</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">iter_subgroups</span><span class="p">(</span>
+    <span class="n">goal_objects</span><span class="o">=</span><span class="n">goal_objects</span><span class="p">,</span>
+    <span class="n">quality_measure</span><span class="o">=</span><span class="s1">&#39;Precision&#39;</span><span class="p">,</span> <span class="n">quality_threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+    <span class="n">max_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">use_tqdm</span><span class="o">=</span><span class="n">USE_TQDM</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">subgroups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">subgroups_iterator</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subgroups</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>16
+CPU times: user 4.07 ms, sys: 2 μs, total: 4.07 ms
+Wall time: 4.07 ms
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Order subgroups 1) by simplicity of pattern, 2) by their quality</span>
+<span class="n">subgroups</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">subgroups</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">sg_data</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sg_data</span><span class="o">.</span><span class="n">pattern</span><span class="p">),</span> <span class="o">-</span><span class="n">sg_data</span><span class="o">.</span><span class="n">quality_value</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Subgroups for Survived Passengers:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">quality</span><span class="p">,</span> <span class="n">quality_name</span> <span class="ow">in</span> <span class="n">subgroups</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pattern: </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quality_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">quality</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="s2">, Support: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">ps</span><span class="o">.</span><span class="n">measure_frequency</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of data)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Subgroups for Survived Passengers:
+Pattern: {&#39;Survived&#39;: {&#39;Yes&#39;}}
+Precision: 100.00%, Support: 342 (38% of data)
+
+Pattern: {&#39;Name&#39;: {&#39;Mrs.&#39;}}
+Precision: 79.20%, Support: 125 (14% of data)
+
+Pattern: {&#39;Sex&#39;: {&#39;female&#39;}}
+Precision: 74.20%, Support: 314 (35% of data)
+
+Pattern: {&#39;Name&#39;: {&#39;Miss.&#39;}}
+Precision: 69.78%, Support: 182 (20% of data)
+
+Pattern: {&#39;Fare&#39;: 30.0}
+Precision: 83.33%, Support: 6 (1% of data)
+
+Pattern: {&#39;Age&#39;: &lt;= 20.0, &#39;Pclass&#39;: &lt;= 2.0}
+Precision: 76.79%, Support: 56 (6% of data)
+
+Pattern: {&#39;Parch&#39;: &gt;= 1.0, &#39;Pclass&#39;: &lt;= 2.0}
+Precision: 73.79%, Support: 103 (12% of data)
+
+Pattern: {&#39;Embarked&#39;: NOT({&#39;Southampton&#39;}), &#39;Fare&#39;: &gt;= 30.0}
+Precision: 72.62%, Support: 84 (9% of data)
+
+Pattern: {&#39;Pclass&#39;: &lt;= 2.0, &#39;SibSp&#39;: &gt;= 1.0}
+Precision: 67.13%, Support: 143 (16% of data)
+
+Pattern: {&#39;Fare&#39;: &gt;= 30.0, &#39;Pclass&#39;: &lt;= 2.0}
+Precision: 66.83%, Support: 199 (22% of data)
+
+Pattern: {&#39;Embarked&#39;: NOT({&#39;Southampton&#39;}), &#39;Pclass&#39;: &lt;= 2.0}
+Precision: 66.36%, Support: 107 (12% of data)
+
+Pattern: {&#39;Parch&#39;: &gt;= 1.0, &#39;SibSp&#39;: &lt;= 0.0}
+Precision: 66.20%, Support: 71 (8% of data)
+
+Pattern: {&#39;Age&#39;: &lt;= 80.0, &#39;Pclass&#39;: &lt;= 1.0}
+Precision: 65.59%, Support: 186 (21% of data)
+
+Pattern: {&#39;Age&#39;: &gt;= 0.0, &#39;Pclass&#39;: &lt;= 1.0}
+Precision: 65.59%, Support: 186 (21% of data)
+
+Pattern: {&#39;Fare&#39;: &gt;= 30.0, &#39;SibSp&#39;: &lt;= 1.0}
+Precision: 65.50%, Support: 200 (22% of data)
+
+Pattern: {&#39;Fare&#39;: &gt;= 30.0, &#39;Parch&#39;: &lt;= 0.0}
+Precision: 65.22%, Support: 138 (15% of data)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Paspailleur Python Package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="patterns_api/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Patterns API</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#before-the-start-download-the-data">Before the start: Download the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-one-describe-the-data-with-patterns">Part One: Describe the data with Patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#categorical-data">Categorical data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#closed-interval-patterns">(Closed) Interval Patterns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ngram-pattern">Ngram Pattern</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cartesian-pattern">Cartesian Pattern</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#initialise-pattern-structure">Initialise Pattern Structure</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#part-two-mining-patterns">Part Two: Mining patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mining-concepts">Mining concepts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mining-implications">Mining implications</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mining-subgroups">Mining subgroups</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/example_from_titanic.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, SmartFCA/LORIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

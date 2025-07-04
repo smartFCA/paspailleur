@@ -1,0 +1,574 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Paspailleur in one page &#8212; Paspailleur 0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Paspailleur 0.1 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="example_from_titanic.html">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="patterns_api/index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="example_from_titanic.html">
+    Titanic Study
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="patterns_api/index.html">
+    Patterns API
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="algorithms_api.html">
+    Algorithms API
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/smartFCA/paspailleur.git" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Paspailleur in one page</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="paspailleur-in-one-page">
+<span id="getting-started"></span><h1>Paspailleur in one page<a class="headerlink" href="#paspailleur-in-one-page" title="Link to this heading">#</a></h1>
+<section id="install">
+<h2>Install<a class="headerlink" href="#install" title="Link to this heading">#</a></h2>
+<p>To use Paspailleur, first install it using pip:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>paspailleur
+</pre></div>
+</div>
+</section>
+<section id="define-complex-patterns">
+<h2>Define complex patterns<a class="headerlink" href="#define-complex-patterns" title="Link to this heading">#</a></h2>
+<p>Paspailleur lets you describe the data using complex “patterns” such as itemsets (<code class="docutils literal notranslate"><span class="pre">ItemSetPattern</span></code>), intervals (<code class="docutils literal notranslate"><span class="pre">IntervalPattern</span></code>), categories (<code class="docutils literal notranslate"><span class="pre">CategorySetPattern</span></code>), and ngrams (<code class="docutils literal notranslate"><span class="pre">NgramSetPattern</span></code>).</p>
+<section id="built-in-patterns">
+<h3>Built-in patterns<a class="headerlink" href="#built-in-patterns" title="Link to this heading">#</a></h3>
+<p>The study will use the Titanic example and focus on only 20 Passengers, not all of them.
+We’ll be using the Titanic example since it has more than one pattern type, which uses more than one pattern class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">paspailleur.pattern_structures</span> <span class="kn">import</span> <span class="n">built_in_patterns</span> <span class="k">as</span> <span class="n">bip</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="k">class</span> <span class="nc">SurvivedPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+<span class="linenos"> 4</span>   <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;No&quot;</span><span class="p">,</span> <span class="s2">&quot;Yes&quot;</span><span class="p">)</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="k">class</span> <span class="nc">KnownAgePattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+<span class="linenos"> 7</span>   <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;No&quot;</span><span class="p">,</span> <span class="s2">&quot;Yes&quot;</span><span class="p">)</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="k">class</span> <span class="nc">KnownCabinPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+<span class="linenos">10</span>   <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;No&quot;</span><span class="p">,</span> <span class="s2">&quot;Yes&quot;</span><span class="p">)</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="k">class</span> <span class="nc">SexPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+<span class="linenos">13</span>   <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;female&quot;</span><span class="p">,</span> <span class="s2">&quot;male&quot;</span><span class="p">)</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="k">class</span> <span class="nc">EmbarkedPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">CategorySetPattern</span><span class="p">):</span>
+<span class="linenos">16</span>   <span class="n">Universe</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Southampton&quot;</span><span class="p">,</span> <span class="s2">&quot;Cherbourg&quot;</span><span class="p">,</span> <span class="s2">&quot;Queenstown&quot;</span><span class="p">)</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="k">class</span> <span class="nc">PassengerClassPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">IntervalPattern</span><span class="p">):</span>
+<span class="linenos">19</span>   <span class="o">...</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="k">class</span> <span class="nc">AgePattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">IntervalPattern</span><span class="p">):</span>
+<span class="linenos">22</span>   <span class="n">BoundsUniverse</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">80</span><span class="p">)</span>
+<span class="linenos">23</span>
+<span class="linenos">24</span><span class="k">class</span> <span class="nc">NSiblingsPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">IntervalPattern</span><span class="p">):</span>
+<span class="linenos">25</span>   <span class="n">BoundsUniverse</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="linenos">26</span>
+<span class="linenos">27</span><span class="k">class</span> <span class="nc">NParentsPattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">IntervalPattern</span><span class="p">):</span>
+<span class="linenos">28</span>   <span class="n">BoundsUniverse</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="k">class</span> <span class="nc">FarePattern</span><span class="p">(</span><span class="n">bip</span><span class="o">.</span><span class="n">IntervalPattern</span><span class="p">):</span>
+<span class="linenos">31</span>   <span class="n">BoundsUniverse</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With this we’ve initialized the pattern classes to be used in the analysis.</p>
+</section>
+<section id="pattern-structure-to-represent-the-dataset">
+<h3>Pattern Structure to represent the dataset<a class="headerlink" href="#pattern-structure-to-represent-the-dataset" title="Link to this heading">#</a></h3>
+<p>With the pattern classes defined, you can now construct a dataset pattern structure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">paspailleur.pattern_structures.built_in_patterns</span> <span class="kn">import</span> <span class="n">CartesianPattern</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="n">pattern_structure</span> <span class="o">=</span> <span class="n">CartesianPattern</span><span class="p">(</span>
+<span class="linenos"> 4</span>   <span class="n">df</span><span class="p">,</span>
+<span class="linenos"> 5</span>   <span class="p">{</span>
+<span class="linenos"> 6</span>     <span class="s1">&#39;Survived&#39;</span><span class="p">:</span> <span class="n">SurvivedPattern</span><span class="p">,</span>
+<span class="linenos"> 7</span>     <span class="s1">&#39;Known Age&#39;</span><span class="p">:</span> <span class="n">KnownAgePattern</span><span class="p">,</span>
+<span class="linenos"> 8</span>     <span class="s1">&#39;Known Cabin&#39;</span><span class="p">:</span> <span class="n">KnownCabinPattern</span><span class="p">,</span>
+<span class="linenos"> 9</span>     <span class="s1">&#39;Sex&#39;</span><span class="p">:</span> <span class="n">SexPattern</span><span class="p">,</span>
+<span class="linenos">10</span>     <span class="s1">&#39;Embarked&#39;</span><span class="p">:</span> <span class="n">EmbarkedPattern</span><span class="p">,</span>
+<span class="linenos">11</span>     <span class="s1">&#39;Passenger Class&#39;</span><span class="p">:</span> <span class="n">PassengerClassPattern</span><span class="p">,</span>
+<span class="linenos">12</span>     <span class="s1">&#39;Age&#39;</span><span class="p">:</span> <span class="n">AgePattern</span><span class="p">,</span>
+<span class="linenos">13</span>     <span class="s1">&#39;# Siblings and Spouses&#39;</span><span class="p">:</span> <span class="n">NSiblingsPattern</span><span class="p">,</span>
+<span class="linenos">14</span>     <span class="s1">&#39;# Parents and Children&#39;</span><span class="p">:</span> <span class="n">NParentsPattern</span><span class="p">,</span>
+<span class="linenos">15</span>     <span class="s1">&#39;Fare&#39;</span><span class="p">:</span> <span class="n">FarePattern</span><span class="p">,</span>
+<span class="linenos">16</span>     <span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">NamePattern</span>
+<span class="linenos">17</span> <span class="p">}</span>
+<span class="linenos">18</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which are the intents behind the pattern classes, used to make the actual analysis.</p>
+</section>
+</section>
+<section id="discover-patterns-in-the-data">
+<h2>Discover patterns in the data<a class="headerlink" href="#discover-patterns-in-the-data" title="Link to this heading">#</a></h2>
+<p>After defining the intents and extents of the search now we create the pattern structures</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kn">from</span> <span class="nn">paspailleur.pattern_structures.pattern_structure</span> <span class="kn">import</span> <span class="n">PatternStructure</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="n">ps</span> <span class="o">=</span> <span class="n">PatternStructure</span><span class="p">()</span>
+<span class="linenos">4</span><span class="n">ps</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">min_atom_support</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>What this code does, is create pattern structures by joining atomic patterns together, the created pattern structure has a minimum of 80 support atoms.
+A pattern describes the objects covered by all atomic patterns it consists of.</p>
+<section id="mine-concepts">
+<h3>Mine concepts<a class="headerlink" href="#mine-concepts" title="Link to this heading">#</a></h3>
+<p>Here is the code for mining pattern concepts</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="n">concepts</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">mine_concepts</span><span class="p">(</span><span class="n">min_delta_stability</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">min_support</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="s1">&#39;gSofia&#39;</span><span class="p">,</span> <span class="n">use_tqdm</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="linenos">2</span><span class="nb">print</span><span class="p">(</span>  <span class="nb">type</span><span class="p">(</span><span class="n">concepts</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">concepts</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The parameters used to mine concepts are:
+<code class="docutils literal notranslate"><span class="pre">min</span> <span class="pre">support</span></code> which is the minimum number of objects covered by the concept.
+<code class="docutils literal notranslate"><span class="pre">min_delta_stability</span></code> which means that all more precise concepts will cover less objects.</p>
+</section>
+<section id="mine-implications">
+<h3>Mine implications<a class="headerlink" href="#mine-implications" title="Link to this heading">#</a></h3>
+<p>&lt;Here comes some easy-to-understand example&gt;</p>
+</section>
+<section id="mine-subgroups">
+<h3>Mine subgroups<a class="headerlink" href="#mine-subgroups" title="Link to this heading">#</a></h3>
+<p>&lt;Here comes some easy-to-understand example&gt;</p>
+</section>
+<section id="iterate-all-patterns">
+<h3>Iterate all patterns<a class="headerlink" href="#iterate-all-patterns" title="Link to this heading">#</a></h3>
+<p>&lt;Here comes some easy-to-understand example&gt;</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install">Install</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#define-complex-patterns">Define complex patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#built-in-patterns">Built-in patterns</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pattern-structure-to-represent-the-dataset">Pattern Structure to represent the dataset</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#discover-patterns-in-the-data">Discover patterns in the data</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mine-concepts">Mine concepts</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mine-implications">Mine implications</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mine-subgroups">Mine subgroups</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iterate-all-patterns">Iterate all patterns</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/usage.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, SmartFCA/LORIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

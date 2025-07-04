@@ -1,0 +1,624 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Titanic Study"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "first thing we need to do is to install paspailleur from git:"
+   ]
+  },
+  {
+   "metadata": {},
+   "cell_type": "code",
+   "source": "!pip install --quiet git+https://github.com/smartFCA/paspailleur.git",
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "USE_TQDM = False  # set to False when used within documentation"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "GarMFW4YQKT6"
+   },
+   "source": [
+    "## Before the start: Download the data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "bR2hOTglQO8Q"
+   },
+   "source": [
+    "Second is to initiate the dataset:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 307
+    },
+    "id": "rO23iZ-KQUaA",
+    "outputId": "81b982b7-5770-4be0-b9e4-395744dcf71a"
+   },
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "df_full = pd.read_csv('https://raw.githubusercontent.com/datasciencedojo/datasets/refs/heads/master/titanic.csv', index_col=0)\n",
+    "df_orig = df_full.copy()\n",
+    "print(df_full.shape)\n",
+    "print(df_full.columns)"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "7RfhNfWFRsjU"
+   },
+   "source": [
+    "Now we do some modifications to make the results look better and reorganize the table with only the needed columns:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 255
+    },
+    "id": "FZXQp0z3RzVt",
+    "outputId": "2499fccd-bda9-46d9-c916-39d53255522e"
+   },
+   "source": [
+    "# change the values of the Embarked column into the full names instead of the letters\n",
+    "df_full['Embarked'] = df_full['Embarked'].map({'S': 'Southampton', 'C': 'Cherbourg', 'Q': 'Queenstown'})\n",
+    "# change the values of the Survived column into yes and no instead of 0 1\n",
+    "df_full['Survived'] = df_full['Survived'].map(['No', 'Yes'].__getitem__)\n",
+    "\n",
+    "# the removed columns are ticket and cabin since they are not needed for the study\n",
+    "df = df_full.drop(columns=['Ticket', 'Cabin'])\n",
+    "print(df.shape)\n",
+    "df.head()"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Part One: Describe the data with Patterns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "70mi89xZVfhZ"
+   },
+   "source": [
+    "Now we should describe how we treat every column in the data.\n",
+    "\n",
+    "- **CategorySetPattern** is designed for categorical data. That is, every object is described by a categorical value. Then a pattern would be a subset of categories that covers rows marked by _any_ of the categories of the pattern;\n",
+    "- **IntervalPattern** treats numerical data. Any row (marked by either a number of an interval of numbers) is either lies inside some interval pattern or nor;\n",
+    "- **NgramSetPattern** treats textual data. Every text is represented as an ngram (i.e. a sequence of words). The task here is to find subngrams that can often be found in the data;\n",
+    "- **CartesianPattern** combined independent *dimensions* in the tabular data. Every dimension represents a column in the data described by its own Pattern.\n",
+    "\n",
+    "With this, we'll be able to initialize and do simple comaprisons between custom patterns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "import paspailleur as psp"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Categorical data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "# The classical way to inherit a new Pattern class\n",
+    "class SurvivedPattern(psp.bip.CategorySetPattern):\n",
+    "    # CategorySetPattern required the definition of the Universe of categories,\n",
+    "    # that is the set of all possible categories that can be found in the data\n",
+    "    Universe = ('No', 'Yes')\n",
+    "\n",
+    "# A simplified way to inherit Pattern classes\n",
+    "SexPattern = psp.pattern_factory(psp.bip.CategorySetPattern, Universe=('female', 'male'))\n",
+    "\n",
+    "# Built-in pattern can be called by their names\n",
+    "EmbarkedPattern = psp.pattern_factory('CategorySetPattern', Universe=('Southampton', 'Cherbourg', 'Queenstown'))"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### (Closed) Interval Patterns"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "PassengerClassPattern = psp.pattern_factory(psp.bip.ClosedIntervalPattern, BoundsUniverse=(1,2,3))\n",
+    "AgePattern = psp.pattern_factory('ClosedIntervalPattern', BoundsUniverse=(0, 20, 40, 60, 80))\n",
+    "NSiblingsPattern = psp.pattern_factory('ClosedIntervalPattern', BoundsUniverse=(0, 1, 2, 8))\n",
+    "NParentsPattern = psp.pattern_factory('ClosedIntervalPattern', BoundsUniverse=(0, 1, 2, 6))\n",
+    "FarePattern = psp.pattern_factory('ClosedIntervalPattern', BoundsUniverse=(0, 30, 100, 300, 515))"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Ngram Pattern"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "NamePattern = psp.pattern_factory(psp.bip.NgramSetPattern, StopWords=set())"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Cartesian Pattern"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "id": "KWrg-MXeViwW"
+   },
+   "source": [
+    "# CartesianPattern combines Patterns for each column in the data\n",
+    "class PassengerPattern(psp.bip.CartesianPattern):\n",
+    "    DimensionTypes = {\n",
+    "        'Survived': SurvivedPattern, \n",
+    "        'Sex': SexPattern,\n",
+    "        'Embarked': EmbarkedPattern,\n",
+    "        'Pclass': PassengerClassPattern,\n",
+    "        'Age': AgePattern,\n",
+    "        'SibSp': NSiblingsPattern,\n",
+    "        'Parch': NParentsPattern,\n",
+    "        'Fare': FarePattern,\n",
+    "        'Name': NamePattern\n",
+    "    }"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Initialise Pattern Structure"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "BQRPx6lSbrJR"
+   },
+   "source": [
+    "For the moment, `paspailleur` cannot treat `None` and `NaN` values in the data. So we manually fill them with the minimal patterns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "for f in df.columns:\n",
+    "    if df[f].isna().any():\n",
+    "        p = PassengerPattern.DimensionTypes[f].get_min_pattern()\n",
+    "        df[f] = df[f].fillna(p)\n",
+    "        print(f\"Found NaN values in dimension {f}. Replace them by pattern: {p}\")"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "7kUd1jAxcec4"
+   },
+   "source": [
+    "Now, let us create a *context* dictionary, where the keys of the dictionary are objects (the names of rows in the data) and values are patterns of these objects.\n",
+    "\n",
+    "For every object there should be just one pattern."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "K3JN-10BdukW"
+   },
+   "source": [
+    "Now we create a `PatternStructure` that will let us analyse the context.\n",
+    "\n",
+    "Every pattern in the pattern structure would be created by joining atomic patterns together. So a pattern would describe objects that are covered by *all* atomic patterns it consists of."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "nGguiH20dvd1",
+    "outputId": "6a8bfdd4-30aa-46bf-cad8-8d19349791dd"
+   },
+   "source": [
+    "%%time\n",
+    "ps = psp.PatternStructure(PassengerPattern)\n",
+    "ps.fit(df.to_dict('index'), min_atom_support=0.1, use_tqdm=USE_TQDM)\n",
+    "print('#objects x #atomic_patterns', ps.shape)"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "SXZuMqLGd515"
+   },
+   "source": [
+    "Here we mine stable pattern concepts where every concept can be treated as an individual cluster.\n",
+    "\n",
+    "There are two important parameters to the function `ps.mine_concepts`:  \n",
+    "* ``min support`` which is the minimum number of objects covered by the concept.  \n",
+    "* ``min_delta_stability`` which means that all more precise concepts will cover less objects.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Part Two: Mining patterns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Mining concepts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 116,
+     "referenced_widgets": [
+      "233f1ce0b92f4d2ab85320910dbf3909",
+      "58f941925c8a4048bd1c22bb26b4115f",
+      "509cfcedb24a4b0ebe4d9644ea3df44b",
+      "091ee250e8e84b85a788db76ca4d6563",
+      "597f2ecea0aa462db7398644c2224f60",
+      "a3f3121cd18b4ce9b9b095ed293d8f4b",
+      "75617ba148e0496ea603bf683db38136",
+      "e9131275056c44ba845e36a2005f7be4",
+      "d659620653974ae99f6a466c9dd39af7",
+      "8ee476f6dee748cfab64555e6ec1e19b",
+      "4ec5a0aa58a7465fa07c510412242270",
+      "320e9058684f42f0a404068cef587394",
+      "22b16af0542e4314bed4d4122fc58ee0",
+      "15af28590a8c49a798b737c49c7342d2",
+      "b306dfc0b87641e780240e9ac448595a",
+      "07b23c91cf2d4d3cac1f00ab69b7ff7a",
+      "e556c8eb14e24e0a9da7bdb4e1aee29a",
+      "5170bae6d2214137a2eb828f399fef14",
+      "ace4de1ac0ec41ec98a55e7e5c49b30a",
+      "f25b2249fc9c40f2845f8cf45a189f10",
+      "584a78aaaf494ad2a957c5e829e7510a",
+      "a4a81991fd1d4ae2aa9a4e69110d5ddc"
+     ]
+    },
+    "id": "FLHAyMz2eWD8",
+    "outputId": "58932456-3186-420b-f919-e928763dfa9f"
+   },
+   "source": [
+    "%%time\n",
+    "concepts = ps.mine_concepts(min_delta_stability=0.01, min_support=0.1, algorithm='gSofia', use_tqdm=USE_TQDM)"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "znM2LuCD7Vy7",
+    "outputId": "e690be0c-211e-40e5-d5a5-deb4e7b7b672"
+   },
+   "source": [
+    "print(f\"# concepts: {len(concepts):,}\")\n",
+    "extent, intent = concepts[50]\n",
+    "print(\"Concept #50\")\n",
+    "print(f\"* objects in the concept: {list(extent)[:10]} (some of them)\")\n",
+    "print(f\"* pattern of the concept: {intent}\")"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Mining implications"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "EunTIwT6M_s8"
+   },
+   "source": [
+    "Now for the implications\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/",
+     "height": 180,
+     "referenced_widgets": [
+      "42a06a9d5c3648b78734c4191193bbde",
+      "9d7a07b1e62b4a57a6e979524de1b77d",
+      "768752e2865e459f9e60a84fd624eef6",
+      "10506f2ebe544ff1bc9e18fec7079930",
+      "4044869f543941f1a5c5e7e710ec67b3",
+      "514a8e0e05be4366a6ffccb0c2acc08b",
+      "69a221b019bb45f29f46a3a65d290651",
+      "07c166619da14666816b02b64bb061a1",
+      "c98b1a2ee38743c19cc81a7a99ce2693",
+      "36a8bd720a24408989a718d409233e48",
+      "a0bece28a42a4f6a949e82f52ed1266a",
+      "48d2b28d68ec44ce8fc0c7f98f5b277c",
+      "2e624fc1125f45e0bc1a1cebcc879b62",
+      "bd829e542c4b4e41a81e36b0107e7dda",
+      "b9323b016b084ba29cd9830da477fe0c",
+      "4c6744fc8c0c4af8aacdf8a7e8f605b5",
+      "e6cfc1be67a64a679cd8768207ec37bb",
+      "6b89eec952ee4b579b0ae75fa8b54aea",
+      "636552158c6b407cbfe4b6a074f746e6",
+      "0afd61b9b3a2494ca093dd72b41b3b24",
+      "1e3cef7543c046269947e5c71a4dfb29",
+      "f66224dcd8bf4d5e9c4b7a78b94c892a",
+      "654cd646f758408fb2645ecccbbde5b8",
+      "c39d02a5db1e4bb99515e5c7fff42dc7",
+      "c80dc1a3dc3a440daa9914dad40066ff",
+      "8d9751684c594d9a86a2b10ed47fe0b1",
+      "79fb64caccc64ccba8e604e9df84b679",
+      "19315b0ec66d48f29440c07cd1cade8a",
+      "258d8255698e4dc18099df3198731898",
+      "8b2524b6a7de4ae0909951ad41944a40",
+      "1a923ff66dac4b12adf8b62d3678be31",
+      "aa2744dd03bc467486e6bc92ff8ba5ad",
+      "7e76d6b4fee84fdeaf31665406874edd",
+      "ceedddafb2fe45af80a93bdd028a6443",
+      "c8b896f05eec4289927d2453839124ba",
+      "72d28ea72833494fa46cb4fc06df8421",
+      "12f6b4203e42437594e9ae42ed5a1bbb",
+      "391fc303909f4cd593bab52b2b2312d6",
+      "62a4cde42e3640128e5acbb416cfd807",
+      "8cff89631aae4c24bddd371c0506d62c",
+      "05fcd3cf7bd046d1adb6d030923f5a40",
+      "6400312553854cbfbe0122724e82fd9a",
+      "d11c9b7d97c74f979522887651c6387c",
+      "6173b3105f5d4b14a4e91f99b965b9b3"
+     ]
+    },
+    "id": "w4EGJYCmNDWy",
+    "outputId": "44c90286-918f-4ee6-b17f-8108244a810a"
+   },
+   "source": [
+    "%%time\n",
+    "implications = ps.mine_implications(min_support=0.2, max_key_length=3, \n",
+    "                                    algorithm='Talky-GI',\n",
+    "                                    reduce_conclusions=True, use_tqdm=USE_TQDM)\n",
+    "print(len(implications))"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "mROj9jN_7hNQ",
+    "outputId": "469d9aa0-fcd2-44d5-9842-b52a17fa1fba",
+    "scrolled": true
+   },
+   "source": [
+    "print(\"Mined Implications:\")\n",
+    "for premise, conclusion in implications.items():\n",
+    "    print(premise, f'=> ({ps.measure_support(premise)} examples)', conclusion, sep='\\n')\n",
+    "    print()"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The function gave us implication `{'Embarked': NOT({'Cherbourg'})}` => `{'Fare': <= 300.0}`. Let us check out the inverse implication: \"If you paid a lot => you are from Cherbourg\"."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "p = PassengerPattern({'Fare': '>= 300'})\n",
+    "intent = ps.intent(ps.extent(p))\n",
+    "intent['Embarked'], intent['Fare']"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Notice that intent of Fare is `[30, 515]` and not `[300, 515]` as expected. \n",
+    "\n",
+    "It might be seemed as a bug, but it might be seen as a feature. \n",
+    "The reason why the pattern structure does not output description `'Fare': [300,515]` is because there are simply too few objects whose Fare value is higher than 300."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "print(f'{p} is a valid atomic pattern: ', p in p.atomic_patterns)\n",
+    "print(f'{p} is an atomic pattern of the pattern structure: ', p in ps.atomic_patterns)\n",
+    "print(f'Because {p} only describes {ps.measure_support(p)} objects')\n",
+    "print(f' and the minimal support of atomic patterns in the pattern structure is: ', \n",
+    "      min([len(extent) for extent in ps.atomic_patterns.values()]))"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Mining subgroups"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "OifneNfwRZHP"
+   },
+   "source": [
+    "Now for mining subgroups with the goal which is the survivors"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "id": "gPr4KXR1SSvz"
+   },
+   "source": [
+    "goal_objects = set(df[df['Survived'] == \"Yes\"].index)\n",
+    "subgroups_iterator = ps.iter_subgroups(\n",
+    "    goal_objects=goal_objects,\n",
+    "    quality_measure='Precision', quality_threshold=0.65,\n",
+    "    max_length=2,\n",
+    "    use_tqdm=USE_TQDM\n",
+    ")"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "code",
+   "metadata": {},
+   "source": [
+    "%%time\n",
+    "subgroups = list(subgroups_iterator)\n",
+    "print(len(subgroups))"
+   ],
+   "outputs": [],
+   "execution_count": null
+  },
+  {
+   "cell_type": "code",
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "-1vMJuKY7sIy",
+    "outputId": "b017ce3b-76f9-4c12-f373-0a3d99f22bc6"
+   },
+   "source": [
+    "# Order subgroups 1) by simplicity of pattern, 2) by their quality\n",
+    "subgroups = sorted(subgroups, key=lambda sg_data: (len(sg_data.pattern), -sg_data.quality_value))\n",
+    "print(\"Subgroups for Survived Passengers:\")\n",
+    "for pattern, objects, quality, quality_name in subgroups:\n",
+    "    print(f\"Pattern: {pattern}\")\n",
+    "    print(f\"{quality_name}: {quality:.2%}, Support: {len(objects)} ({ps.measure_frequency(pattern):.0%} of data)\")\n",
+    "    print()"
+   ],
+   "outputs": [],
+   "execution_count": null
+  }
+ ],
+ "metadata": {
+  "colab": {
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.3"
+  },
+  "widgets": {
+   "application/vnd.jupyter.widget-state+json": {
+    "state": {},
+    "version_major": 2,
+    "version_minor": 0
+   }
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
