@@ -699,7 +699,7 @@ class IntervalPattern(Pattern):
         """
         value = value.strip()
         if value == 'ø':
-            return (0, False), (0, False)
+            return (math.inf, True), (-math.inf, True)
 
         if value.startswith('>'):
             if value.startswith('>='):
@@ -742,6 +742,9 @@ class IntervalPattern(Pattern):
         ((1.0, True), (5.0, True))
         """
         given_value = value  # save for possible future errors
+        if given_value == ((math.inf, True), (-math.inf, True)):
+            return given_value  # a way to encode empty interval
+
         if isinstance(value, Number):
             value = (value, value)
 
@@ -753,7 +756,7 @@ class IntervalPattern(Pattern):
 
         is_contradictive = (rb < lb) or (lb == rb and not (closed_lb and closed_rb))
         if is_contradictive:
-            lb, rb = 0, 0
+            lb, rb = math.inf, -math.inf
 
         if cls.BoundsUniverse is not None and not is_contradictive:
             if -math.inf < lb < min(cls.BoundsUniverse):
@@ -1227,7 +1230,7 @@ class ClosedIntervalPattern(IntervalPattern):
                 'Only closed intervals are supported within ClosedIntervalPattern. ' \
                 f'Change the bounds of interval "{value}" to square brackets to make it close'
 
-        parsed_value = super(ClosedIntervalPattern, cls).parse_string_description(value)
+        parsed_value = super().parse_string_description(value)  #super(ClosedIntervalPattern, cls).parse_string_description(value)
         return parsed_value[0][0], parsed_value[1][0]
 
     @classmethod
@@ -1255,16 +1258,12 @@ class ClosedIntervalPattern(IntervalPattern):
         >>> ClosedIntervalPattern.preprocess_value([1, 5])
         (1.0, 5.0)
         """
-        if isinstance(value, Sequence) and len(value) == 2 and all(isinstance(v, Number) for v in value):
-            return float(value[0]), float(value[1])
-
         try:
-            processed_value = super(ClosedIntervalPattern, cls).preprocess_value(value)
+            processed_value =  super().preprocess_value(value)
             return processed_value[0][0], processed_value[1][0]
         except Exception as e:
-            pass
+            raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}. The error message is {e}')
 
-        raise ValueError(f'Value {value} cannot be preprocessed into {cls.__name__}')
 
     def atomise(self, atoms_configuration: Literal['min', 'max'] = 'min') -> set[Self]:
         """
