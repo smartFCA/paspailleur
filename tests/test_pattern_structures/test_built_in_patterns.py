@@ -110,7 +110,7 @@ def test_IntervalPattern():
     assert BoundedIntervalPattern('[0, 10]').value == ((0, True), (10, True))
     assert BoundedIntervalPattern('[0, 10]') == BoundedIntervalPattern('[0, 10]')
     assert BoundedIntervalPattern('[0, 30]') == BoundedIntervalPattern('[0, 50]')
-    assert BoundedIntervalPattern('ø').value == ((0, False), (0, False))
+    assert BoundedIntervalPattern('ø').value == ((math.inf, True), (-math.inf, True))
 
 
 def test_ClosedIntervalPattern():
